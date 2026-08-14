@@ -495,6 +495,7 @@ final class ITT_Fields {
 					self::text( 'label_name', 'תווית שדה שם' ),
 					self::text( 'label_phone', 'תווית שדה טלפון' ),
 					self::text( 'label_email', 'תווית שדה אימייל' ),
+					self::checkbox( 'show_email', 'להציג שדה אימייל' ),
 					self::text( 'label_message', 'תווית שדה הודעה' ),
 					self::checkbox( 'show_message', 'להציג שדה הודעה' ),
 					self::text( 'submit', 'כפתור שליחה' ),

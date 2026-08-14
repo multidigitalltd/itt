@@ -888,6 +888,7 @@ final class ITT_Content {
 			'label_name'    => 'שם מלא',
 			'label_phone'   => 'טלפון',
 			'label_email'   => 'אימייל',
+			'show_email'    => 0,
 			'label_message' => 'בקצרה עלייך ועל המטרה המקצועית/אישית שלך',
 			'show_message'  => 0,
 			'submit'        => 'לתיאום שיחת התאמה',

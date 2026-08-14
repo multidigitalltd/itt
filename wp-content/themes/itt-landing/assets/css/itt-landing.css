@@ -636,6 +636,11 @@
 	gap: 14px;
 }
 
+/* `display: grid` above outranks the UA rule for [hidden], so restate it. */
+.itt-quotes__item[hidden] {
+	display: none;
+}
+
 .itt-quotes__text {
 	font-size: clamp(19px, 2.2vw, 24px);
 	line-height: 1.65;
@@ -1001,6 +1006,88 @@
 	gap: 8px;
 	font-size: 18px;
 	color: var(--itt-on-purple);
+}
+
+/* 11 — founder bio ------------------------------------------------------- */
+
+.itt-doctor__inner {
+	display: grid;
+	grid-template-columns: 0.8fr 1.2fr;
+	gap: 48px;
+	align-items: center;
+}
+
+.itt-doctor__media {
+	position: relative;
+	min-width: 0;
+	height: 400px;
+	border-radius: var(--itt-r-lg);
+	overflow: hidden;
+	background: var(--itt-placeholder);
+}
+
+.itt-doctor__image {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.itt-doctor__copy {
+	display: grid;
+	gap: 22px;
+	align-content: center;
+}
+
+.itt-doctor__title {
+	font-size: clamp(26px, 3.2vw, 40px);
+	font-weight: 700;
+	color: var(--itt-purple);
+	line-height: 1.2;
+}
+
+.itt-doctor__text {
+	font-size: 19px;
+	line-height: 1.75;
+	color: var(--itt-text-body);
+	text-wrap: pretty;
+}
+
+.itt-doctor__stats {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 16px;
+}
+
+.itt-stat {
+	background: var(--itt-white);
+	border-radius: var(--itt-r-box);
+	padding: 24px;
+	display: grid;
+	gap: 6px;
+	align-content: start;
+	transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.itt-stat:hover {
+	transform: translateY(-4px);
+	box-shadow: 0 14px 32px rgba(43, 26, 74, 0.12);
+}
+
+.itt-stat__number {
+	font-size: clamp(24px, 2.6vw, 34px);
+	font-weight: 700;
+	line-height: 1;
+}
+
+.itt-stat--orange .itt-stat__number { color: var(--itt-orange-deep); }
+.itt-stat--cyan .itt-stat__number { color: var(--itt-cyan-deep); }
+.itt-stat--purple .itt-stat__number { color: var(--itt-purple-mid); }
+.itt-stat--gold .itt-stat__number { color: var(--itt-gold-text); }
+.itt-stat--gray .itt-stat__number { color: var(--itt-muted); }
+
+.itt-stat__label {
+	font-size: 17px;
+	color: var(--itt-muted);
 }
 
 /* 12 — who it fits ------------------------------------------------------ */
@@ -1652,4 +1739,26 @@
 	object-fit: cover;
 	background: #000;
 	border-radius: var(--itt-r-media);
+}
+
+/* Footer extras ---------------------------------------------------------- */
+
+.itt-footer__legal,
+.itt-footer__motion {
+	margin: 0;
+}
+
+@media (max-width: 900px) {
+	.itt-doctor__inner {
+		grid-template-columns: 1fr;
+		gap: 28px;
+	}
+
+	.itt-doctor__media {
+		height: 300px;
+	}
+
+	.itt-doctor__stats {
+		grid-template-columns: 1fr;
+	}
 }

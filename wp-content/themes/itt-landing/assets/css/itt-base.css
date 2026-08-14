@@ -9,14 +9,15 @@
  */
 
 /* -------------------------------------------------------------------------
- * Font
- * Ploni is licensed per site and is not distributed with the theme.
- * Drop the woff2 files into assets/fonts/ — see assets/fonts/README.md.
+ * Font — Ploni ML v2 AAA, under the site owner's licence.
+ * WOFF2 first, WOFF as the fallback for anything that predates it.
+ * See assets/fonts/README.md before replacing these files.
  * ---------------------------------------------------------------------- */
 
 @font-face {
 	font-family: Ploni;
-	src: url("../fonts/ploni-regular.woff2") format("woff2");
+	src: url("../fonts/ploni-regular.woff2") format("woff2"),
+		url("../fonts/ploni-regular.woff") format("woff");
 	font-weight: 400;
 	font-style: normal;
 	font-display: swap;
@@ -24,7 +25,8 @@
 
 @font-face {
 	font-family: Ploni;
-	src: url("../fonts/ploni-demibold.woff2") format("woff2");
+	src: url("../fonts/ploni-demibold.woff2") format("woff2"),
+		url("../fonts/ploni-demibold.woff") format("woff");
 	font-weight: 600;
 	font-style: normal;
 	font-display: swap;
@@ -32,7 +34,8 @@
 
 @font-face {
 	font-family: Ploni;
-	src: url("../fonts/ploni-bold.woff2") format("woff2");
+	src: url("../fonts/ploni-bold.woff2") format("woff2"),
+		url("../fonts/ploni-bold.woff") format("woff");
 	font-weight: 700;
 	font-style: normal;
 	font-display: swap;
@@ -140,7 +143,13 @@
 	color: var(--itt-text);
 	font-family: Ploni, "Assistant", "Heebo", "Segoe UI", system-ui, sans-serif;
 	font-size: 17.5px;
-	line-height: 1.65;
+	/**
+	 * The design file sets no root line-height, so everything without an explicit
+	 * one sits at `normal`. Inheriting 1.65 instead inflated every label and
+	 * accordion title and pushed the page ~3% taller than the reference. Prose
+	 * elements all declare their own line-height, so this only affects UI text.
+	 */
+	line-height: normal;
 	overflow-x: hidden;
 	-webkit-text-size-adjust: 100%;
 }
@@ -462,8 +471,8 @@ html:has(.itt-page) {
 
 .itt-chip--orange-blink:hover,
 .itt-chip--orange-blink:focus-visible {
-	background: var(--itt-orange);
-	border-color: var(--itt-orange);
+	background: var(--itt-orange-deep);
+	border-color: var(--itt-orange-deep);
 	color: var(--itt-white);
 	animation: none;
 }
@@ -924,9 +933,11 @@ html:has(.itt-page) {
 	50% { background: var(--itt-cyan-deep); color: var(--itt-white); }
 }
 
+/* The lit half deepens to #C8511A: white on the brand orange is 3.12:1, and the
+   chip label is 19px/600 — not bold enough to count as large text. */
 @keyframes itt-soft-blink {
 	0% { background: var(--itt-gold-soft); border-color: var(--itt-border-orange); color: var(--itt-orange-dark); }
-	50% { background: var(--itt-orange); border-color: var(--itt-orange); color: var(--itt-white); }
+	50% { background: var(--itt-orange-deep); border-color: var(--itt-orange-deep); color: var(--itt-white); }
 }
 
 @keyframes itt-value-glow {

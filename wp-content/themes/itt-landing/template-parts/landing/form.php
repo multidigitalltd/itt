@@ -86,11 +86,13 @@ $itt_bullets = itt_lines( (string) $itt['bullets'] );
 					<span class="itt-field__error" id="itt-phone-error" data-itt-error="phone"></span>
 				</p>
 
-				<p class="itt-field">
-					<label for="itt-email"><?php echo esc_html( (string) $itt['label_email'] ); ?></label>
-					<input type="email" id="itt-email" name="email" autocomplete="email" aria-describedby="itt-email-error">
-					<span class="itt-field__error" id="itt-email-error" data-itt-error="email"></span>
-				</p>
+				<?php if ( ! empty( $itt['show_email'] ) ) : ?>
+					<p class="itt-field">
+						<label for="itt-email"><?php echo esc_html( (string) $itt['label_email'] ); ?></label>
+						<input type="email" id="itt-email" name="email" autocomplete="email" aria-describedby="itt-email-error">
+						<span class="itt-field__error" id="itt-email-error" data-itt-error="email"></span>
+					</p>
+				<?php endif; ?>
 
 				<?php if ( ! empty( $itt['show_message'] ) ) : ?>
 					<p class="itt-field">

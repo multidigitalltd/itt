@@ -70,8 +70,8 @@ $itt_show_sticky ??= is_page_template( 'template-itt-landing.php' );
 		?>
 
 		<p class="itt-footer__motion">
-			<button type="button" class="itt-motion-toggle" data-itt-motion-toggle aria-pressed="false">
-				<?php esc_html_e( 'עצירת אנימציות בעמוד', 'itt-landing' ); ?>
+			<button type="button" class="itt-motion-toggle" data-itt-a11y-open>
+				<?php esc_html_e( 'התאמות נגישות', 'itt-landing' ); ?>
 			</button>
 		</p>
 	</div>
@@ -92,3 +92,5 @@ $itt_show_sticky ??= is_page_template( 'template-itt-landing.php' );
 		</div>
 	</aside>
 <?php endif; ?>
+
+<?php require ITT_DIR . 'template-parts/a11y-widget.php'; ?>

@@ -341,6 +341,12 @@
 				errors.email = i18n.emailInvalid;
 			}
 
+			// The server refuses a lead without consent; check here too so the
+			// visitor is told before a round trip.
+			if ( form.elements.consent && ! form.elements.consent.checked ) {
+				errors.consent = i18n.consentRequired;
+			}
+
 			return errors;
 		}
 
@@ -383,7 +389,7 @@
 		form.addEventListener( 'submit', function ( event ) {
 			event.preventDefault();
 
-			[ 'name', 'phone', 'email' ].forEach( function ( field ) {
+			[ 'name', 'phone', 'email', 'consent' ].forEach( function ( field ) {
 				setFieldError( field, '' );
 			} );
 
@@ -420,6 +426,7 @@
 				phone: form.elements.phone.value.trim(),
 				email: form.elements.email ? form.elements.email.value.trim() : '',
 				message: form.elements.message ? form.elements.message.value.trim() : '',
+				consent: form.elements.consent ? form.elements.consent.checked : true,
 				hp: form.elements.hp ? form.elements.hp.value : '',
 				ts: rendered
 			};

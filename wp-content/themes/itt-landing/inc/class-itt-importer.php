@@ -206,15 +206,20 @@ final class ITT_Importer {
 	}
 
 	/**
-	 * Register the Tools screen.
+	 * Register the admin screen.
+	 *
+	 * A top-level menu item, so the client finds the content hub without
+	 * digging through Tools.
 	 */
 	public static function menu(): void {
-		add_management_page(
+		add_menu_page(
 			__( 'עמודי ITT', 'itt-landing' ),
 			__( 'עמודי ITT', 'itt-landing' ),
 			'manage_options',
 			'itt-pages',
-			array( self::class, 'screen' )
+			array( self::class, 'screen' ),
+			'dashicons-welcome-write-blog',
+			25
 		);
 	}
 
@@ -291,7 +296,7 @@ final class ITT_Importer {
 					'page'       => 'itt-pages',
 					'itt-notice' => count( $pages ),
 				),
-				admin_url( 'tools.php' )
+				admin_url( 'admin.php' )
 			)
 		);
 		exit;

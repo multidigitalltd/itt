@@ -182,7 +182,7 @@
 }
 
 .itt-facts__icon--calendar { background: var(--itt-purple-soft); color: var(--itt-purple-mid); }
-.itt-facts__icon--pin { background: var(--itt-cyan-soft); color: var(--itt-cyan-deep); }
+.itt-facts__icon--pin { background: var(--itt-cyan-soft); color: var(--itt-cyan-mid); }
 .itt-facts__icon--cap { background: var(--itt-orange-soft); color: var(--itt-orange-deep); }
 
 .itt-facts__text {
@@ -480,7 +480,7 @@
 .itt-equation__number {
 	font-size: 36px;
 	font-weight: 700;
-	color: var(--itt-cyan-deep);
+	color: var(--itt-cyan-mid);
 	line-height: 1;
 }
 
@@ -607,10 +607,9 @@
 
 .itt-badge-card--gray .itt-badge-card__badge,
 .itt-badge-card--purple .itt-badge-card__badge { background: var(--itt-purple); color: var(--itt-white); }
-.itt-badge-card--cyan .itt-badge-card__badge { background: var(--itt-cyan-deep); color: var(--itt-white); }
+.itt-badge-card--cyan .itt-badge-card__badge { background: var(--itt-cyan); color: var(--itt-purple-deep); }
 .itt-badge-card--gold .itt-badge-card__badge { background: var(--itt-gold); color: var(--itt-purple); }
-/* Deepened from #F2662A: at 17px the white label needs 4.5:1, not 3:1. */
-.itt-badge-card--orange .itt-badge-card__badge { background: var(--itt-orange-deep); color: var(--itt-white); }
+.itt-badge-card--orange .itt-badge-card__badge { background: var(--itt-orange); color: var(--itt-purple-deep); }
 
 .itt-badge-card__text {
 	font-size: 19px;
@@ -676,7 +675,8 @@
 
 .itt-quotes__btn:hover,
 .itt-quotes__btn:focus-visible {
-	background: var(--itt-cyan-deep);
+	background: var(--itt-cyan);
+	color: var(--itt-purple-deep);
 }
 
 /* 07 — outcomes --------------------------------------------------------- */
@@ -712,7 +712,8 @@
 }
 
 .itt-outcome--purple .itt-outcome__head { background: var(--itt-purple); }
-.itt-outcome--cyan .itt-outcome__head { background: var(--itt-cyan-deep); }
+.itt-outcome--cyan .itt-outcome__head { background: var(--itt-cyan); }
+.itt-outcome--cyan .itt-outcome__title { color: var(--itt-purple-deep); }
 .itt-outcome--orange .itt-outcome__head { background: var(--itt-orange); }
 .itt-outcome--gold .itt-outcome__head { background: var(--itt-gold-text); }
 .itt-outcome--gray .itt-outcome__head { background: var(--itt-purple-deep); }
@@ -960,7 +961,7 @@
 
 .itt-lesson__sign {
 	font-size: 24px;
-	color: var(--itt-cyan-deep);
+	color: var(--itt-cyan-mid);
 }
 
 .itt-lesson__sign::before,
@@ -1095,7 +1096,7 @@
 }
 
 .itt-stat--orange .itt-stat__number { color: var(--itt-orange-deep); }
-.itt-stat--cyan .itt-stat__number { color: var(--itt-cyan-deep); }
+.itt-stat--cyan .itt-stat__number { color: var(--itt-cyan-mid); }
 .itt-stat--purple .itt-stat__number { color: var(--itt-purple-mid); }
 .itt-stat--gold .itt-stat__number { color: var(--itt-gold-text); }
 .itt-stat--gray .itt-stat__number { color: var(--itt-muted); }
@@ -1147,7 +1148,7 @@
 
 .itt-fit__card--purple .itt-fit__mark,
 .itt-fit__card--gray .itt-fit__mark { background: var(--itt-purple-soft); color: var(--itt-purple-mid); }
-.itt-fit__card--cyan .itt-fit__mark { background: var(--itt-cyan-soft); color: var(--itt-cyan-deep); }
+.itt-fit__card--cyan .itt-fit__mark { background: var(--itt-cyan-soft); color: var(--itt-cyan-mid); }
 .itt-fit__card--gold .itt-fit__mark { background: var(--itt-cream-warm); color: var(--itt-gold-text); }
 .itt-fit__card--orange .itt-fit__mark { background: var(--itt-orange-soft); color: var(--itt-orange-deep); }
 

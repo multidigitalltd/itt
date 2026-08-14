@@ -101,6 +101,24 @@ $itt_bullets = itt_lines( (string) $itt['bullets'] );
 					</p>
 				<?php endif; ?>
 
+				<?php if ( '' !== trim( (string) $itt['consent_text'] ) ) : ?>
+					<p class="itt-field itt-consent">
+						<span class="itt-consent__row">
+							<input type="checkbox" id="itt-consent" name="consent" value="1" required aria-describedby="itt-consent-error">
+							<label for="itt-consent">
+								<?php
+								echo itt_consent_text( // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped inside.
+									(string) $itt['consent_text'],
+									(string) $itt['terms_url'],
+									(string) $itt['privacy_url']
+								);
+								?>
+							</label>
+						</span>
+						<span class="itt-field__error" id="itt-consent-error" data-itt-error="consent"></span>
+					</p>
+				<?php endif; ?>
+
 				<p class="itt-form__honeypot" aria-hidden="true">
 					<label for="itt-website"><?php esc_html_e( 'לא למלא', 'itt-landing' ); ?></label>
 					<input type="text" id="itt-website" name="hp" tabindex="-1" autocomplete="off">

@@ -126,8 +126,10 @@ final class ITT_Theme {
 			wp_enqueue_style( 'itt-thank-you', ITT_URI . 'assets/css/itt-thank-you.css', array( 'itt-base' ), ITT_VERSION );
 		}
 
-		wp_enqueue_script( 'itt-motion', ITT_URI . 'assets/js/itt-motion.js', array(), ITT_VERSION, true );
-		wp_script_add_data( 'itt-motion', 'strategy', 'defer' );
+		// Accessibility widget + motion layer. Loaded on both templates because
+		// the widget must be reachable from every page the theme renders.
+		wp_enqueue_script( 'itt-a11y', ITT_URI . 'assets/js/itt-a11y.js', array(), ITT_VERSION, true );
+		wp_script_add_data( 'itt-a11y', 'strategy', 'defer' );
 	}
 
 	/**

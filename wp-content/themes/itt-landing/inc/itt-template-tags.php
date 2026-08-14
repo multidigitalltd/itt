@@ -215,6 +215,46 @@ function itt_chevron( string $direction ): void {
 }
 
 /**
+ * Render the consent sentence, turning its two tokens into real links.
+ *
+ * The sentence is escaped first; only [terms] and [privacy] become anchors, and
+ * only when a URL was supplied. Anything else stays plain text, so an editor
+ * cannot inject markup through the consent field.
+ *
+ * @param string $text        Sentence with [terms]…[/terms] / [privacy]…[/privacy].
+ * @param string $terms_url   Terms page URL, may be empty.
+ * @param string $privacy_url Privacy page URL, may be empty.
+ * @return string Escaped HTML, safe to echo.
+ */
+function itt_consent_text( string $text, string $terms_url, string $privacy_url ): string {
+	$html = esc_html( $text );
+
+	foreach ( array(
+		'terms'   => $terms_url,
+		'privacy' => $privacy_url,
+	) as $token => $url ) {
+		$html = (string) preg_replace_callback(
+			'/\[' . $token . '\](.+?)\[\/' . $token . '\]/u',
+			static function ( array $m ) use ( $url ): string {
+				if ( '' === $url ) {
+					return $m[1];
+				}
+
+				return sprintf(
+					'<a class="itt-consent__link" href="%s" target="_blank" rel="noopener">%s<span class="screen-reader-text"> %s</span></a>',
+					esc_url( $url ),
+					$m[1],
+					esc_html__( '(נפתח בחלון חדש)', 'itt-landing' )
+				);
+			},
+			$html
+		);
+	}
+
+	return $html;
+}
+
+/**
  * Resolve the playable source for a video slot.
  *
  * A file uploaded to the media library wins over an external link, so the

@@ -893,6 +893,9 @@ final class ITT_Content {
 			'show_message'  => 0,
 			'submit'        => 'לתיאום שיחת התאמה',
 			'privacy'       => 'הפרטים נשמרים לצורך שיחת ההתאמה בלבד',
+			'consent_text'  => 'קראתי ואני מאשרת את [terms]תנאי השימוש[/terms] ואת [privacy]מדיניות הפרטיות[/privacy], ומסכימה שניצור איתי קשר לגבי ההרשמה.',
+			'terms_url'     => '',
+			'privacy_url'   => '',
 		);
 	}
 

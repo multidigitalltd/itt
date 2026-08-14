@@ -500,6 +500,9 @@ final class ITT_Fields {
 					self::checkbox( 'show_message', 'להציג שדה הודעה' ),
 					self::text( 'submit', 'כפתור שליחה' ),
 					self::text( 'privacy', 'הערת פרטיות' ),
+					self::textarea( 'consent_text', 'טקסט אישור התקנון' ),
+					self::url( 'terms_url', 'קישור לתנאי השימוש', 'הטקסט [terms]…[/terms] יהפוך לקישור לכתובת הזו. ריק = יוצג כטקסט רגיל.' ),
+					self::url( 'privacy_url', 'קישור למדיניות הפרטיות', 'הטקסט [privacy]…[/privacy] יהפוך לקישור לכתובת הזו.' ),
 				)
 			),
 			'ty_hero'  => self::section(

@@ -85,7 +85,7 @@
 	color: var(--itt-gold);
 }
 
-.itt-ty-step--2 .itt-ty-step__number { background: var(--itt-cyan-deep); color: var(--itt-white); }
+.itt-ty-step--2 .itt-ty-step__number { background: var(--itt-cyan); color: var(--itt-purple-deep); }
 .itt-ty-step--3 .itt-ty-step__number { background: var(--itt-orange); color: var(--itt-white); }
 
 .itt-ty-step__title {

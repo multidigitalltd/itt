@@ -154,6 +154,11 @@ final class ITT_Leads {
 						'type'              => 'string',
 						'sanitize_callback' => 'sanitize_textarea_field',
 					),
+					'consent' => array(
+						'required'          => false,
+						'type'              => 'boolean',
+						'sanitize_callback' => static fn( $value ): bool => (bool) $value,
+					),
 					'hp'      => array(
 						'required'          => false,
 						'type'              => 'string',
@@ -209,7 +214,7 @@ final class ITT_Leads {
 			return self::success();
 		}
 
-		if ( ! self::within_rate_limit() ) {
+		if ( ! self::within_rate_limit( false ) ) {
 			return new WP_Error(
 				'itt_rate_limited',
 				__( 'קיבלנו כמה פניות מהמכשיר הזה. אפשר לנסות שוב מאוחר יותר או לכתוב לנו בוואטסאפ.', 'itt-landing' ),
@@ -221,7 +226,7 @@ final class ITT_Leads {
 		$phone = trim( (string) $request->get_param( 'phone' ) );
 		$email = trim( (string) $request->get_param( 'email' ) );
 
-		$errors = self::validate( $name, $phone, $email );
+		$errors = self::validate( $name, $phone, $email, (bool) $request->get_param( 'consent' ) );
 
 		if ( array() !== $errors ) {
 			return new WP_Error(
@@ -244,6 +249,9 @@ final class ITT_Leads {
 					'_itt_email'   => sanitize_email( $email ),
 					'_itt_message' => (string) $request->get_param( 'message' ),
 					'_itt_source'  => esc_url_raw( (string) $request->get_header( 'referer' ) ),
+					// Proof of consent, kept with the lead for the privacy record.
+					'_itt_consent' => 1,
+					'_itt_consent_at' => gmdate( 'c' ),
 				),
 			),
 			true
@@ -257,6 +265,10 @@ final class ITT_Leads {
 			);
 		}
 
+		// The budget is spent only on a lead that was actually stored, so a
+		// visitor who mistypes their phone a few times is never locked out.
+		self::within_rate_limit( true );
+
 		self::notify( $name, $phone, $email, (string) $request->get_param( 'message' ) );
 
 		return self::success();
@@ -268,12 +280,13 @@ final class ITT_Leads {
 	 * The browser runs the same checks for a faster response, but they are never
 	 * trusted: this is the check that counts.
 	 *
-	 * @param string $name  Full name.
-	 * @param string $phone Phone number.
-	 * @param string $email Email address, optional.
+	 * @param string $name    Full name.
+	 * @param string $phone   Phone number.
+	 * @param string $email   Email address, optional.
+	 * @param bool   $consent Whether the terms box was ticked.
 	 * @return array<string, string> Field key => message.
 	 */
-	private static function validate( string $name, string $phone, string $email ): array {
+	private static function validate( string $name, string $phone, string $email, bool $consent ): array {
 		$errors = array();
 
 		if ( mb_strlen( $name ) < 2 ) {
@@ -286,6 +299,12 @@ final class ITT_Leads {
 
 		if ( '' !== $email && ! is_email( $email ) ) {
 			$errors['email'] = __( 'נא למלא כתובת אימייל תקינה.', 'itt-landing' );
+		}
+
+		// Consent is checked here and not only in the browser: a submission that
+		// skips the box must not become a stored lead under any circumstances.
+		if ( ! $consent ) {
+			$errors['consent'] = __( 'יש לאשר את תנאי השימוש ומדיניות הפרטיות.', 'itt-landing' );
 		}
 
 		return $errors;
@@ -312,8 +331,11 @@ final class ITT_Leads {
 	 *
 	 * The IP is hashed before it becomes part of a transient key, so no raw
 	 * address is written to the options table.
+	 *
+	 * @param bool $consume Whether to count this call against the budget.
+	 * @return bool True while the client may still submit.
 	 */
-	private static function within_rate_limit(): bool {
+	private static function within_rate_limit( bool $consume ): bool {
 		$ip = isset( $_SERVER['REMOTE_ADDR'] )
 			? sanitize_text_field( wp_unslash( (string) $_SERVER['REMOTE_ADDR'] ) )
 			: '';
@@ -329,7 +351,9 @@ final class ITT_Leads {
 			return false;
 		}
 
-		set_transient( $key, $count + 1, self::RATE_WINDOW );
+		if ( $consume ) {
+			set_transient( $key, $count + 1, self::RATE_WINDOW );
+		}
 
 		return true;
 	}

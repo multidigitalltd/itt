@@ -471,9 +471,9 @@ html:has(.itt-page) {
 
 .itt-chip--orange-blink:hover,
 .itt-chip--orange-blink:focus-visible {
-	background: var(--itt-orange-deep);
-	border-color: var(--itt-orange-deep);
-	color: var(--itt-white);
+	background: var(--itt-orange);
+	border-color: var(--itt-orange);
+	color: var(--itt-purple-deep);
 	animation: none;
 }
 
@@ -615,7 +615,7 @@ html:has(.itt-page) {
 .itt-band__title {
 	font-size: clamp(22px, 2.4vw, 28px);
 	font-weight: 700;
-	color: var(--itt-cyan-deep);
+	color: var(--itt-cyan-mid);
 	line-height: 1.3;
 }
 
@@ -923,21 +923,27 @@ html:has(.itt-page) {
 	50% { opacity: 0.55; }
 }
 
+/**
+ * The brand cyan #16B4E8 is kept exactly as designed everywhere it is a surface
+ * or a graphic. Where it has to carry *text* on a light ground it steps to
+ * #0E8AC0 — the same hue, one stop darker — because the brand value measures
+ * 2.4:1 on white and cannot clear even the 3:1 large-text floor.
+ */
 @keyframes itt-value-blink {
 	0% { color: var(--itt-orange); }
-	50% { color: var(--itt-cyan-deep); }
+	50% { color: var(--itt-cyan-mid); }
 }
 
 @keyframes itt-cta-blink {
 	0% { background: var(--itt-gold); color: var(--itt-purple); }
-	50% { background: var(--itt-cyan-deep); color: var(--itt-white); }
+	/* Exact brand cyan, with the label darkened instead of the background. */
+	50% { background: var(--itt-cyan); color: var(--itt-purple-deep); }
 }
 
-/* The lit half deepens to #C8511A: white on the brand orange is 3.12:1, and the
-   chip label is 19px/600 — not bold enough to count as large text. */
+/* Exact brand orange on the lit half; the label darkens rather than the fill. */
 @keyframes itt-soft-blink {
 	0% { background: var(--itt-gold-soft); border-color: var(--itt-border-orange); color: var(--itt-orange-dark); }
-	50% { background: var(--itt-orange-deep); border-color: var(--itt-orange-deep); color: var(--itt-white); }
+	50% { background: var(--itt-orange); border-color: var(--itt-orange); color: var(--itt-purple-deep); }
 }
 
 @keyframes itt-value-glow {
@@ -1082,4 +1088,448 @@ html:has(.itt-page) {
 		gap: 6px;
 		flex-wrap: wrap;
 	}
+}
+
+/* -------------------------------------------------------------------------
+ * Accessibility widget
+ *
+ * Fixed to the viewport so the controls are reachable at any scroll position.
+ * It sits above the sticky CTA bar, and its own colours are fixed (not token
+ * driven) so that it stays legible in every contrast mode it can switch on.
+ * ---------------------------------------------------------------------- */
+
+.itt-a11y {
+	position: fixed;
+	inset-inline-start: 20px;
+	bottom: 106px;
+	z-index: 70;
+}
+
+.itt-a11y__toggle {
+	width: 56px;
+	height: 56px;
+	border: 2px solid #FFFFFF;
+	border-radius: var(--itt-r-pill);
+	background: #1B2A6B;
+	color: #FFFFFF;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	box-shadow: 0 6px 20px rgba(15, 8, 32, 0.35);
+	transition: background 0.25s ease, transform 0.25s ease;
+}
+
+.itt-a11y__toggle:hover,
+.itt-a11y__toggle:focus-visible {
+	background: #101B47;
+	transform: scale(1.06);
+}
+
+.itt-a11y__panel {
+	position: absolute;
+	inset-inline-start: 0;
+	bottom: 68px;
+	width: 290px;
+	max-width: calc(100vw - 40px);
+	max-height: min(70vh, 560px);
+	overflow-y: auto;
+	overscroll-behavior: contain;
+	background: #FFFFFF;
+	color: #1F1B2E;
+	border: 1px solid #D8D4E4;
+	border-radius: var(--itt-r-box);
+	box-shadow: 0 18px 48px rgba(15, 8, 32, 0.28);
+	padding: 16px;
+	display: grid;
+	gap: 14px;
+	text-align: start;
+}
+
+.itt-a11y__panel[hidden] {
+	display: none;
+}
+
+.itt-a11y__head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 10px;
+}
+
+.itt-a11y__title {
+	font-size: 18px;
+	font-weight: 700;
+	color: #1B2A6B;
+}
+
+.itt-a11y__close {
+	width: 32px;
+	height: 32px;
+	border: 1px solid #D8D4E4;
+	border-radius: var(--itt-r-pill);
+	background: #FFFFFF;
+	color: #1F1B2E;
+	cursor: pointer;
+	flex: none;
+	line-height: 1;
+}
+
+.itt-a11y__close:hover,
+.itt-a11y__close:focus-visible {
+	background: #1B2A6B;
+	border-color: #1B2A6B;
+	color: #FFFFFF;
+}
+
+.itt-a11y__label {
+	font-size: 14px;
+	font-weight: 700;
+	color: #3C3752;
+	margin-bottom: 6px;
+}
+
+.itt-a11y__row {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+
+.itt-a11y__step {
+	width: 44px;
+	height: 44px;
+	border: 1px solid #D8D4E4;
+	border-radius: 10px;
+	background: #F4F3F9;
+	color: #1F1B2E;
+	font-size: 20px;
+	font-weight: 700;
+	cursor: pointer;
+	line-height: 1;
+}
+
+.itt-a11y__step:hover,
+.itt-a11y__step:focus-visible {
+	background: #1B2A6B;
+	border-color: #1B2A6B;
+	color: #FFFFFF;
+}
+
+.itt-a11y__value {
+	flex: 1;
+	text-align: center;
+	font-size: 16px;
+	font-weight: 700;
+	color: #1F1B2E;
+}
+
+.itt-a11y__options {
+	display: grid;
+	gap: 6px;
+}
+
+.itt-a11y__option {
+	width: 100%;
+	min-height: 44px;
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 9px 12px;
+	border: 1px solid #D8D4E4;
+	border-radius: 10px;
+	background: #FFFFFF;
+	color: #1F1B2E;
+	font-size: 15px;
+	font-weight: 600;
+	text-align: start;
+	cursor: pointer;
+}
+
+.itt-a11y__option:hover,
+.itt-a11y__option:focus-visible {
+	border-color: #1B2A6B;
+	background: #F4F3F9;
+}
+
+.itt-a11y__check {
+	width: 20px;
+	height: 20px;
+	border: 2px solid #8A85A0;
+	border-radius: 5px;
+	flex: none;
+	position: relative;
+}
+
+.itt-a11y__option[aria-pressed="true"] {
+	border-color: #1B2A6B;
+	background: #EEF1FB;
+}
+
+.itt-a11y__option[aria-pressed="true"] .itt-a11y__check {
+	background: #1B2A6B;
+	border-color: #1B2A6B;
+}
+
+.itt-a11y__option[aria-pressed="true"] .itt-a11y__check::after {
+	content: "";
+	position: absolute;
+	inset-inline-start: 5px;
+	top: 1px;
+	width: 5px;
+	height: 10px;
+	border: solid #FFFFFF;
+	border-width: 0 2px 2px 0;
+	transform: rotate(45deg);
+}
+
+.itt-a11y__foot {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 10px;
+	flex-wrap: wrap;
+	border-top: 1px solid #E7E4EF;
+	padding-top: 12px;
+}
+
+.itt-a11y__reset {
+	min-height: 44px;
+	padding: 10px 16px;
+	border: 1px solid #D8D4E4;
+	border-radius: var(--itt-r-pill);
+	background: #FFFFFF;
+	color: #1F1B2E;
+	font-size: 14px;
+	font-weight: 700;
+	cursor: pointer;
+}
+
+.itt-a11y__reset:hover,
+.itt-a11y__reset:focus-visible {
+	background: #1B2A6B;
+	border-color: #1B2A6B;
+	color: #FFFFFF;
+}
+
+.itt-a11y__statement {
+	font-size: 14px;
+	font-weight: 700;
+	color: #1B2A6B;
+	text-decoration: underline;
+}
+
+@media (max-width: 600px) {
+	.itt-a11y {
+		inset-inline-start: 12px;
+		bottom: 82px;
+	}
+
+	.itt-a11y__toggle {
+		width: 48px;
+		height: 48px;
+	}
+}
+
+/* -------------------------------------------------------------------------
+ * Accessibility modes set by the widget
+ * ---------------------------------------------------------------------- */
+
+/**
+ * Text size.
+ *
+ * The design is expressed in px, so multiplying a single root value would not
+ * reach it. Zooming each top-level region scales the type and reflows the
+ * layout with it — which is what the visitor actually wants — while the widget
+ * itself is excluded so its own controls never grow out of the panel.
+ */
+.itt-page.itt-scaled > *:not(.itt-a11y):not(script) {
+	zoom: var(--itt-font-scale, 1);
+}
+
+.itt-page.itt-links a:not(.itt-btn):not(.itt-chip):not(.itt-a11y *) {
+	text-decoration: underline;
+	text-underline-offset: 3px;
+	text-decoration-thickness: 2px;
+}
+
+.itt-page.itt-readable :not(.itt-a11y):not(.itt-a11y *) {
+	font-family: Arial, "Segoe UI", system-ui, sans-serif !important;
+	letter-spacing: 0.01em;
+}
+
+.itt-page.itt-spacing :is(p, li, blockquote, .itt-section__lead):not(.itt-a11y *) {
+	line-height: 2 !important;
+	letter-spacing: 0.12em;
+	word-spacing: 0.16em;
+}
+
+/**
+ * High contrast: white ground, near-black text, one accent. Every decorative
+ * tint is flattened so nothing drops below AAA.
+ */
+.itt-page.itt-contrast {
+	--itt-purple: #10102A;
+	--itt-purple-deep: #000000;
+	--itt-purple-mid: #10102A;
+	--itt-cyan: #00405E;
+	--itt-cyan-deep: #00405E;
+	--itt-cyan-mid: #00405E;
+	--itt-orange: #8A2600;
+	--itt-orange-hot: #8A2600;
+	--itt-orange-dark: #8A2600;
+	--itt-orange-deep: #8A2600;
+	--itt-gold: #FFD400;
+	--itt-gold-text: #4A3800;
+	--itt-white: #FFFFFF;
+	--itt-cream: #FFFFFF;
+	--itt-cream-warm: #FFFFFF;
+	--itt-gray: #FFFFFF;
+	--itt-gray-card: #FFFFFF;
+	--itt-cyan-soft: #FFFFFF;
+	--itt-purple-soft: #FFFFFF;
+	--itt-orange-soft: #FFFFFF;
+	--itt-gold-soft: #FFFFFF;
+	--itt-value-bg: #FFFFFF;
+	--itt-placeholder: #EDEDED;
+	--itt-text: #000000;
+	--itt-text-soft: #000000;
+	--itt-text-body: #000000;
+	--itt-muted: #000000;
+	--itt-muted-2: #000000;
+	--itt-muted-3: #000000;
+	--itt-on-purple: #FFFFFF;
+	--itt-on-purple-soft: #FFFFFF;
+	--itt-on-purple-mute: #FFFFFF;
+	--itt-on-deep: #FFFFFF;
+	--itt-border: #10102A;
+	--itt-border-soft: #10102A;
+	--itt-border-purple: #10102A;
+	--itt-border-gold: #10102A;
+	--itt-border-cyan: #10102A;
+	--itt-border-orange: #10102A;
+	--itt-border-violet: #10102A;
+}
+
+/**
+ * Dark contrast.
+ *
+ * Implemented as a hue-preserving inversion rather than by remapping the brand
+ * tokens: several of them (--itt-purple, --itt-cyan-deep) are used both as text
+ * and as a background, so any remap that fixes one role breaks the other.
+ * Inversion is role-agnostic and preserves every contrast ratio exactly, so a
+ * pairing that passes AA in the default palette still passes here. Media is
+ * inverted back so photographs and the logo keep their real colours.
+ */
+.itt-page.itt-dark {
+	filter: invert(1) hue-rotate(180deg);
+}
+
+.itt-page.itt-dark :is(img, video, iframe, .itt-hero__birds) {
+	filter: invert(1) hue-rotate(180deg);
+}
+
+/* The widget sits inside the inverted page, so it is inverted back to stay
+   readable — otherwise its own controls would fight the mode they switch. */
+.itt-page.itt-dark .itt-a11y {
+	filter: invert(1) hue-rotate(180deg);
+}
+
+/* High contrast flattens the tinted card headers onto one solid ground. */
+.itt-page.itt-contrast .itt-outcome__head {
+	background: var(--itt-purple) !important;
+}
+
+/**
+ * High contrast darkens the cyan surface, so the dark labels that sit on the
+ * brand cyan in the normal palette have to flip to white here.
+ */
+.itt-page.itt-contrast :is(
+	.itt-badge-card--cyan .itt-badge-card__badge,
+	.itt-outcome--cyan .itt-outcome__title,
+	.itt-ty-step--2 .itt-ty-step__number,
+	.itt-chip--cyan:hover,
+	.itt-btn--ghost-cyan:hover
+) {
+	color: #FFFFFF;
+}
+
+/* The blinking CTA lands on the darkened cyan mid-cycle; its label follows. */
+.itt-page.itt-contrast .itt-btn--blink {
+	animation-name: itt-cta-blink-contrast;
+}
+
+@keyframes itt-cta-blink-contrast {
+	0% { background: var(--itt-gold); color: #000000; }
+	50% { background: var(--itt-cyan); color: #FFFFFF; }
+}
+
+/* On the dark bars the outline buttons must not keep their dark accent. */
+.itt-page.itt-contrast :is(.itt-sticky, .itt-footer, .itt-topbar) .itt-btn--ghost-cyan {
+	border-color: #FFFFFF;
+	color: #FFFFFF;
+	background: transparent;
+}
+
+.itt-page.itt-contrast :is(.itt-sticky, .itt-footer, .itt-topbar) .itt-btn--ghost-cyan:hover,
+.itt-page.itt-contrast :is(.itt-sticky, .itt-footer, .itt-topbar) .itt-btn--ghost-cyan:focus-visible {
+	background: #FFFFFF;
+	color: #000000;
+}
+
+.itt-page.itt-contrast .itt-badge-card,
+.itt-page.itt-contrast .itt-fit__card,
+.itt-page.itt-contrast .itt-voice,
+.itt-page.itt-contrast .itt-bonus,
+.itt-page.itt-contrast .itt-step,
+.itt-page.itt-contrast .itt-card {
+	border: 2px solid #10102A;
+	box-shadow: none;
+}
+
+/* mix-blend-mode would multiply against the inverted ground and black out. */
+.itt-page.itt-dark .itt-header__logo-img {
+	mix-blend-mode: normal;
+}
+
+/* -------------------------------------------------------------------------
+ * Consent row
+ * ---------------------------------------------------------------------- */
+
+.itt-consent__row {
+	display: grid;
+	grid-template-columns: auto 1fr;
+	gap: 10px;
+	align-items: start;
+}
+
+.itt-consent__row input[type="checkbox"] {
+	width: 22px;
+	height: 22px;
+	margin: 2px 0 0;
+	accent-color: var(--itt-purple-mid);
+	flex: none;
+}
+
+.itt-form__form .itt-consent label {
+	font-size: 15.5px;
+	font-weight: 400;
+	line-height: 1.55;
+	color: var(--itt-muted);
+	cursor: pointer;
+}
+
+.itt-consent__link {
+	color: var(--itt-purple-mid);
+	font-weight: 700;
+	text-decoration: underline;
+	text-underline-offset: 3px;
+}
+
+.itt-consent__link:hover {
+	color: var(--itt-orange-dark);
+}
+
+.itt-consent input[aria-invalid="true"] {
+	outline: 2px solid #A93226;
+	outline-offset: 2px;
 }

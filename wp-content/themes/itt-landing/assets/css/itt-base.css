@@ -780,23 +780,6 @@ html:has(.itt-page) {
 	color: var(--itt-gold);
 }
 
-.itt-motion-toggle {
-	background: transparent;
-	border: 1px solid rgba(255, 255, 255, 0.35);
-	border-radius: var(--itt-r-pill);
-	color: var(--itt-on-deep);
-	cursor: pointer;
-	font-size: 16px;
-	min-height: 44px;
-	padding: 10px 20px;
-}
-
-.itt-motion-toggle:hover,
-.itt-motion-toggle[aria-pressed="true"] {
-	background: rgba(255, 255, 255, 0.12);
-	color: var(--itt-white);
-}
-
 .itt-sticky {
 	position: fixed;
 	inset-inline: 0;
@@ -1420,17 +1403,24 @@ html:has(.itt-page) {
  * pairing that passes AA in the default palette still passes here. Media is
  * inverted back so photographs and the logo keep their real colours.
  */
+/**
+ * The filter is applied to each top-level region, never to the page itself: a
+ * filtered element becomes the containing block for its fixed descendants, so
+ * filtering the page would strip `position: fixed` from the accessibility
+ * widget and the CTA bar and let them scroll away. Filtering the regions
+ * individually leaves each fixed element anchored to the viewport, because a
+ * filter establishes a containing block for descendants, not for itself.
+ */
 .itt-page.itt-dark {
+	background: #0B0B0F;
+}
+
+.itt-page.itt-dark > *:not(.itt-a11y):not(script) {
 	filter: invert(1) hue-rotate(180deg);
 }
 
+/* Media is inverted back so photographs and the logo keep their real colours. */
 .itt-page.itt-dark :is(img, video, iframe, .itt-hero__birds) {
-	filter: invert(1) hue-rotate(180deg);
-}
-
-/* The widget sits inside the inverted page, so it is inverted back to stay
-   readable — otherwise its own controls would fight the mode they switch. */
-.itt-page.itt-dark .itt-a11y {
 	filter: invert(1) hue-rotate(180deg);
 }
 

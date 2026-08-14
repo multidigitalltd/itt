@@ -81,12 +81,6 @@ $itt_show_sticky ??= is_page_template( 'template-itt-landing.php' );
 				<?php endif; ?>
 			</p>
 		<?php endif; ?>
-
-		<p class="itt-footer__motion">
-			<button type="button" class="itt-motion-toggle" data-itt-a11y-open>
-				<?php esc_html_e( 'התאמות נגישות', 'itt-landing' ); ?>
-			</button>
-		</p>
 	</div>
 </footer>
 

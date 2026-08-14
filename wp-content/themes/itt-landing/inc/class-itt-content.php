@@ -94,6 +94,8 @@ final class ITT_Content {
 			'whatsapp_label'  => '072-260-1903',
 			'email'           => 'office@m-yashir.com',
 			'footer_tagline'  => 'מרכז ישיר · ללמוד. להגשים. להתפרנס',
+			'credit_text'     => 'uxui & dev by multi digital',
+			'credit_url'      => 'https://m-d.co.il/',
 			'sticky_text'     => 'מחזור 20 · הקבלה בראיון ושיחת התאמה בלבד',
 			'sticky_whatsapp' => 'וואטסאפ',
 			'sticky_cta'      => 'לבדיקת התאמה — ללא עלות',

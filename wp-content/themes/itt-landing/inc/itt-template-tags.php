@@ -205,8 +205,10 @@ function itt_icon( string $name ): void {
  * @param string $direction 'prev' or 'next'.
  */
 function itt_chevron( string $direction ): void {
-	// In RTL the left-pointing chevron means "previous".
-	$points = 'prev' === $direction ? '15 18 9 12 15 6' : '9 18 15 12 9 6';
+	// RTL: going back moves towards the start of the line, which is the right,
+	// so "previous" points right and "next" points left. The design file has
+	// them the other way round, which reads as reversed on a Hebrew page.
+	$points = 'prev' === $direction ? '9 18 15 12 9 6' : '15 18 9 12 15 6';
 
 	printf(
 		'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><polyline points="%s"></polyline></svg>',

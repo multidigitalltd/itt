@@ -97,6 +97,8 @@ final class ITT_Fields {
 					self::text( 'whatsapp_label', 'מספר וואטסאפ לתצוגה' ),
 					self::email( 'email', 'אימייל' ),
 					self::text( 'footer_tagline', 'שורת הפוטר' ),
+					self::text( 'credit_text', 'קרדיט בפוטר', 'ריק = לא יוצג.' ),
+					self::url( 'credit_url', 'קישור הקרדיט' ),
 					self::text( 'sticky_text', 'טקסט הסרגל הצף' ),
 					self::text( 'sticky_whatsapp', 'כפתור וואטסאפ בסרגל הצף' ),
 					self::text( 'sticky_cta', 'כפתור ראשי בסרגל הצף' ),

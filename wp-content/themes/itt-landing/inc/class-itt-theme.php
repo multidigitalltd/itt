@@ -65,6 +65,26 @@ final class ITT_Theme {
 	}
 
 	/**
+	 * Cache-busting version for one theme asset.
+	 *
+	 * Derived from the file's own modification time rather than the theme
+	 * version, so editing a stylesheet changes its URL by itself. Relying on a
+	 * hand-bumped constant means one forgotten edit serves stale CSS to every
+	 * visitor and to LiteSpeed until the cache is purged by hand.
+	 *
+	 * One stat() per enqueued file, served from PHP's realpath cache after the
+	 * first request. Falls back to the theme version if the file is unreadable.
+	 *
+	 * @param string $relative Path inside the theme, e.g. 'assets/css/itt-base.css'.
+	 * @return string Version string for wp_enqueue_*().
+	 */
+	public static function asset_version( string $relative ): string {
+		$mtime = @filemtime( ITT_DIR . $relative ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged -- a missing file falls back below.
+
+		return false !== $mtime ? ITT_VERSION . '.' . $mtime : ITT_VERSION;
+	}
+
+	/**
 	 * Returns the template key of the current singular view, or an empty string.
 	 *
 	 * Resolved once per request; used by both asset loading and body classes.
@@ -98,7 +118,7 @@ final class ITT_Theme {
 		if ( '' === $template ) {
 			// Everything outside the two ITT templates gets a single small
 			// stylesheet so a stray page is still readable and accessible.
-			wp_enqueue_style( 'itt-plain', ITT_URI . 'assets/css/itt-plain.css', array(), ITT_VERSION );
+			wp_enqueue_style( 'itt-plain', ITT_URI . 'assets/css/itt-plain.css', array(), self::asset_version( 'assets/css/itt-plain.css' ) );
 
 			return;
 		}
@@ -112,23 +132,23 @@ final class ITT_Theme {
 		// RTL-native with logical properties, so there is no itt-base-rtl.css —
 		// declaring one would make every Hebrew-locale site swap to a file that
 		// does not exist and lose the whole base layer.
-		wp_enqueue_style( 'itt-base', ITT_URI . 'assets/css/itt-base.css', array(), ITT_VERSION );
+		wp_enqueue_style( 'itt-base', ITT_URI . 'assets/css/itt-base.css', array(), self::asset_version( 'assets/css/itt-base.css' ) );
 
 		if ( 'landing' === $template ) {
-			wp_enqueue_style( 'itt-landing', ITT_URI . 'assets/css/itt-landing.css', array( 'itt-base' ), ITT_VERSION );
+			wp_enqueue_style( 'itt-landing', ITT_URI . 'assets/css/itt-landing.css', array( 'itt-base' ), self::asset_version( 'assets/css/itt-landing.css' ) );
 
-			wp_enqueue_script( 'itt-landing', ITT_URI . 'assets/js/itt-landing.js', array(), ITT_VERSION, true );
+			wp_enqueue_script( 'itt-landing', ITT_URI . 'assets/js/itt-landing.js', array(), self::asset_version( 'assets/js/itt-landing.js' ), true );
 			wp_script_add_data( 'itt-landing', 'strategy', 'defer' );
 			wp_localize_script( 'itt-landing', 'ittLanding', self::script_data() );
 		}
 
 		if ( 'thank-you' === $template ) {
-			wp_enqueue_style( 'itt-thank-you', ITT_URI . 'assets/css/itt-thank-you.css', array( 'itt-base' ), ITT_VERSION );
+			wp_enqueue_style( 'itt-thank-you', ITT_URI . 'assets/css/itt-thank-you.css', array( 'itt-base' ), self::asset_version( 'assets/css/itt-thank-you.css' ) );
 		}
 
 		// Accessibility widget + motion layer. Loaded on both templates because
 		// the widget must be reachable from every page the theme renders.
-		wp_enqueue_script( 'itt-a11y', ITT_URI . 'assets/js/itt-a11y.js', array(), ITT_VERSION, true );
+		wp_enqueue_script( 'itt-a11y', ITT_URI . 'assets/js/itt-a11y.js', array(), self::asset_version( 'assets/js/itt-a11y.js' ), true );
 		wp_script_add_data( 'itt-a11y', 'strategy', 'defer' );
 	}
 

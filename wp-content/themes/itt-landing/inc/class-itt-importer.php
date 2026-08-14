@@ -206,20 +206,18 @@ final class ITT_Importer {
 	}
 
 	/**
-	 * Register the admin screen.
+	 * Register the maintenance screen under Tools.
 	 *
-	 * A top-level menu item, so the client finds the content hub without
-	 * digging through Tools.
+	 * It is only needed when a page has to be recreated or reset, so it stays
+	 * out of the main sidebar. Day-to-day content is edited on the pages.
 	 */
 	public static function menu(): void {
-		add_menu_page(
+		add_management_page(
 			__( 'עמודי ITT', 'itt-landing' ),
 			__( 'עמודי ITT', 'itt-landing' ),
 			'manage_options',
 			'itt-pages',
-			array( self::class, 'screen' ),
-			'dashicons-welcome-write-blog',
-			25
+			array( self::class, 'screen' )
 		);
 	}
 
@@ -296,7 +294,7 @@ final class ITT_Importer {
 					'page'       => 'itt-pages',
 					'itt-notice' => count( $pages ),
 				),
-				admin_url( 'admin.php' )
+				admin_url( 'tools.php' )
 			)
 		);
 		exit;

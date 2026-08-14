@@ -1440,11 +1440,12 @@ html:has(.itt-page) {
 }
 
 /**
- * High contrast darkens the cyan surface, so the dark labels that sit on the
- * brand cyan in the normal palette have to flip to white here.
+ * High contrast darkens the cyan and orange surfaces, so the dark labels that
+ * sit on those brand colours in the normal palette have to flip to white here.
  */
 .itt-page.itt-contrast :is(
 	.itt-badge-card--cyan .itt-badge-card__badge,
+	.itt-badge-card--orange .itt-badge-card__badge,
 	.itt-outcome--cyan .itt-outcome__title,
 	.itt-ty-step--2 .itt-ty-step__number,
 	.itt-chip--cyan:hover,
@@ -1534,4 +1535,30 @@ html:has(.itt-page) {
 .itt-consent input[aria-invalid="true"] {
 	outline: 2px solid #A93226;
 	outline-offset: 2px;
+}
+
+.itt-footer__credit {
+	margin: 0;
+	font-size: 16px;
+	direction: ltr;
+	unicode-bidi: isolate;
+}
+
+.itt-footer__credit a {
+	color: var(--itt-on-deep);
+	text-decoration: underline;
+	text-underline-offset: 3px;
+}
+
+.itt-footer__credit a:hover,
+.itt-footer__credit a:focus-visible {
+	color: var(--itt-gold);
+}
+
+@media (max-width: 900px) {
+	.itt-footer__credit a {
+		display: inline-flex;
+		align-items: center;
+		min-height: 44px;
+	}
 }

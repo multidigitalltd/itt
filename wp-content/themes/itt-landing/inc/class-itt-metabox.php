@@ -90,8 +90,8 @@ final class ITT_Metabox {
 
 		wp_enqueue_media();
 
-		wp_enqueue_style( 'itt-admin', ITT_URI . 'assets/css/itt-admin.css', array(), ITT_VERSION );
-		wp_enqueue_script( 'itt-admin', ITT_URI . 'assets/js/itt-admin.js', array(), ITT_VERSION, true );
+		wp_enqueue_style( 'itt-admin', ITT_URI . 'assets/css/itt-admin.css', array(), ITT_Theme::asset_version( 'assets/css/itt-admin.css' ) );
+		wp_enqueue_script( 'itt-admin', ITT_URI . 'assets/js/itt-admin.js', array(), ITT_Theme::asset_version( 'assets/js/itt-admin.js' ), true );
 		wp_localize_script(
 			'itt-admin',
 			'ittAdmin',

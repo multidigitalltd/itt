@@ -69,6 +69,19 @@ $itt_show_sticky ??= is_page_template( 'template-itt-landing.php' );
 		}
 		?>
 
+		<?php if ( '' !== trim( (string) ( $itt_chrome['credit_text'] ?? '' ) ) ) : ?>
+			<p class="itt-footer__credit">
+				<?php if ( '' !== trim( (string) ( $itt_chrome['credit_url'] ?? '' ) ) ) : ?>
+					<a href="<?php echo esc_url( (string) $itt_chrome['credit_url'] ); ?>" target="_blank" rel="noopener">
+						<?php echo esc_html( (string) $itt_chrome['credit_text'] ); ?>
+						<span class="screen-reader-text"><?php esc_html_e( '(נפתח בחלון חדש)', 'itt-landing' ); ?></span>
+					</a>
+				<?php else : ?>
+					<?php echo esc_html( (string) $itt_chrome['credit_text'] ); ?>
+				<?php endif; ?>
+			</p>
+		<?php endif; ?>
+
 		<p class="itt-footer__motion">
 			<button type="button" class="itt-motion-toggle" data-itt-a11y-open>
 				<?php esc_html_e( 'התאמות נגישות', 'itt-landing' ); ?>

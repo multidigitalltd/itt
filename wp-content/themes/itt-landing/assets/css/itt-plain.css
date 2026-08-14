@@ -1,0 +1,57 @@
+/**
+ * Minimal, accessible styling for any view that is not one of the two ITT
+ * templates. Kept deliberately tiny — it loads on those views only.
+ */
+
+body {
+	margin: 0;
+	background: #FFFFFF;
+	color: #2B2833;
+	font-family: "Assistant", "Heebo", "Segoe UI", system-ui, sans-serif;
+	font-size: 18px;
+	line-height: 1.7;
+}
+
+.itt-plain {
+	max-width: 760px;
+	margin: 0 auto;
+	padding: 48px 24px 80px;
+}
+
+.itt-plain__title {
+	font-size: clamp(28px, 5vw, 40px);
+	line-height: 1.2;
+	color: #3B2264;
+	margin: 0 0 24px;
+}
+
+.itt-plain__content > * + * {
+	margin-top: 1em;
+}
+
+.itt-plain a {
+	color: #4E2E86;
+}
+
+.itt-plain a:hover {
+	color: #A6541A;
+}
+
+.itt-skip-link {
+	position: absolute;
+	inset-inline-start: -9999px;
+	top: 0;
+	padding: 12px 20px;
+	background: #3B2264;
+	color: #FFFFFF;
+	font-weight: 700;
+}
+
+.itt-skip-link:focus {
+	inset-inline-start: 0;
+}
+
+:focus-visible {
+	outline: 3px solid #0E5E80;
+	outline-offset: 3px;
+}

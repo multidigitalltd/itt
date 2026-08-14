@@ -1,0 +1,18 @@
+/*
+Theme Name: ITT Landing
+Theme URI: https://m-yashir.com/
+Author: Multi Digital
+Author URI: https://multidigital.co.il/
+Description: תבנית עצמאית לדף הנחיתה של הכשרת ITT Leader (מרכז ישיר). RTL, נגישה לפי WCAG 2.2 AA ות"י 5568, ללא jQuery וללא page builder. כל התוכן נשמר בתוך העמודים עצמם ונערך ישירות בעורך העמוד.
+Version: 1.0.0
+Requires at least: 6.4
+Tested up to: 6.7
+Requires PHP: 8.3
+License: GNU General Public License v2 or later
+License URI: http://www.gnu.org/licenses/gpl-2.0.html
+Text Domain: itt-landing
+Tags: rtl-language-support, accessibility-ready, one-column, custom-colors
+
+הקובץ הזה נטען על ידי WordPress רק כדי לזהות את התבנית.
+גיליונות הסגנון בפועל נמצאים תחת assets/css/ ונטענים בטעינה מותנית לפי העמוד.
+*/

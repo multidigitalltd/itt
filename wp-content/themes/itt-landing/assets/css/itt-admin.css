@@ -1,0 +1,119 @@
+/**
+ * Page-editor styling for the ITT content meta boxes.
+ */
+
+.itt-fields {
+	display: grid;
+	gap: 18px;
+}
+
+.itt-field {
+	display: grid;
+	gap: 6px;
+	margin: 0;
+}
+
+.itt-field > label strong,
+.itt-label strong {
+	font-size: 13px;
+}
+
+.itt-help {
+	font-size: 12px;
+	line-height: 1.5;
+}
+
+.itt-field--checkbox .itt-checkbox {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	font-weight: 600;
+}
+
+.itt-image {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	flex-wrap: wrap;
+}
+
+.itt-image__preview {
+	width: 96px;
+	height: 72px;
+	object-fit: cover;
+	border: 1px solid #dcdcde;
+	border-radius: 4px;
+	background: #f6f7f7;
+}
+
+.itt-image__preview.is-empty {
+	background: repeating-linear-gradient(45deg, #f0f0f1, #f0f0f1 6px, #fafafa 6px, #fafafa 12px);
+}
+
+.itt-repeater {
+	border: 1px solid #dcdcde;
+	border-radius: 6px;
+	padding: 14px;
+	background: #fbfbfc;
+}
+
+.itt-repeater__title {
+	margin: 0 0 10px;
+	font-size: 14px;
+}
+
+.itt-repeater__rows {
+	display: grid;
+	gap: 10px;
+	margin-bottom: 10px;
+}
+
+.itt-row {
+	border: 1px solid #e0e0e2;
+	border-radius: 5px;
+	background: #fff;
+}
+
+.itt-row__head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	padding: 8px 12px;
+	background: #f6f7f7;
+	border-bottom: 1px solid #e0e0e2;
+	border-radius: 5px 5px 0 0;
+}
+
+.itt-row__summary {
+	font-weight: 600;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.itt-row__remove {
+	color: #b32d2e;
+	flex: none;
+}
+
+.itt-row__body {
+	display: grid;
+	gap: 14px;
+	padding: 12px;
+}
+
+.itt-image__file {
+	display: inline-block;
+	min-width: 180px;
+	padding: 8px 12px;
+	border: 1px solid #dcdcde;
+	border-radius: 4px;
+	background: #fff;
+	font-size: 13px;
+	direction: ltr;
+	text-align: left;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}

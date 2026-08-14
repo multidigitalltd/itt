@@ -1,0 +1,1074 @@
+/**
+ * ITT base: design tokens, reset, typography, shared components and chrome.
+ *
+ * A handful of colour decisions deviate from the design file on purpose, where
+ * the original value failed the 4.5:1 required by WCAG 2.2 AA and ת"י 5568.
+ * They are listed in full in README.md; the hue and the rhythm of every blink
+ * are unchanged. Every other value — colour, size, spacing, radius, shadow,
+ * timing — is taken verbatim from the handoff.
+ */
+
+/* -------------------------------------------------------------------------
+ * Font
+ * Ploni is licensed per site and is not distributed with the theme.
+ * Drop the woff2 files into assets/fonts/ — see assets/fonts/README.md.
+ * ---------------------------------------------------------------------- */
+
+@font-face {
+	font-family: Ploni;
+	src: url("../fonts/ploni-regular.woff2") format("woff2");
+	font-weight: 400;
+	font-style: normal;
+	font-display: swap;
+}
+
+@font-face {
+	font-family: Ploni;
+	src: url("../fonts/ploni-demibold.woff2") format("woff2");
+	font-weight: 600;
+	font-style: normal;
+	font-display: swap;
+}
+
+@font-face {
+	font-family: Ploni;
+	src: url("../fonts/ploni-bold.woff2") format("woff2");
+	font-weight: 700;
+	font-style: normal;
+	font-display: swap;
+}
+
+:root {
+	/* Brand */
+	--itt-purple: #3B2264;
+	--itt-purple-deep: #2B1A4A;
+	--itt-purple-mid: #4E2E86;
+	--itt-cyan: #16B4E8;
+	--itt-cyan-deep: #0E5E80;
+	--itt-cyan-mid: #0E8AC0;
+	--itt-orange: #F2662A;
+	--itt-orange-hot: #E8462A;
+	--itt-orange-dark: #A6541A;
+	--itt-orange-deep: #C8511A;
+	--itt-gold: #FFC81E;
+	--itt-gold-text: #8A6410;
+	--itt-green: #8AC7A0;
+
+	/* Surfaces */
+	--itt-white: #FFFFFF;
+	--itt-cream: #F9F0E1;
+	--itt-cream-warm: #FFF7E8;
+	--itt-gray: #F5F7FA;
+	--itt-gray-card: #EFF1F5;
+	--itt-cyan-soft: #EAF6FD;
+	--itt-purple-soft: #F5F0FF;
+	--itt-orange-soft: #FFF1E8;
+	--itt-gold-soft: #FFF3E2;
+	--itt-value-bg: #FFF3D6;
+	--itt-placeholder: #EFE4D2;
+
+	/* Text */
+	--itt-text: #2B2833;
+	--itt-text-soft: #3A3646;
+	--itt-text-body: #4A4655;
+	--itt-muted: #5C5769;
+	--itt-muted-2: #6A6577;
+	/* Darkened from #8A8395 / #8C8799 for AA contrast. */
+	--itt-muted-3: #6E6880;
+	--itt-on-purple: #EDE7F7;
+	--itt-on-purple-soft: #D9CFEC;
+	--itt-on-purple-mute: #CFC4E4;
+	--itt-on-deep: #B9A9D8;
+
+	/* Borders */
+	--itt-border: #E9E6F1;
+	--itt-border-soft: #F0EEF5;
+	--itt-border-warm: #E4DED6;
+	--itt-border-purple: #DCD5E8;
+	--itt-border-gold: #F3D98A;
+	--itt-border-cyan: #C9E9F9;
+	--itt-border-orange: #FBDDB4;
+	--itt-border-violet: #DED2F5;
+
+	/* Radii */
+	--itt-r-pill: 99px;
+	--itt-r-icon: 14px;
+	--itt-r-box: 18px;
+	--itt-r-media: 20px;
+	--itt-r-card: 22px;
+	--itt-r-lg: 24px;
+	--itt-r-xl: 28px;
+
+	/* Shadows */
+	--itt-sh-card: 0 12px 32px rgba(120, 74, 20, 0.08);
+	--itt-sh-card-hover: 0 20px 44px rgba(120, 74, 20, 0.16);
+	--itt-sh-cool: 0 14px 40px rgba(43, 26, 74, 0.10);
+	--itt-sh-cool-sm: 0 10px 30px rgba(43, 26, 74, 0.06);
+	--itt-sh-cool-hover: 0 18px 40px rgba(43, 26, 74, 0.14);
+	--itt-sh-cta: 0 14px 30px rgba(242, 102, 42, 0.35);
+
+	/* Layout */
+	--itt-shell: 1180px;
+	--itt-shell-narrow: 1080px;
+	--itt-shell-faq: 1000px;
+	--itt-shell-tight: 820px;
+	--itt-gutter: 28px;
+	--itt-section-y: 88px;
+
+	/* Motion */
+	--itt-ease-out: cubic-bezier(0.22, 0.61, 0.36, 1);
+	--itt-ease-marker: cubic-bezier(0.4, 0, 0.2, 1);
+	--itt-ease-overshoot: cubic-bezier(0.2, 0.9, 0.3, 1.4);
+}
+
+/* -------------------------------------------------------------------------
+ * Reset — scoped so the theme never fights another stylesheet on the page.
+ * ---------------------------------------------------------------------- */
+
+/**
+ * The reset is written with :where() so it carries zero specificity. A plain
+ * `.itt-page img` rule would outrank every single-class component rule below
+ * it — that trap is what silently broke the logo height and the link colours.
+ */
+:where(.itt-page) :where(*, *::before, *::after) {
+	box-sizing: border-box;
+}
+
+.itt-page {
+	margin: 0;
+	background: var(--itt-white);
+	color: var(--itt-text);
+	font-family: Ploni, "Assistant", "Heebo", "Segoe UI", system-ui, sans-serif;
+	font-size: 17.5px;
+	line-height: 1.65;
+	overflow-x: hidden;
+	-webkit-text-size-adjust: 100%;
+}
+
+:where(.itt-page) :where(h1, h2, h3, h4, p, figure, blockquote) {
+	margin: 0;
+}
+
+:where(.itt-page) :where(ul, ol) {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+:where(.itt-page) :where(img, svg) {
+	max-width: 100%;
+}
+
+:where(.itt-page) :where(img) {
+	display: block;
+	height: auto;
+}
+
+:where(.itt-page) :where(a) {
+	color: var(--itt-purple-mid);
+	text-decoration: none;
+}
+
+:where(.itt-page) :where(a:hover) {
+	color: var(--itt-orange-dark);
+}
+
+:where(.itt-page) :where(button) {
+	font: inherit;
+	color: inherit;
+}
+
+.itt-page a,
+.itt-page button {
+	transition: background 0.25s ease, color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+html:has(.itt-page) {
+	scroll-behavior: smooth;
+}
+
+/* Anchors sit under the sticky header. */
+.itt-page [id] {
+	scroll-margin-top: 96px;
+}
+
+/* -------------------------------------------------------------------------
+ * Focus and skip link — visible, never removed.
+ * ---------------------------------------------------------------------- */
+
+.itt-page :focus-visible {
+	outline: 3px solid var(--itt-cyan);
+	outline-offset: 3px;
+	border-radius: 4px;
+}
+
+.itt-page [tabindex="-1"]:focus {
+	outline: none;
+}
+
+.itt-skip-link {
+	position: absolute;
+	inset-inline-start: -9999px;
+	top: 0;
+	z-index: 200;
+	padding: 14px 24px;
+	background: var(--itt-purple);
+	color: var(--itt-white);
+	font-weight: 700;
+	border-end-end-radius: var(--itt-r-box);
+}
+
+.itt-skip-link:focus {
+	inset-inline-start: 0;
+	color: var(--itt-white);
+}
+
+.screen-reader-text {
+	position: absolute !important;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip-path: inset(50%);
+	white-space: nowrap;
+	border: 0;
+}
+
+/* -------------------------------------------------------------------------
+ * Layout shells
+ * ---------------------------------------------------------------------- */
+
+/**
+ * The design tokens (1180 / 1080 / 1000 / 820) are content widths: the design
+ * file has no box-sizing reset, so its max-width sits inside the 28px padding.
+ * The gutter is added back here so the content column measures the same as in
+ * the reference while the reset stays border-box.
+ */
+.itt-shell {
+	width: 100%;
+	max-width: calc(var(--itt-shell) + var(--itt-gutter) * 2);
+	margin-inline: auto;
+	padding-inline: var(--itt-gutter);
+}
+
+.itt-shell--narrow {
+	max-width: calc(var(--itt-shell-narrow) + var(--itt-gutter) * 2);
+}
+
+.itt-shell--faq {
+	max-width: calc(var(--itt-shell-faq) + var(--itt-gutter) * 2);
+}
+
+.itt-shell--tight {
+	max-width: calc(var(--itt-shell-tight) + var(--itt-gutter) * 2);
+}
+
+.itt-main {
+	display: block;
+}
+
+.itt-page--landing {
+	padding-bottom: 92px;
+}
+
+.itt-section {
+	padding-block: var(--itt-section-y);
+	background: var(--itt-white);
+}
+
+.itt-section--gray {
+	background: var(--itt-gray);
+}
+
+.itt-section--cream {
+	background: var(--itt-cream);
+}
+
+.itt-section--warm {
+	background: var(--itt-cream-warm);
+}
+
+.itt-section__head {
+	display: grid;
+	gap: 16px;
+	justify-items: center;
+	text-align: center;
+	margin-bottom: 44px;
+}
+
+.itt-section__title {
+	font-size: clamp(28px, 4vw, 44px);
+	line-height: 1.2;
+	font-weight: 700;
+	color: var(--itt-purple);
+	max-width: 26em;
+	text-wrap: pretty;
+}
+
+.itt-section__title--start {
+	max-width: 26em;
+	text-align: start;
+	margin-bottom: 42px;
+}
+
+.itt-section__title--light {
+	color: var(--itt-white);
+}
+
+.itt-section__lead {
+	font-size: clamp(17.5px, 1.6vw, 20px);
+	line-height: 1.75;
+	color: var(--itt-text-body);
+	max-width: 44em;
+	text-wrap: pretty;
+}
+
+/* -------------------------------------------------------------------------
+ * Buttons, chips, tags, pills
+ * ---------------------------------------------------------------------- */
+
+.itt-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	min-height: 44px;
+	padding: 14px 30px;
+	border: 2px solid transparent;
+	border-radius: var(--itt-r-pill);
+	font-size: 19px;
+	font-weight: 700;
+	line-height: 1.2;
+	text-align: center;
+	cursor: pointer;
+	transition: background 0.25s ease, color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.itt-btn--lg {
+	padding: 18px 38px;
+	font-size: 20px;
+}
+
+.itt-btn--block {
+	width: 100%;
+	padding-block: 18px;
+	font-size: 20px;
+}
+
+.itt-btn--orange {
+	background: var(--itt-orange);
+	color: var(--itt-white);
+	box-shadow: var(--itt-sh-cta);
+}
+
+.itt-btn--orange:hover,
+.itt-btn--orange:focus-visible {
+	background: var(--itt-orange-hot);
+	color: var(--itt-white);
+}
+
+.itt-btn--gold {
+	background: var(--itt-gold);
+	color: var(--itt-purple);
+}
+
+.itt-btn--gold:hover,
+.itt-btn--gold:focus-visible {
+	background: var(--itt-white);
+	color: var(--itt-purple);
+}
+
+.itt-btn--purple {
+	background: var(--itt-purple);
+	color: var(--itt-white);
+}
+
+.itt-btn--purple:hover,
+.itt-btn--purple:focus-visible {
+	background: var(--itt-orange);
+	color: var(--itt-white);
+}
+
+.itt-btn--outline {
+	border-color: var(--itt-purple);
+	color: var(--itt-purple);
+	background: transparent;
+}
+
+.itt-btn--outline:hover,
+.itt-btn--outline:focus-visible {
+	background: var(--itt-purple);
+	color: var(--itt-white);
+}
+
+.itt-btn--ghost-cyan {
+	border-color: var(--itt-cyan);
+	color: var(--itt-cyan);
+	background: transparent;
+}
+
+.itt-btn--ghost-cyan:hover,
+.itt-btn--ghost-cyan:focus-visible {
+	background: var(--itt-cyan);
+	color: var(--itt-purple-deep);
+}
+
+.itt-btn:active {
+	transform: scale(0.97);
+}
+
+.itt-chip {
+	display: inline-flex;
+	align-items: center;
+	min-height: 44px;
+	padding: 14px 30px;
+	border-radius: var(--itt-r-pill);
+	border: 1px solid transparent;
+	font-size: 19px;
+	font-weight: 600;
+}
+
+.itt-chip--cyan {
+	background: var(--itt-cyan-soft);
+	border-color: var(--itt-border-cyan);
+	color: var(--itt-cyan-deep);
+}
+
+.itt-chip--cyan:hover,
+.itt-chip--cyan:focus-visible {
+	background: var(--itt-cyan);
+	color: var(--itt-purple-deep);
+}
+
+.itt-chip--purple {
+	background: var(--itt-purple-soft);
+	border-color: var(--itt-border-violet);
+	color: var(--itt-purple-mid);
+}
+
+.itt-chip--purple:hover,
+.itt-chip--purple:focus-visible {
+	background: var(--itt-purple-mid);
+	color: var(--itt-white);
+}
+
+.itt-chip--orange-blink {
+	background: var(--itt-gold-soft);
+	border-color: var(--itt-border-orange);
+	color: var(--itt-orange-dark);
+	animation: itt-soft-blink 2.4s steps(1, end) infinite;
+}
+
+.itt-chip--orange-blink:hover,
+.itt-chip--orange-blink:focus-visible {
+	background: var(--itt-orange);
+	border-color: var(--itt-orange);
+	color: var(--itt-white);
+	animation: none;
+}
+
+.itt-tag {
+	display: inline-flex;
+	align-items: center;
+	padding: 8px 20px;
+	border-radius: var(--itt-r-pill);
+	font-size: 16px;
+	font-weight: 700;
+}
+
+.itt-tag--purple {
+	background: var(--itt-purple);
+	color: var(--itt-white);
+}
+
+.itt-tag--purple-soft {
+	background: var(--itt-purple-soft);
+	color: var(--itt-purple-mid);
+}
+
+.itt-tag--gold {
+	background: var(--itt-gold);
+	color: var(--itt-purple);
+	font-size: 17px;
+}
+
+.itt-tag--gold-outline {
+	background: rgba(255, 200, 30, 0.15);
+	border: 1px solid rgba(255, 200, 30, 0.4);
+	color: var(--itt-gold);
+}
+
+.itt-pill {
+	display: inline-flex;
+	padding: 6px 14px;
+	border-radius: var(--itt-r-pill);
+	font-size: 15px;
+	font-weight: 600;
+}
+
+.itt-rule {
+	display: block;
+	width: 38px;
+	height: 4px;
+	border-radius: var(--itt-r-pill);
+}
+
+.itt-rule--red { background: var(--itt-orange-hot); }
+.itt-rule--orange { background: var(--itt-orange); }
+.itt-rule--gold { background: var(--itt-gold); }
+
+.itt-dot {
+	display: block;
+	width: 10px;
+	height: 10px;
+	border-radius: var(--itt-r-pill);
+}
+
+.itt-dot--cyan { background: var(--itt-cyan); }
+.itt-dot--orange { background: var(--itt-orange); }
+.itt-dot--gold { background: var(--itt-gold); }
+.itt-dot--green { background: var(--itt-green); }
+
+.itt-gold {
+	color: var(--itt-gold);
+}
+
+/* Generic card surface reused across sections. */
+.itt-card {
+	display: grid;
+	gap: 14px;
+	align-content: start;
+	padding: 30px 26px;
+	border-radius: var(--itt-r-media);
+	background: var(--itt-white);
+	box-shadow: var(--itt-sh-cool-sm);
+	transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.itt-card:hover {
+	transform: translateY(-6px);
+	box-shadow: var(--itt-sh-cool-hover);
+}
+
+/* Purple / cyan / deep bands between sections. */
+.itt-band {
+	border-radius: var(--itt-r-card);
+	padding: 34px 38px;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 28px;
+	flex-wrap: wrap;
+}
+
+.itt-band--purple {
+	margin-top: 34px;
+	background: var(--itt-purple);
+	color: var(--itt-white);
+}
+
+.itt-band--total {
+	margin-top: 40px;
+	border-radius: var(--itt-r-lg);
+	padding: 36px 40px;
+}
+
+.itt-band--cyan,
+.itt-band--deep {
+	border-radius: 0;
+	padding: 0;
+	display: block;
+}
+
+.itt-band--cyan {
+	background: var(--itt-cyan-soft);
+}
+
+.itt-band--deep {
+	background: var(--itt-purple);
+}
+
+.itt-band__inner {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 26px;
+	flex-wrap: wrap;
+	padding-block: 44px;
+}
+
+.itt-band__copy {
+	display: grid;
+	gap: 6px;
+}
+
+.itt-band__title {
+	font-size: clamp(22px, 2.4vw, 28px);
+	font-weight: 700;
+	color: var(--itt-cyan-deep);
+	line-height: 1.3;
+}
+
+.itt-band--purple .itt-band__title,
+.itt-band__title--light {
+	color: var(--itt-white);
+}
+
+.itt-band__text {
+	font-size: 19px;
+	line-height: 1.55;
+	color: #3F6B80;
+	max-width: 34em;
+	text-wrap: pretty;
+}
+
+.itt-band--purple .itt-band__text,
+.itt-band--deep .itt-band__text {
+	color: var(--itt-on-purple-soft);
+}
+
+.itt-band--purple > .itt-band__text {
+	font-size: clamp(19px, 2vw, 23px);
+	font-weight: 600;
+	color: var(--itt-white);
+	max-width: 30em;
+}
+
+/* -------------------------------------------------------------------------
+ * Chrome — announcement bar, sticky header, footer, fixed CTA bar
+ * ---------------------------------------------------------------------- */
+
+.itt-topbar {
+	background: var(--itt-purple-deep);
+}
+
+.itt-topbar__inner {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 14px;
+	flex-wrap: wrap;
+	padding-block: 10px;
+}
+
+.itt-topbar__dot {
+	width: 9px;
+	height: 9px;
+	border-radius: var(--itt-r-pill);
+	background: var(--itt-gold);
+	flex: none;
+}
+
+.itt-topbar__text {
+	font-size: 17px;
+	color: var(--itt-on-purple);
+}
+
+.itt-topbar__link {
+	font-size: 17px;
+	font-weight: 700;
+	color: var(--itt-gold);
+	border-bottom: 1px solid rgba(255, 200, 30, 0.5);
+}
+
+.itt-topbar__link:hover {
+	color: var(--itt-white);
+}
+
+.itt-header {
+	position: sticky;
+	top: 0;
+	z-index: 50;
+	background: var(--itt-white);
+	border-bottom: 1px solid #ECEAF2;
+	box-shadow: 0 6px 20px rgba(43, 26, 74, 0.06);
+}
+
+.itt-header--slim {
+	position: static;
+	box-shadow: none;
+}
+
+.itt-header__inner {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 20px;
+	padding-block: 12px;
+}
+
+.itt-header__logo-img {
+	height: 52px;
+	width: auto;
+	mix-blend-mode: multiply;
+}
+
+.itt-header__actions {
+	display: flex;
+	align-items: center;
+	gap: 18px;
+	flex-wrap: wrap;
+}
+
+.itt-header__note {
+	font-size: 17px;
+	color: var(--itt-muted-2);
+}
+
+.itt-header__phone {
+	font-size: 26px;
+	font-weight: 700;
+	color: var(--itt-purple);
+}
+
+/**
+ * White on the brand orange measures 3.12:1, which clears AA only as large
+ * text — so every white-on-orange button is kept at 19px/700 (14.25pt bold).
+ */
+.itt-header__cta {
+	padding: 13px 26px;
+	font-size: 19px;
+	white-space: nowrap;
+	box-shadow: none;
+}
+
+.itt-footer {
+	background: var(--itt-purple-deep);
+	color: var(--itt-white);
+}
+
+.itt-footer__inner {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 24px;
+	flex-wrap: wrap;
+	padding-block: 34px;
+}
+
+.itt-footer__tagline {
+	font-size: 19px;
+	font-weight: 700;
+}
+
+.itt-footer__contact,
+.itt-footer__legal-list {
+	display: flex;
+	gap: 22px;
+	align-items: center;
+	flex-wrap: wrap;
+}
+
+.itt-footer__contact a,
+.itt-footer__legal-list a {
+	font-size: 19px;
+	color: var(--itt-on-deep);
+}
+
+.itt-footer__contact a:hover,
+.itt-footer__legal-list a:hover {
+	color: var(--itt-gold);
+}
+
+.itt-motion-toggle {
+	background: transparent;
+	border: 1px solid rgba(255, 255, 255, 0.35);
+	border-radius: var(--itt-r-pill);
+	color: var(--itt-on-deep);
+	cursor: pointer;
+	font-size: 16px;
+	min-height: 44px;
+	padding: 10px 20px;
+}
+
+.itt-motion-toggle:hover,
+.itt-motion-toggle[aria-pressed="true"] {
+	background: rgba(255, 255, 255, 0.12);
+	color: var(--itt-white);
+}
+
+.itt-sticky {
+	position: fixed;
+	inset-inline: 0;
+	bottom: 0;
+	z-index: 60;
+	background: var(--itt-purple-deep);
+	border-top: 1px solid rgba(255, 255, 255, 0.12);
+	box-shadow: 0 -10px 30px rgba(15, 8, 32, 0.28);
+}
+
+.itt-sticky__inner {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 18px;
+	flex-wrap: wrap;
+	padding-block: 14px;
+}
+
+.itt-sticky__text {
+	font-size: 19px;
+	color: var(--itt-on-purple);
+}
+
+.itt-sticky__actions {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	flex-wrap: wrap;
+}
+
+.itt-sticky .itt-btn {
+	padding: 11px 24px;
+	font-size: 19px;
+	box-shadow: none;
+}
+
+/* -------------------------------------------------------------------------
+ * Motion primitives
+ * ---------------------------------------------------------------------- */
+
+.itt-reveal,
+.itt-rise {
+	opacity: 1;
+}
+
+.js-itt .itt-reveal {
+	opacity: 0;
+	transform: translateY(30px);
+	transition: opacity 0.7s ease, transform 0.7s var(--itt-ease-out);
+}
+
+.js-itt .itt-rise {
+	opacity: 0;
+	transform: translateY(26px);
+	transition: opacity 0.55s ease, transform 0.55s cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+
+.js-itt .itt-reveal.is-visible,
+.js-itt .itt-rise.is-visible {
+	opacity: 1;
+	transform: none;
+}
+
+.itt-hl {
+	background-image: linear-gradient(transparent 62%, var(--itt-hl-color) 62%);
+	background-repeat: no-repeat;
+	background-position: 100% 100%;
+	background-size: 100% 100%;
+}
+
+.js-itt .itt-hl {
+	background-size: 0% 100%;
+	transition: background-size 0.7s var(--itt-ease-marker);
+}
+
+.js-itt .itt-hl.is-visible {
+	background-size: 100% 100%;
+}
+
+.itt-hl--gold { --itt-hl-color: rgba(255, 200, 30, 0.5); }
+.itt-hl--cyan { --itt-hl-color: rgba(22, 180, 232, 0.4); }
+.itt-hl--orange { --itt-hl-color: rgba(242, 102, 42, 0.45); }
+
+.itt-pop {
+	display: inline-block;
+	font-weight: 700;
+	/* Deepened from #F2662A: the brand orange sits at 2.9:1 on the grey and
+	   cream backgrounds this emphasis appears on. #A6541A clears 4.5:1 at every
+	   size the paragraph clamps to, so it holds on mobile too. */
+	color: var(--itt-orange-dark);
+}
+
+.js-itt .itt-pop {
+	opacity: 0;
+	transform: translateY(6px) scale(0.9);
+	transition: opacity 0.45s ease, transform 0.5s var(--itt-ease-overshoot);
+}
+
+.js-itt .itt-pop.is-visible {
+	opacity: 1;
+	transform: none;
+}
+
+.itt-blink {
+	color: var(--itt-orange);
+	animation: itt-value-blink 2.2s steps(1, end) infinite;
+}
+
+.itt-blink-soft {
+	animation: itt-badge-pulse 2.6s ease-in-out infinite;
+}
+
+.itt-pulse {
+	animation: itt-protocol-pulse 2.8s ease-in-out infinite;
+}
+
+.itt-btn--blink {
+	animation: itt-cta-blink 2.2s steps(1, end) infinite;
+}
+
+@keyframes itt-badge-pulse {
+	0%, 100% { opacity: 1; }
+	50% { opacity: 0.55; }
+}
+
+@keyframes itt-value-blink {
+	0% { color: var(--itt-orange); }
+	50% { color: var(--itt-cyan-deep); }
+}
+
+@keyframes itt-cta-blink {
+	0% { background: var(--itt-gold); color: var(--itt-purple); }
+	50% { background: var(--itt-cyan-deep); color: var(--itt-white); }
+}
+
+@keyframes itt-soft-blink {
+	0% { background: var(--itt-gold-soft); border-color: var(--itt-border-orange); color: var(--itt-orange-dark); }
+	50% { background: var(--itt-orange); border-color: var(--itt-orange); color: var(--itt-white); }
+}
+
+@keyframes itt-value-glow {
+	0%, 100% { box-shadow: 0 0 0 0 rgba(255, 200, 30, 0); }
+	50% { box-shadow: 0 0 0 6px rgba(255, 200, 30, 0.28); }
+}
+
+@keyframes itt-protocol-pulse {
+	0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 200, 30, 0.55); }
+	50% { transform: scale(1.045); box-shadow: 0 0 0 14px rgba(255, 200, 30, 0); }
+}
+
+@keyframes itt-fly-across {
+	0% { transform: translate(0, 0) scale(0.85); opacity: 0; }
+	10% { opacity: 0.75; }
+	50% { transform: translate(32vw, -42px) scale(1.05); }
+	90% { opacity: 0.55; }
+	100% { transform: translate(68vw, -10px) scale(0.9); opacity: 0; }
+}
+
+@keyframes itt-flap {
+	0%, 100% { transform: scaleY(1); }
+	50% { transform: scaleY(0.45); }
+}
+
+@keyframes itt-pop-in {
+	0% { transform: scale(0); }
+	70% { transform: scale(1.12); }
+	100% { transform: scale(1); }
+}
+
+/**
+ * Reduced motion, and the in-page "stop animations" control required by
+ * WCAG 2.2.2 for the blinking CTAs. Both land on the finished state.
+ */
+@media (prefers-reduced-motion: reduce) {
+	html:has(.itt-page) {
+		scroll-behavior: auto;
+	}
+
+	.itt-page *,
+	.itt-page *::before,
+	.itt-page *::after {
+		animation-duration: 0.001ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.001ms !important;
+	}
+
+	.js-itt .itt-reveal,
+	.js-itt .itt-rise,
+	.js-itt .itt-pop {
+		opacity: 1 !important;
+		transform: none !important;
+	}
+
+	.js-itt .itt-hl {
+		background-size: 100% 100% !important;
+	}
+}
+
+.itt-page.itt-no-motion *,
+.itt-page.itt-no-motion *::before,
+.itt-page.itt-no-motion *::after {
+	animation: none !important;
+	transition: none !important;
+}
+
+.itt-page.itt-no-motion .itt-reveal,
+.itt-page.itt-no-motion .itt-rise,
+.itt-page.itt-no-motion .itt-pop {
+	opacity: 1 !important;
+	transform: none !important;
+}
+
+.itt-page.itt-no-motion .itt-hl {
+	background-size: 100% 100% !important;
+}
+
+/* -------------------------------------------------------------------------
+ * Responsive chrome
+ * ---------------------------------------------------------------------- */
+
+@media (max-width: 900px) {
+	:root {
+		--itt-section-y: 56px;
+		--itt-gutter: 20px;
+	}
+
+	.itt-header__note {
+		display: none;
+	}
+
+	.itt-footer__inner {
+		justify-content: flex-start;
+	}
+}
+
+@media (max-width: 600px) {
+	.itt-header__phone {
+		font-size: 22px;
+	}
+
+	/* Padding shrinks on small screens, the size does not: white on the brand
+	   orange only clears AA as large text (>=19px/700). */
+	.itt-header__cta {
+		padding: 12px 18px;
+	}
+
+	.itt-sticky__text {
+		display: none;
+	}
+
+	.itt-sticky__actions {
+		width: 100%;
+		justify-content: center;
+	}
+
+	.itt-band {
+		padding: 26px 22px;
+	}
+}
+
+/**
+ * Touch targets. The Multi Digital standard asks for 44px minimum on mobile,
+ * which is stricter than WCAG 2.2's 24px — the inline text links get real
+ * padding rather than relying on the "inline in a sentence" exception.
+ */
+@media (max-width: 900px) {
+	.itt-topbar__link,
+	.itt-header__phone,
+	.itt-footer__contact a,
+	.itt-footer__legal-list a,
+	.itt-form__contact a:not(.itt-btn) {
+		display: inline-flex;
+		align-items: center;
+		min-height: 44px;
+	}
+
+	.itt-form__contact li {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		flex-wrap: wrap;
+	}
+}

@@ -1503,8 +1503,10 @@ html:has(.itt-page) {
 }
 
 .itt-consent__row input[type="checkbox"] {
-	width: 22px;
-	height: 22px;
+	/* 24px is the WCAG 2.2 target-size minimum; the label is bound to the box
+	   with `for`, so the comfortable tap area is the whole sentence. */
+	width: 24px;
+	height: 24px;
 	margin: 2px 0 0;
 	accent-color: var(--itt-purple-mid);
 	flex: none;

@@ -839,6 +839,17 @@
 	overflow: hidden;
 }
 
+/* This headline is the one place the design goes above the 44px scale. */
+.itt-syllabus .itt-section__title {
+	font-size: clamp(30px, 4.4vw, 50px);
+	line-height: 1.15;
+}
+
+/* The design's section head here is 30px above the tabs, not the generic 44. */
+.itt-syllabus .itt-section__head {
+	margin-bottom: 30px;
+}
+
 .itt-stats {
 	display: flex;
 	gap: 34px;
@@ -945,7 +956,6 @@
 .itt-faq__sign {
 	flex: none;
 	font-weight: 700;
-	line-height: 1;
 }
 
 .itt-lesson__sign {
@@ -1038,11 +1048,16 @@
 	align-content: center;
 }
 
+/* The design groups the heading with its paragraphs at a tighter 10px. */
+.itt-doctor__head {
+	display: grid;
+	gap: 10px;
+}
+
 .itt-doctor__title {
 	font-size: clamp(26px, 3.2vw, 40px);
 	font-weight: 700;
 	color: var(--itt-purple);
-	line-height: 1.2;
 }
 
 .itt-doctor__text {
@@ -1216,6 +1231,11 @@
 }
 
 /* 13 — bonuses ---------------------------------------------------------- */
+
+/* 46px in the design — one step above the generic title scale. */
+.itt-bonuses .itt-section__title {
+	font-size: clamp(29px, 4.2vw, 46px);
+}
 
 .itt-bonuses__subtitle {
 	font-size: clamp(18px, 2vw, 22px);
@@ -1427,6 +1447,11 @@
 	display: grid;
 	gap: 22px;
 	align-content: start;
+}
+
+/* The column's grid gap is the spacing; the generic title margin doubled it. */
+.itt-form__copy .itt-section__title {
+	margin-bottom: 0;
 }
 
 .itt-form__lead {

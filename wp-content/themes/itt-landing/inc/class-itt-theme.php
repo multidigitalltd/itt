@@ -108,8 +108,11 @@ final class ITT_Theme {
 		wp_dequeue_style( 'global-styles' );
 		wp_dequeue_style( 'classic-theme-styles' );
 
+		// NOTE: no `rtl => replace` style data here. The stylesheet is written
+		// RTL-native with logical properties, so there is no itt-base-rtl.css —
+		// declaring one would make every Hebrew-locale site swap to a file that
+		// does not exist and lose the whole base layer.
 		wp_enqueue_style( 'itt-base', ITT_URI . 'assets/css/itt-base.css', array(), ITT_VERSION );
-		wp_style_add_data( 'itt-base', 'rtl', 'replace' );
 
 		if ( 'landing' === $template ) {
 			wp_enqueue_style( 'itt-landing', ITT_URI . 'assets/css/itt-landing.css', array( 'itt-base' ), ITT_VERSION );

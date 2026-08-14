@@ -28,9 +28,11 @@ defined( 'ABSPATH' ) || exit;
 		</div>
 
 		<div class="itt-doctor__copy">
-			<h2 class="itt-doctor__title" id="itt-doctor-title"><?php echo esc_html( (string) $itt['heading'] ); ?></h2>
-			<p class="itt-doctor__text"><?php echo esc_html( (string) $itt['text'] ); ?></p>
-			<p class="itt-doctor__text"><?php echo esc_html( (string) $itt['text_2'] ); ?></p>
+			<div class="itt-doctor__head">
+				<h2 class="itt-doctor__title" id="itt-doctor-title"><?php echo esc_html( (string) $itt['heading'] ); ?></h2>
+				<p class="itt-doctor__text"><?php echo esc_html( (string) $itt['text'] ); ?></p>
+				<p class="itt-doctor__text"><?php echo esc_html( (string) $itt['text_2'] ); ?></p>
+			</div>
 
 			<?php if ( ! empty( $itt['stats'] ) ) : ?>
 				<ul class="itt-doctor__stats">

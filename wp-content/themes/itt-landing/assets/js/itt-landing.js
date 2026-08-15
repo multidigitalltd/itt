@@ -113,13 +113,16 @@
 	 * Testimonial slider
 	 * ----------------------------------------------------------------- */
 
-	function initSlider() {
-		var slider = document.querySelector( '[data-itt-slider]' );
+	function initSliders() {
+		document.querySelectorAll( '[data-itt-slider]' ).forEach( initSlider );
+	}
 
-		if ( ! slider ) {
-			return;
-		}
-
+	/**
+	 * Wire one slider's arrows to its own track.
+	 *
+	 * @param {Element} slider The slider wrapper.
+	 */
+	function initSlider( slider ) {
 		var track = slider.querySelector( '.itt-slider__viewport' );
 		var buttons = slider.querySelectorAll( '[data-itt-slide]' );
 
@@ -160,6 +163,84 @@
 		window.addEventListener( 'resize', syncButtons, { passive: true } );
 
 		syncButtons();
+	}
+
+	/* --------------------------------------------------------------------
+	 * "Read more" on the written testimonials
+	 * ----------------------------------------------------------------- */
+
+	function initReadMore() {
+		var toggles = Array.prototype.slice.call( document.querySelectorAll( '[data-itt-more]' ) );
+
+		if ( ! toggles.length ) {
+			return;
+		}
+
+		/**
+		 * Clamp a quote and reveal its toggle, but only when the text really is
+		 * taller than the clamp — a button that expands nothing is worse than no
+		 * button at all.
+		 *
+		 * @param {Element} button The toggle.
+		 */
+		function measure( button ) {
+			var text = document.getElementById( button.getAttribute( 'aria-controls' ) );
+
+			if ( ! text || 'true' === button.getAttribute( 'aria-expanded' ) ) {
+				return;
+			}
+
+			text.classList.add( 'is-clamped' );
+
+			var overflows = text.scrollHeight - text.clientHeight > 2;
+
+			button.hidden = ! overflows;
+
+			if ( ! overflows ) {
+				text.classList.remove( 'is-clamped' );
+			}
+		}
+
+		toggles.forEach( function ( button ) {
+			button.addEventListener( 'click', function () {
+				var text = document.getElementById( button.getAttribute( 'aria-controls' ) );
+				var expanded = 'true' === button.getAttribute( 'aria-expanded' );
+				var label = button.querySelector( '[data-itt-more-label]' );
+
+				if ( ! text ) {
+					return;
+				}
+
+				text.classList.toggle( 'is-clamped', expanded );
+				button.setAttribute( 'aria-expanded', expanded ? 'false' : 'true' );
+
+				if ( label ) {
+					// Fall back in place: a missing string must never blank the button.
+					label.textContent = expanded
+						? ( i18n.readMore || 'קרא עוד' )
+						: ( i18n.readLess || 'הצג פחות' );
+				}
+			} );
+		} );
+
+		function measureAll() {
+			toggles.forEach( measure );
+		}
+
+		measureAll();
+
+		// The clamp is measured in lines, so it has to be re-checked once the
+		// real font is in and whenever the column width changes.
+		if ( document.fonts && document.fonts.ready ) {
+			document.fonts.ready.then( measureAll );
+		}
+
+		var resizeTimer = null;
+
+		window.addEventListener( 'resize', function () {
+			window.clearTimeout( resizeTimer );
+			resizeTimer = window.setTimeout( measureAll, 200 );
+		}, { passive: true } );
 	}
 
 	/* --------------------------------------------------------------------
@@ -495,7 +576,8 @@
 
 	initTabs();
 	initAccordions();
-	initSlider();
+	initSliders();
+	initReadMore();
 	initFacades();
 	initQuotes();
 	initForm();

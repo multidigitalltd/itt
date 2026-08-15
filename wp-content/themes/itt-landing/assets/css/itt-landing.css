@@ -772,9 +772,12 @@
 	background: var(--itt-gray);
 	border-radius: var(--itt-r-card);
 	padding: 30px 26px;
-	display: grid;
+	/* Flex, not grid: the attribution is pushed to the base with margin-block-
+	   start:auto, so the names line up across cards of different length — which
+	   grid cannot do once the "read more" row appears and disappears. */
+	display: flex;
+	flex-direction: column;
 	gap: 16px;
-	align-content: start;
 	transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
 }
 
@@ -802,7 +805,66 @@
 	color: var(--itt-text-soft);
 }
 
+/**
+ * Five lines, then a toggle. The clamp class is added by script, so without
+ * JavaScript the full quote is shown and the button stays hidden.
+ */
+.itt-voice__text.is-clamped {
+	display: -webkit-box;
+	-webkit-line-clamp: 5;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
+}
+
+.itt-voice__more {
+	align-self: flex-start;
+	display: inline-flex;
+	align-items: center;
+	/* Padding rather than a bare inline button: the control has to clear the
+	   24px target-size minimum on its own. */
+	padding-block: 6px;
+	padding-inline: 0;
+	border: 0;
+	background: none;
+	color: var(--itt-purple-mid);
+	font-size: 17px;
+	font-weight: 700;
+	cursor: pointer;
+	text-decoration: underline;
+	text-underline-offset: 3px;
+	margin-block: -6px;
+}
+
+.itt-voice__more:hover,
+.itt-voice__more:focus-visible {
+	color: var(--itt-orange-dark);
+}
+
+.itt-voice__more[hidden] {
+	display: none;
+}
+
+/* Slider variant, used once there are more than three testimonials. */
+.itt-voices__slider .itt-slider__head {
+	align-items: flex-end;
+	margin-bottom: 26px;
+}
+
+.itt-voices__title {
+	margin-bottom: 0;
+	text-align: start;
+	max-width: 20em;
+}
+
+.itt-voices__slide {
+	flex: 0 0 calc((100% - 36px) / 3);
+	scroll-snap-align: start;
+	display: block;
+}
+
 .itt-voice__author {
+	margin-block-start: auto;
+	padding-block-start: 4px;
 	font-size: 18px;
 	font-weight: 700;
 	color: var(--itt-purple);
@@ -1790,5 +1852,25 @@
 
 	.itt-doctor__stats {
 		grid-template-columns: 1fr;
+	}
+}
+
+@media (max-width: 900px) {
+	.itt-voices__slide {
+		flex-basis: calc((100% - 18px) / 2);
+	}
+}
+
+@media (max-width: 600px) {
+	.itt-voices__slide {
+		flex-basis: 85%;
+	}
+}
+
+@media (max-width: 900px) {
+	/* The standard asks for 44px on touch. */
+	.itt-voice__more {
+		min-height: 44px;
+		margin-block: -10px;
 	}
 }

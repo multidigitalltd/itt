@@ -173,6 +173,8 @@ final class ITT_Theme {
 				'success'       => __( 'הפרטים התקבלו — נחזור אלייך בהקדם.', 'itt-landing' ),
 				'genericError'  => __( 'השליחה נכשלה. אפשר לנסות שוב או ליצור קשר בוואטסאפ.', 'itt-landing' ),
 				'errorsHeading' => __( 'לא הצלחנו לשלוח את הטופס:', 'itt-landing' ),
+				'readMore'      => __( 'קרא עוד', 'itt-landing' ),
+				'readLess'      => __( 'הצג פחות', 'itt-landing' ),
 			),
 		);
 	}

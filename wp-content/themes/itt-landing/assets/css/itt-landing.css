@@ -1761,6 +1761,26 @@
 		gap: 28px;
 	}
 
+	/**
+	 * The equation reads top to bottom once the three boxes stop fitting on
+	 * one line. Left to flex-wrap it broke into an arbitrary shape with the
+	 * "+" and "=" stranded beside a box instead of between two, which stops
+	 * looking like an equation at all.
+	 */
+	.itt-equation {
+		flex-direction: column;
+		gap: 10px;
+	}
+
+	.itt-equation__box {
+		width: 100%;
+		max-width: 420px;
+	}
+
+	.itt-equation__op {
+		line-height: 1;
+	}
+
 	.itt-hero__inner {
 		padding-block: 36px 32px;
 	}

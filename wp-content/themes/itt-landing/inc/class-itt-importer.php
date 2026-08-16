@@ -62,6 +62,13 @@ final class ITT_Importer {
 			'sections' => 'thank-you',
 			'content'  => 'women',
 		),
+		'thank-you-men' => array(
+			'title'    => 'תודה — הפרטים התקבלו · לגברים',
+			'slug'     => 'itt-leader-toda-gvarim',
+			'template' => 'template-itt-thank-you.php',
+			'sections' => 'thank-you',
+			'content'  => 'men',
+		),
 		'accessibility' => array(
 			'title'    => 'הצהרת נגישות',
 			'slug'     => 'hatsharat-negishut',
@@ -78,6 +85,7 @@ final class ITT_Importer {
 		add_action( 'after_switch_theme', array( self::class, 'provision' ) );
 		add_action( 'admin_menu', array( self::class, 'menu' ) );
 		add_action( 'admin_post_itt_provision', array( self::class, 'handle_request' ) );
+		add_action( 'admin_post_itt_settings', array( self::class, 'handle_settings' ) );
 	}
 
 	/**
@@ -92,6 +100,28 @@ final class ITT_Importer {
 		$id = is_array( $pages ) ? absint( $pages[ $template ] ?? 0 ) : 0;
 
 		return 'publish' === get_post_status( $id ) ? $id : 0;
+	}
+
+	/**
+	 * The thank-you page a given landing page should send visitors to.
+	 *
+	 * A man who submits the men's form must not land on a page addressed to a
+	 * woman, so the men's landing page has its own. Any other page — including
+	 * a copy an editor made themselves — falls back to the main thank-you page.
+	 *
+	 * @param int $landing_id Page the form was submitted from.
+	 * @return int Thank-you page ID, or 0 when none exists.
+	 */
+	public static function thank_you_for( int $landing_id ): int {
+		if ( $landing_id > 0 && self::page_id( 'landing-men' ) === $landing_id ) {
+			$men = self::page_id( 'thank-you-men' );
+
+			if ( 0 !== $men ) {
+				return $men;
+			}
+		}
+
+		return self::page_id( 'thank-you' );
 	}
 
 	/**
@@ -349,6 +379,9 @@ final class ITT_Importer {
 
 		echo '</tbody></table>';
 
+		self::render_turnstile_form();
+
+		echo '<h2>' . esc_html__( 'ניהול עמודים', 'itt-landing' ) . '</h2>';
 		echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" style="margin-top:20px">';
 		wp_nonce_field( 'itt_provision' );
 		echo '<input type="hidden" name="action" value="itt_provision">';
@@ -362,6 +395,81 @@ final class ITT_Importer {
 			array( 'onclick' => "return confirm('" . esc_js( __( 'הפעולה תחליף את כל התוכן בכל עמודי ITT בתוכן המקורי מהעיצוב. להמשיך?', 'itt-landing' ) ) . "');" )
 		);
 		echo '</form></div>';
+	}
+
+	/**
+	 * The Cloudflare Turnstile key fields.
+	 *
+	 * Kept on this screen rather than in a page's meta boxes: the keys belong
+	 * to the site, and the secret must not travel with an exported page.
+	 */
+	private static function render_turnstile_form(): void {
+		$settings = ITT_Settings::all();
+
+		echo '<h2>' . esc_html__( 'הגנה מפני ספאם (Cloudflare Turnstile)', 'itt-landing' ) . '</h2>';
+
+		echo '<p>' . esc_html__( 'כל עוד השדות ריקים הטופס עובד בלי אימות כלל, ולא נשלחת שום בקשה ל-Cloudflare. אחרי מילוי שני המפתחות יוצג אימות מתחת לטופס, והשליחה תיבדק מול Cloudflare בצד השרת.', 'itt-landing' ) . '</p>';
+
+		printf(
+			'<p>%s <a href="%s" target="_blank" rel="noopener">%s</a></p>',
+			esc_html__( 'את המפתחות מפיקים בחינם בלוח הבקרה של Cloudflare, תחת Turnstile ← Add site:', 'itt-landing' ),
+			esc_url( 'https://dash.cloudflare.com/?to=/:account/turnstile' ),
+			esc_html__( 'פתיחת Turnstile ב-Cloudflare', 'itt-landing' )
+		);
+
+		echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
+		wp_nonce_field( 'itt_settings' );
+		echo '<input type="hidden" name="action" value="itt_settings">';
+
+		echo '<table class="form-table" role="presentation"><tbody>';
+
+		printf(
+			'<tr><th scope="row"><label for="itt-turnstile-site">%s</label></th><td><input type="text" class="regular-text code" id="itt-turnstile-site" name="turnstile_site_key" value="%s" dir="ltr" autocomplete="off"><p class="description">%s</p></td></tr>',
+			esc_html__( 'Site Key', 'itt-landing' ),
+			esc_attr( $settings['turnstile_site_key'] ),
+			esc_html__( 'מפתח ציבורי — מוטמע בעמוד.', 'itt-landing' )
+		);
+
+		printf(
+			'<tr><th scope="row"><label for="itt-turnstile-secret">%s</label></th><td><input type="password" class="regular-text code" id="itt-turnstile-secret" name="turnstile_secret_key" value="%s" dir="ltr" autocomplete="off"><p class="description">%s</p></td></tr>',
+			esc_html__( 'Secret Key', 'itt-landing' ),
+			esc_attr( $settings['turnstile_secret_key'] ),
+			esc_html__( 'מפתח סודי — נשמר בשרת בלבד ולעולם לא מוצג בעמוד.', 'itt-landing' )
+		);
+
+		echo '</tbody></table>';
+
+		submit_button( __( 'שמירת מפתחות', 'itt-landing' ) );
+		echo '</form>';
+	}
+
+	/**
+	 * Save the Turnstile keys.
+	 */
+	public static function handle_settings(): void {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'אין לך הרשאה לבצע את הפעולה הזו.', 'itt-landing' ), '', array( 'response' => 403 ) );
+		}
+
+		check_admin_referer( 'itt_settings' );
+
+		ITT_Settings::save(
+			array(
+				'turnstile_site_key'   => wp_unslash( (string) ( $_POST['turnstile_site_key'] ?? '' ) ),
+				'turnstile_secret_key' => wp_unslash( (string) ( $_POST['turnstile_secret_key'] ?? '' ) ),
+			)
+		);
+
+		wp_safe_redirect(
+			add_query_arg(
+				array(
+					'page'       => 'itt-pages',
+					'itt-saved'  => 1,
+				),
+				admin_url( 'tools.php' )
+			)
+		);
+		exit;
 	}
 
 	/**

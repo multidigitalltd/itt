@@ -387,7 +387,7 @@
 			var slot = form.querySelector( '[data-itt-error="' + field + '"]' );
 
 			if ( slot ) {
-				slot.textContent = message;
+				slot.textContent = message || '';
 			}
 
 			if ( input ) {
@@ -395,6 +395,15 @@
 					input.setAttribute( 'aria-invalid', 'true' );
 				} else {
 					input.removeAttribute( 'aria-invalid' );
+				}
+
+				// aria-invalid on a checkbox has nothing to repaint, so the row
+				// carries the state instead — otherwise an unticked consent box
+				// is reported by the summary with nothing on screen to look at.
+				var field_el = input.closest( '.itt-field' );
+
+				if ( field_el ) {
+					field_el.classList.toggle( 'is-invalid', !! message );
 				}
 			}
 		}
@@ -425,10 +434,25 @@
 			// The server refuses a lead without consent; check here too so the
 			// visitor is told before a round trip.
 			if ( form.elements.consent && ! form.elements.consent.checked ) {
-				errors.consent = i18n.consentRequired;
+				errors.consent = i18n.consentRequired || 'שדה חובה — יש לאשר את תנאי השימוש ומדיניות הפרטיות.';
+			}
+
+			if ( config.turnstile && ! turnstileToken() ) {
+				errors.turnstile = i18n.turnstileMissing || 'נא להשלים את אימות האבטחה שמתחת לטופס.';
 			}
 
 			return errors;
+		}
+
+		/**
+		 * The Turnstile token, if the widget has produced one.
+		 *
+		 * @return {string} Token, or an empty string.
+		 */
+		function turnstileToken() {
+			var input = form.querySelector( '[name="cf-turnstile-response"]' );
+
+			return input ? input.value : '';
 		}
 
 		/**
@@ -445,32 +469,10 @@
 			summary.hidden = ! message;
 		}
 
-		/**
-		 * Fetch a fresh REST nonce. Never printed into the cached HTML.
-		 *
-		 * @return {Promise<string>} The nonce, or an empty string.
-		 */
-		function fetchNonce() {
-			if ( ! config.nonceUrl ) {
-				return Promise.resolve( '' );
-			}
-
-			return fetch( config.nonceUrl, { credentials: 'same-origin' } )
-				.then( function ( response ) {
-					return response.ok ? response.json() : {};
-				} )
-				.then( function ( data ) {
-					return data.nonce || '';
-				} )
-				.catch( function () {
-					return '';
-				} );
-		}
-
 		form.addEventListener( 'submit', function ( event ) {
 			event.preventDefault();
 
-			[ 'name', 'phone', 'email', 'consent' ].forEach( function ( field ) {
+			[ 'name', 'phone', 'email', 'consent', 'turnstile' ].forEach( function ( field ) {
 				setFieldError( field, '' );
 			} );
 
@@ -509,21 +511,25 @@
 				message: form.elements.message ? form.elements.message.value.trim() : '',
 				consent: form.elements.consent ? form.elements.consent.checked : true,
 				hp: form.elements.hp ? form.elements.hp.value : '',
-				ts: rendered
+				ts: rendered,
+				turnstile: turnstileToken(),
+				page: parseInt( form.getAttribute( 'data-itt-page' ), 10 ) || 0
 			};
 
-			fetchNonce()
-				.then( function ( nonce ) {
-					return fetch( config.submitUrl, {
-						method: 'POST',
-						credentials: 'same-origin',
-						headers: {
-							'Content-Type': 'application/json',
-							'X-WP-Nonce': nonce
-						},
-						body: JSON.stringify( payload )
-					} );
-				} )
+			// credentials: 'omit' on purpose. With a WordPress auth cookie
+			// attached, WordPress runs its REST cookie-nonce check before the
+			// endpoint is reached and rejects the request with "Cookie check
+			// failed" whenever that nonce has gone stale — which a page cache
+			// or an expired session makes routine. The endpoint is public, so
+			// there is nothing for the cookie to authenticate anyway.
+			fetch( config.submitUrl, {
+				method: 'POST',
+				credentials: 'omit',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify( payload )
+			} )
 				.then( function ( response ) {
 					return response.json().then( function ( data ) {
 						return { ok: response.ok, data: data };
@@ -545,6 +551,13 @@
 					if ( submit ) {
 						submit.removeAttribute( 'aria-disabled' );
 						submit.textContent = submitLabel;
+					}
+
+					// A Turnstile token is good for one submission. Without a
+					// reset, a visitor who fixes a typo and tries again is
+					// rejected for a token that was already spent.
+					if ( config.turnstile && window.turnstile ) {
+						window.turnstile.reset();
 					}
 
 					announce( error.message || i18n.genericError );

@@ -1654,9 +1654,27 @@
 	box-shadow: 0 0 0 3px rgba(78, 46, 134, 0.18);
 }
 
-.itt-form__form input[aria-invalid="true"] {
+.itt-form__form input:not([type="checkbox"])[aria-invalid="true"] {
 	border-color: #A93226;
 	background: #FDF3F2;
+}
+
+/**
+ * A checkbox has almost no surface to repaint, so a missing consent tick is
+ * marked on the whole row instead — otherwise the error summary named a field
+ * with nothing on screen pointing at it.
+ */
+.itt-field.is-invalid {
+	border-inline-start: 3px solid #A93226;
+	border-radius: 8px;
+	background: #FDF3F2;
+	padding: 10px 12px;
+	margin-inline-start: -12px;
+}
+
+.itt-consent input[aria-invalid="true"] {
+	outline: 2px solid #A93226;
+	outline-offset: 2px;
 }
 
 .itt-field__error {
@@ -1882,5 +1900,84 @@
 	.itt-voice__more {
 		min-height: 44px;
 		margin-block: -10px;
+	}
+}
+
+/* -------------------------------------------------------------------------
+ * Phone pass
+ *
+ * Everything below 600px. The rules above already stop the layout breaking;
+ * these are about it reading well on a phone rather than merely fitting —
+ * the offer above the fold, and one consistent width for every call to
+ * action instead of pills that each size themselves to their own text.
+ * ---------------------------------------------------------------------- */
+
+@media (max-width: 600px) {
+
+	/**
+	 * Copy first, picture second. Above 600px the image leads because there is
+	 * room for both on one screen; on a phone a 380px image pushed the
+	 * headline and the CTA off the first viewport entirely, so the visitor
+	 * met a photograph instead of the offer.
+	 */
+	.itt-hero__media {
+		order: 0;
+	}
+
+	.itt-hero__image {
+		max-height: 260px;
+	}
+
+	.itt-hero__inner {
+		gap: 22px;
+		padding-block: 24px 28px;
+	}
+
+	.itt-hero__title {
+		font-size: clamp(28px, 8.2vw, 36px);
+	}
+
+	/**
+	 * One width for every call to action. Left to size themselves, the pills
+	 * landed at three different widths in a single column and read as a
+	 * mistake rather than a set.
+	 */
+	.itt-hero__actions .itt-btn,
+	.itt-jump__list .itt-chip,
+	.itt-band .itt-btn,
+	.itt-fit__cta .itt-btn {
+		width: 100%;
+		justify-content: center;
+		text-align: center;
+	}
+
+	/* grid-template-columns and justify-content are both needed: the desktop
+	   rule centres the flex line, and a grid that inherits justify-content:
+	   center shrink-wraps its track to the widest label instead of filling. */
+	.itt-hero__actions,
+	.itt-jump__list {
+		display: grid;
+		grid-template-columns: 1fr;
+		justify-content: stretch;
+		gap: 12px;
+		width: 100%;
+	}
+
+	.itt-jump__list li {
+		display: grid;
+	}
+
+	.itt-jump__inner {
+		padding-block: 32px;
+		justify-items: stretch;
+	}
+
+	/* The band reads as one centred unit rather than start-aligned text with a
+	   button floating under it at an unrelated width. */
+	.itt-band,
+	.itt-band__inner,
+	.itt-band__copy {
+		text-align: center;
+		justify-items: center;
 	}
 }

@@ -312,7 +312,11 @@
 				el.style.transitionDelay = Math.min( index * 0.12, 0.36 ) + 's';
 				el.classList.add( 'is-visible' );
 			},
-			{ threshold: 0.12, rootMargin: '0px 0px -40px 0px' }
+			// Fires a little before the element reaches the viewport rather than
+			// after: on a phone the sections are tall and flick-scrolling is
+			// normal, and waiting for 12% of a 1100px block to be on screen
+			// meant scrolling into content that was still at opacity 0.
+			{ threshold: 0, rootMargin: '0px 0px 120px 0px' }
 		);
 
 		observeOnce(
@@ -324,7 +328,7 @@
 					el.classList.add( 'is-visible' );
 				}, 220 + order * 260 );
 			},
-			{ threshold: 0.55 }
+			{ threshold: 0, rootMargin: '0px 0px -60px 0px' }
 		);
 
 		observeOnce(
@@ -332,7 +336,7 @@
 			function ( el ) {
 				el.classList.add( 'is-visible' );
 			},
-			{ threshold: 0.6 }
+			{ threshold: 0, rootMargin: '0px 0px -60px 0px' }
 		);
 
 		observeOnce(
@@ -342,10 +346,10 @@
 					el.classList.add( 'is-visible' );
 				}, ( index % 3 ) * 120 + Math.floor( index / 3 ) * 60 );
 			},
-			{ threshold: 0.25 }
+			{ threshold: 0, rootMargin: '0px 0px 80px 0px' }
 		);
 
-		observeOnce( document.querySelectorAll( '.itt-count' ), countUp, { threshold: 0.8 } );
+		observeOnce( document.querySelectorAll( '.itt-count' ), countUp, { threshold: 0, rootMargin: '0px 0px -80px 0px' } );
 	}
 
 	reduced.addEventListener( 'change', apply );

@@ -83,13 +83,16 @@ final class ITT_Fields {
 	private static function build(): array {
 		return array(
 			'chrome'   => self::section(
-				'כותרת עליונה, פוטר וסרגל צף',
+				'לוגו, כותרת עליונה, פוטר וסרגל צף',
 				'landing',
 				array(
+					// First in the box on purpose: the logo is the field editors
+					// come looking for, and it was easy to miss halfway down a
+					// list of eighteen.
+					self::image( 'logo', 'לוגו האתר', 'לחיצה על "בחירת תמונה" פותחת את ספריית המדיה. מומלץ PNG או SVG על רקע שקוף, בגובה 100px לפחות. ריק = הלוגו המצורף לתבנית.' ),
+					self::text( 'logo_alt', 'טקסט חלופי ללוגו' ),
 					self::text( 'topbar_text', 'טקסט הפס העליון' ),
 					self::text( 'topbar_cta', 'קישור בפס העליון' ),
-					self::image( 'logo', 'לוגו', 'ברירת מחדל: הלוגו המצורף לתבנית.' ),
-					self::text( 'logo_alt', 'טקסט חלופי ללוגו' ),
 					self::text( 'header_note', 'הערה בכותרת' ),
 					self::text( 'phone', 'טלפון מרכזייה' ),
 					self::text( 'header_cta', 'כפתור בכותרת' ),

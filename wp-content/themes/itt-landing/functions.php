@@ -32,6 +32,7 @@ define( 'ITT_VERSION', ( static function (): string {
  */
 define( 'ITT_URI', trailingslashit( get_template_directory_uri() ) );
 
+require_once ITT_DIR . 'inc/class-itt-settings.php';
 require_once ITT_DIR . 'inc/class-itt-content.php';
 require_once ITT_DIR . 'inc/class-itt-content-men.php';
 require_once ITT_DIR . 'inc/class-itt-fields.php';

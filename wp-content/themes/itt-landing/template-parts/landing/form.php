@@ -2,10 +2,14 @@
 /**
  * Section 16 — closing block and the lead form.
  *
- * The form posts to the REST route with a nonce fetched at submit time, so the
- * page itself carries nothing visitor-specific and stays fully cacheable behind
- * LiteSpeed or Cloudflare. Because the nonce can only be fetched by script, a
- * visitor without JavaScript is given the phone and WhatsApp routes instead.
+ * The form posts to the REST route by script, so the page itself carries
+ * nothing visitor-specific and stays fully cacheable behind LiteSpeed or
+ * Cloudflare. Because the submission needs script, a visitor without
+ * JavaScript is given the phone and WhatsApp routes instead.
+ *
+ * data-itt-page carries the page's own ID — not visitor-specific, so it is
+ * safe to cache — which lets the endpoint send the men's form to the men's
+ * thank-you page.
  *
  * @package ITT_Landing
  *
@@ -71,7 +75,7 @@ $itt_bullets = itt_lines( (string) $itt['bullets'] );
 				</p>
 			</noscript>
 
-			<form class="itt-form__form" data-itt-form novalidate>
+			<form class="itt-form__form" data-itt-form data-itt-page="<?php echo esc_attr( (string) get_queried_object_id() ); ?>" novalidate>
 				<div class="itt-form__errors" data-itt-form-errors role="alert" tabindex="-1" hidden></div>
 
 				<p class="itt-field">
@@ -116,6 +120,18 @@ $itt_bullets = itt_lines( (string) $itt['bullets'] );
 							</label>
 						</span>
 						<span class="itt-field__error" id="itt-consent-error" data-itt-error="consent"></span>
+					</p>
+				<?php endif; ?>
+
+				<?php if ( ITT_Settings::turnstile_enabled() ) : ?>
+					<p class="itt-field itt-turnstile">
+						<span
+							class="cf-turnstile"
+							data-sitekey="<?php echo esc_attr( ITT_Settings::get( 'turnstile_site_key' ) ); ?>"
+							data-language="he"
+							data-theme="light"
+						></span>
+						<span class="itt-field__error" data-itt-error="turnstile"></span>
 					</p>
 				<?php endif; ?>
 

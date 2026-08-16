@@ -140,6 +140,14 @@ final class ITT_Theme {
 			wp_enqueue_script( 'itt-landing', ITT_URI . 'assets/js/itt-landing.js', array(), self::asset_version( 'assets/js/itt-landing.js' ), true );
 			wp_script_add_data( 'itt-landing', 'strategy', 'defer' );
 			wp_localize_script( 'itt-landing', 'ittLanding', self::script_data() );
+
+			// Cloudflare Turnstile, only once both keys are configured. Loaded
+			// from Cloudflare because the challenge has to talk to them; when
+			// the keys are empty no third-party request is made at all.
+			if ( ITT_Settings::turnstile_enabled() ) {
+				wp_enqueue_script( 'itt-turnstile', 'https://challenges.cloudflare.com/turnstile/v0/api.js', array(), null, true ); // phpcs:ignore WordPress.WP.EnqueuedResourceParameters.MissingVersion -- versioned by Cloudflare.
+				wp_script_add_data( 'itt-turnstile', 'defer', true );
+			}
 		}
 
 		if ( 'thank-you' === $template ) {
@@ -155,26 +163,26 @@ final class ITT_Theme {
 	/**
 	 * Data handed to the landing script.
 	 *
-	 * The REST nonce is intentionally *not* printed here: a full-page cache
-	 * (LiteSpeed / Cloudflare) would serve a stale one. The script fetches a
-	 * fresh nonce from an uncached endpoint right before submitting.
+	 * Nothing per-visitor is printed here, so the whole page stays cacheable.
 	 *
 	 * @return array<string, mixed>
 	 */
 	private static function script_data(): array {
 		return array(
-			'nonceUrl'  => esc_url_raw( rest_url( ITT_Leads::REST_NAMESPACE . '/token' ) ),
 			'submitUrl' => esc_url_raw( rest_url( ITT_Leads::REST_NAMESPACE . '/lead' ) ),
+			'turnstile' => ITT_Settings::turnstile_enabled(),
 			'i18n'      => array(
-				'nameRequired'  => __( 'נא למלא שם מלא.', 'itt-landing' ),
-				'phoneInvalid'  => __( 'נא למלא מספר טלפון תקין (לפחות 9 ספרות).', 'itt-landing' ),
-				'emailInvalid'  => __( 'נא למלא כתובת אימייל תקינה.', 'itt-landing' ),
-				'sending'       => __( 'שולח…', 'itt-landing' ),
-				'success'       => __( 'הפרטים התקבלו — נחזור אלייך בהקדם.', 'itt-landing' ),
-				'genericError'  => __( 'השליחה נכשלה. אפשר לנסות שוב או ליצור קשר בוואטסאפ.', 'itt-landing' ),
-				'errorsHeading' => __( 'לא הצלחנו לשלוח את הטופס:', 'itt-landing' ),
-				'readMore'      => __( 'קרא עוד', 'itt-landing' ),
-				'readLess'      => __( 'הצג פחות', 'itt-landing' ),
+				'nameRequired'     => __( 'נא למלא שם מלא.', 'itt-landing' ),
+				'phoneInvalid'     => __( 'נא למלא מספר טלפון תקין (לפחות 9 ספרות).', 'itt-landing' ),
+				'emailInvalid'     => __( 'נא למלא כתובת אימייל תקינה.', 'itt-landing' ),
+				'consentRequired'  => __( 'שדה חובה — יש לאשר את תנאי השימוש ומדיניות הפרטיות.', 'itt-landing' ),
+				'turnstileMissing' => __( 'נא להשלים את אימות האבטחה שמתחת לטופס.', 'itt-landing' ),
+				'sending'          => __( 'שולח…', 'itt-landing' ),
+				'success'          => __( 'הפרטים התקבלו — נחזור אלייך בהקדם.', 'itt-landing' ),
+				'genericError'     => __( 'השליחה נכשלה. אפשר לנסות שוב או ליצור קשר בוואטסאפ.', 'itt-landing' ),
+				'errorsHeading'    => __( 'לא הצלחנו לשלוח את הטופס:', 'itt-landing' ),
+				'readMore'         => __( 'קרא עוד', 'itt-landing' ),
+				'readLess'         => __( 'הצג פחות', 'itt-landing' ),
 			),
 		);
 	}

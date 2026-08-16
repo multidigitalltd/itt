@@ -586,6 +586,20 @@
 	gap: 22px;
 }
 
+/**
+ * An odd number of cards leaves one alone in a two-column grid with a hole
+ * beside it. The lead card takes the full width instead, which both fills the
+ * grid and gives the opening card the emphasis it is there for.
+ *
+ * Conditional on the count rather than hard-coded: :first-child that is also
+ * an odd position counted from the end only matches when the total is odd. Add
+ * or remove a card in the editor and the rule turns itself off and on — with
+ * six cards this stops matching and the grid goes back to three even rows.
+ */
+.itt-envelope__cards > li:first-child:nth-last-child(odd) {
+	grid-column: 1 / -1;
+}
+
 .itt-badge-card {
 	position: relative;
 	border-radius: var(--itt-r-card);

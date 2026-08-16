@@ -1942,6 +1942,13 @@
 	 * landed at three different widths in a single column and read as a
 	 * mistake rather than a set.
 	 */
+	/**
+	 * Full width, but not oversized with it. At the desktop padding of
+	 * 18px/38px the label wrapped to two lines inside the button on a 320px
+	 * screen and the thing stood 88px tall. The font holds at 19px because
+	 * white on the brand orange only clears AA as large text; the padding is
+	 * what gives, and that is enough to keep every label on one line.
+	 */
 	.itt-hero__actions .itt-btn,
 	.itt-jump__list .itt-chip,
 	.itt-band .itt-btn,
@@ -1949,6 +1956,9 @@
 		width: 100%;
 		justify-content: center;
 		text-align: center;
+		padding: 14px 14px;
+		font-size: 19px;
+		min-height: 52px;
 	}
 
 	/* grid-template-columns and justify-content are both needed: the desktop

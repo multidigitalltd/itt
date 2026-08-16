@@ -50,6 +50,24 @@ final class ITT_Theme {
 
 		add_theme_support( 'title-tag' );
 		add_theme_support( 'post-thumbnails' );
+
+		/**
+		 * Puts the logo where WordPress users already look for it:
+		 * עיצוב → התאמה אישית → זהות האתר. The per-page logo field stays, for
+		 * the case where one landing page needs a different mark, but it is no
+		 * longer the only way in — and with both empty the theme falls back to
+		 * the file shipped in assets/img/.
+		 */
+		add_theme_support(
+			'custom-logo',
+			array(
+				'height'               => 104,
+				'width'                => 420,
+				'flex-height'          => true,
+				'flex-width'           => true,
+				'unlink-homepage-logo' => true,
+			)
+		);
 		add_theme_support( 'automatic-feed-links' );
 		add_theme_support( 'responsive-embeds' );
 		add_theme_support(

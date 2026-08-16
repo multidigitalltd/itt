@@ -660,6 +660,11 @@ final class ITT_Content {
 			'heading' => 'המעטפת המקסימלית שתוביל אותך [hl:cyan]להצלחה בס״ד[/hl]',
 			'cards'   => array(
 				array(
+					'badge'   => 'סמינרים עשירים',
+					'text'    => 'החומר מועבר פרונטלי ע״י המאסטר ד״ר אמיר קוליק וצוות מנוסה ובכיר. כל יום גדוש בלמידה, התנסות אישית וכלים יישומיים.',
+					'variant' => 'gold',
+				),
+				array(
 					'badge'   => 'פרקטיקום ב-LIVE',
 					'text'    => 'כדי שארגז הכלים האיכותי יהיה מוחשי ומוטמע היטב, במהלך השיעורים יתבצעו הדגמות חיות ותרגולים של הטכניקות השונות, תוך קבלת משוב מהמנטוריות, לרכישת ניסיון וביטחון מקצועי.',
 					'variant' => 'gray',
@@ -672,7 +677,7 @@ final class ITT_Content {
 				array(
 					'badge'   => 'ליווי בזום',
 					'text'    => 'במסגרת ההכשרה יתקיימו 2 מפגשי זום אינטראקטיביים עם ד״ר אמיר קוליק, בהם תוכלי להוסיף ידע ולהתקדם בדרכך האישית והמקצועית.',
-					'variant' => 'gold',
+					'variant' => 'purple',
 				),
 				array(
 					'badge'   => 'הסמכה וקבלת תעודה',
@@ -892,7 +897,10 @@ final class ITT_Content {
 			'label_name'    => 'שם מלא',
 			'label_phone'   => 'טלפון',
 			'label_email'   => 'אימייל',
-			'show_email'    => 0,
+			// On by default: the office needs a written channel as well as a
+			// phone number. The field itself stays optional — a visitor who
+			// leaves it blank still submits, and only a real address is stored.
+			'show_email'    => 1,
 			'label_message' => 'בקצרה עלייך ועל המטרה המקצועית/אישית שלך',
 			'show_message'  => 0,
 			'submit'        => 'לתיאום שיחת התאמה',

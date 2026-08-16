@@ -89,10 +89,11 @@ $itt_show_sticky ??= is_page_template( 'template-itt-landing.php' );
 		<div class="itt-shell itt-sticky__inner">
 			<p class="itt-sticky__text"><?php echo esc_html( (string) $itt_chrome['sticky_text'] ); ?></p>
 			<div class="itt-sticky__actions">
-				<a class="itt-btn itt-btn--ghost-cyan" href="<?php echo esc_url( (string) $itt_chrome['whatsapp'] ); ?>" rel="noopener">
-					<?php echo esc_html( (string) $itt_chrome['sticky_whatsapp'] ); ?>
+				<a class="itt-btn itt-btn--ghost-cyan itt-sticky__wa" href="<?php echo esc_url( (string) $itt_chrome['whatsapp'] ); ?>" rel="noopener">
+					<?php itt_icon( 'whatsapp' ); ?>
+					<span class="itt-sticky__wa-label"><?php echo esc_html( (string) $itt_chrome['sticky_whatsapp'] ); ?></span>
 				</a>
-				<a class="itt-btn itt-btn--orange" href="#form">
+				<a class="itt-btn itt-btn--orange itt-sticky__cta" href="#form">
 					<?php echo esc_html( (string) $itt_chrome['sticky_cta'] ); ?>
 				</a>
 			</div>

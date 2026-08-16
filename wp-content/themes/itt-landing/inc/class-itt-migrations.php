@@ -64,9 +64,36 @@ final class ITT_Migrations {
 	public static function run(): void {
 		foreach ( self::landing_pages() as $post_id ) {
 			self::envelope_seminars_card( $post_id );
+			self::show_email_field( $post_id );
 		}
 
 		update_option( self::OPTION, ITT_VERSION, false );
+	}
+
+	/**
+	 * 1.6.4 — turn the email field on for pages created before it defaulted on.
+	 *
+	 * The office needs a written channel as well as a phone number. Only runs
+	 * where the flag is still off, and only once: an editor who turns it back
+	 * off afterwards keeps that choice, because migrations are recorded per
+	 * version and this one will not run again.
+	 *
+	 * @param int $post_id Landing page ID.
+	 */
+	private static function show_email_field( int $post_id ): void {
+		$form = ITT_Meta::get( 'form', $post_id );
+
+		if ( ! empty( $form['show_email'] ) ) {
+			return;
+		}
+
+		$form['show_email'] = 1;
+
+		if ( '' === trim( (string) ( $form['label_email'] ?? '' ) ) ) {
+			$form['label_email'] = 'אימייל';
+		}
+
+		ITT_Meta::save( $post_id, 'form', $form );
 	}
 
 	/**

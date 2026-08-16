@@ -396,6 +396,16 @@
 }
 
 .itt-slider__viewport {
+	/**
+	 * Positioned so the viewport is the containing block for anything absolute
+	 * inside a slide. The testimonial "read more" buttons carry a
+	 * .screen-reader-text span (position: absolute !important); with a static
+	 * viewport its containing block is the page itself, so it is laid out at
+	 * the off-screen coordinates of the slides that are scrolled out of view
+	 * and escapes this element's clip — adding ~600px of horizontal scroll to
+	 * the whole document on a phone.
+	 */
+	position: relative;
 	overflow-x: auto;
 	scroll-snap-type: x mandatory;
 	scroll-behavior: smooth;

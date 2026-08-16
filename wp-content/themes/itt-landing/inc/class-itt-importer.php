@@ -2,7 +2,7 @@
 /**
  * One-time page provisioning.
  *
- * Creates the landing page and the thank-you page and writes the approved copy
+ * Creates the landing pages and the thank-you page and writes the approved copy
  * into their own meta, so that straight after activation the content is really
  * there — inside the pages, editable in the page editor.
  *
@@ -14,7 +14,7 @@ declare( strict_types = 1 );
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Creates and repairs the two ITT pages.
+ * Creates and repairs the ITT pages.
  */
 final class ITT_Importer {
 
@@ -25,22 +25,40 @@ final class ITT_Importer {
 
 	/**
 	 * Page blueprints.
+	 *
+	 * 'sections' is the field-schema key the page's meta boxes follow, and
+	 * 'content' names the copy set it is seeded from. The men's page reuses the
+	 * landing template and the landing schema — it is the same page with a
+	 * different address — so only its seed differs.
 	 */
 	private const PAGES = array(
-		'landing'   => array(
+		'landing'       => array(
 			'title'    => 'הכשרת ITT Leader · מחזור 20',
 			'slug'     => 'itt-leader',
 			'template' => 'template-itt-landing.php',
+			'sections' => 'landing',
+			'content'  => 'women',
 		),
-		'thank-you' => array(
+		'landing-men'   => array(
+			'title'    => 'הכשרת ITT Leader · מחזור 20 · לגברים',
+			'slug'     => 'itt-leader-gvarim',
+			'template' => 'template-itt-landing.php',
+			'sections' => 'landing',
+			'content'  => 'men',
+		),
+		'thank-you'     => array(
 			'title'    => 'תודה — הפרטים התקבלו',
 			'slug'     => 'itt-leader-toda',
 			'template' => 'template-itt-thank-you.php',
+			'sections' => 'thank-you',
+			'content'  => 'women',
 		),
 		'accessibility' => array(
 			'title'    => 'הצהרת נגישות',
 			'slug'     => 'hatsharat-negishut',
 			'template' => '',
+			'sections' => '',
+			'content'  => '',
 		),
 	);
 
@@ -97,6 +115,8 @@ final class ITT_Importer {
 		// Not autoloaded on every request: only the form redirect and the admin
 		// screen need it, and both are happy to pay for one extra query.
 		update_option( self::OPTION, $pages, false );
+
+		self::cross_link( $pages );
 
 		return $pages;
 	}
@@ -177,14 +197,61 @@ final class ITT_Importer {
 	 * @param string $template Template key.
 	 */
 	private static function seed( int $post_id, string $template ): void {
-		foreach ( ITT_Fields::sections_for( $template ) as $section ) {
+		foreach ( ITT_Fields::sections_for( self::PAGES[ $template ]['sections'] ) as $section ) {
 			$stored = get_post_meta( $post_id, ITT_Meta::key( $section ), true );
 
 			if ( is_array( $stored ) && array() !== $stored ) {
 				continue;
 			}
 
-			ITT_Meta::save( $post_id, $section, ITT_Content::section( $section ) );
+			ITT_Meta::save( $post_id, $section, self::copy( $template, $section ) );
+		}
+	}
+
+	/**
+	 * The approved copy for one section of one page.
+	 *
+	 * @param string $template Page blueprint key.
+	 * @param string $section  Section key.
+	 * @return array<string, mixed>
+	 */
+	private static function copy( string $template, string $section ): array {
+		return 'men' === ( self::PAGES[ $template ]['content'] ?? '' )
+			? ITT_Content_Men::section( $section )
+			: ITT_Content::section( $section );
+	}
+
+	/**
+	 * Point the two landing pages at each other through the header button.
+	 *
+	 * Only fills an address that is still empty, so clearing the field in the
+	 * editor to hide the button stays a decision the editor can make and keep.
+	 *
+	 * @param array<string, int> $pages Page IDs keyed by blueprint.
+	 */
+	private static function cross_link( array $pages ): void {
+		$pairs = array(
+			'landing'     => 'landing-men',
+			'landing-men' => 'landing',
+		);
+
+		foreach ( $pairs as $from => $to ) {
+			$source = absint( $pages[ $from ] ?? 0 );
+			$target = absint( $pages[ $to ] ?? 0 );
+
+			if ( 0 === $source || 0 === $target ) {
+				continue;
+			}
+
+			$chrome = ITT_Meta::get( 'chrome', $source );
+
+			if ( '' !== trim( (string) ( $chrome['men_url'] ?? '' ) ) ) {
+				continue;
+			}
+
+			$chrome['men_url'] = (string) get_permalink( $target );
+
+			ITT_Meta::save( $source, 'chrome', $chrome );
 		}
 	}
 
@@ -200,8 +267,8 @@ final class ITT_Importer {
 			return;
 		}
 
-		foreach ( ITT_Fields::sections_for( $template ) as $section ) {
-			ITT_Meta::save( $post_id, $section, ITT_Content::section( $section ) );
+		foreach ( ITT_Fields::sections_for( self::PAGES[ $template ]['sections'] ) as $section ) {
+			ITT_Meta::save( $post_id, $section, self::copy( $template, $section ) );
 		}
 	}
 
@@ -231,7 +298,7 @@ final class ITT_Importer {
 
 		echo '<div class="wrap"><h1>' . esc_html__( 'עמודי ITT', 'itt-landing' ) . '</h1>';
 
-		echo '<p>' . esc_html__( 'התוכן של שני העמודים נשמר בתוך העמודים עצמם ונערך בעורך העמוד. מכאן אפשר ליצור עמוד חסר מחדש, או להחזיר עמוד לתוכן המקורי מהעיצוב.', 'itt-landing' ) . '</p>';
+		echo '<p>' . esc_html__( 'התוכן של כל העמודים נשמר בתוך העמודים עצמם ונערך בעורך העמוד. מכאן אפשר ליצור עמוד חסר מחדש, או להחזיר עמוד לתוכן המקורי מהעיצוב.', 'itt-landing' ) . '</p>';
 
 		echo '<table class="widefat striped" style="max-width:760px"><tbody>';
 
@@ -265,7 +332,7 @@ final class ITT_Importer {
 			'delete',
 			'reset',
 			false,
-			array( 'onclick' => "return confirm('" . esc_js( __( 'הפעולה תחליף את כל התוכן בשני העמודים בתוכן המקורי מהעיצוב. להמשיך?', 'itt-landing' ) ) . "');" )
+			array( 'onclick' => "return confirm('" . esc_js( __( 'הפעולה תחליף את כל התוכן בכל עמודי ITT בתוכן המקורי מהעיצוב. להמשיך?', 'itt-landing' ) ) . "');" )
 		);
 		echo '</form></div>';
 	}

@@ -732,6 +732,29 @@ html:has(.itt-page) {
 }
 
 /**
+ * Secondary header link to the companion (men's) landing page. Deliberately
+ * quieter than the orange CTA so the primary conversion path stays dominant.
+ */
+.itt-header__men {
+	display: inline-flex;
+	align-items: center;
+	min-height: 44px;
+	padding: 0 16px;
+	border: 1px solid var(--itt-purple);
+	border-radius: var(--itt-r-pill);
+	font-size: 17px;
+	font-weight: 700;
+	color: var(--itt-purple);
+	white-space: nowrap;
+}
+
+.itt-header__men:hover,
+.itt-header__men:focus-visible {
+	background: var(--itt-purple);
+	color: var(--itt-white);
+}
+
+/**
  * White on the brand orange measures 3.12:1, which clears AA only as large
  * text — so every white-on-orange button is kept at 19px/700 (14.25pt bold).
  */
@@ -1024,15 +1047,60 @@ html:has(.itt-page) {
 	}
 }
 
+/**
+ * Phone chrome. On a 320-414px screen the announcement bar and the sticky
+ * header together used to eat 279px — most of the first viewport — because
+ * both flex rows wrapped. Below 600px they are compacted into one line each:
+ * the decorative dot goes, type steps down, and the header CTA is dropped
+ * because the fixed bottom bar already carries the same "check your fit"
+ * action permanently and within thumb reach.
+ */
 @media (max-width: 600px) {
-	.itt-header__phone {
-		font-size: 22px;
+	.itt-topbar__inner {
+		gap: 8px;
+		padding-block: 6px;
 	}
 
-	/* Padding shrinks on small screens, the size does not: white on the brand
-	   orange only clears AA as large text (>=19px/700). */
+	.itt-topbar__dot {
+		display: none;
+	}
+
+	.itt-topbar__text,
+	.itt-topbar__link {
+		font-size: 14px;
+	}
+
+	/* Without this the notice wraps to a single orphan word on most phone
+	   widths, which reads as a layout bug rather than a sentence. */
+	.itt-topbar__text {
+		text-wrap: balance;
+	}
+
+	.itt-header__inner {
+		gap: 10px;
+		padding-block: 6px;
+	}
+
+	.itt-header__logo-img {
+		height: 38px;
+	}
+
+	.itt-header__actions {
+		gap: 10px;
+		flex-wrap: nowrap;
+	}
+
+	.itt-header__phone {
+		font-size: 20px;
+	}
+
+	.itt-header__men {
+		padding: 0 12px;
+		font-size: 15px;
+	}
+
 	.itt-header__cta {
-		padding: 12px 18px;
+		display: none;
 	}
 
 	.itt-sticky__text {
@@ -1046,6 +1114,28 @@ html:has(.itt-page) {
 
 	.itt-band {
 		padding: 26px 22px;
+	}
+}
+
+/* Narrowest phones: keep the header on one line rather than let the logo,
+   the men's link and the phone number fight for the same 280px. */
+@media (max-width: 400px) {
+	.itt-topbar__text,
+	.itt-topbar__link {
+		font-size: 13px;
+	}
+
+	.itt-header__logo-img {
+		height: 34px;
+	}
+
+	.itt-header__phone {
+		font-size: 18px;
+	}
+
+	.itt-header__men {
+		padding: 0 10px;
+		font-size: 14px;
 	}
 }
 

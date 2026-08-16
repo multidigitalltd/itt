@@ -40,6 +40,12 @@ defined( 'ABSPATH' ) || exit;
 			<a class="itt-header__phone" href="<?php echo esc_url( 'tel:' . preg_replace( '/[^\d*]/', '', (string) $itt_chrome['phone'] ) ); ?>">
 				<span dir="ltr"><?php echo esc_html( (string) $itt_chrome['phone'] ); ?></span>
 			</a>
+			<?php if ( '' !== trim( (string) ( $itt_chrome['men_url'] ?? '' ) ) ) : ?>
+				<a class="itt-header__men" href="<?php echo esc_url( (string) $itt_chrome['men_url'] ); ?>">
+					<?php echo esc_html( (string) $itt_chrome['men_text'] ); ?>
+				</a>
+			<?php endif; ?>
+
 			<a class="itt-btn itt-btn--orange itt-header__cta" href="#form">
 				<?php echo esc_html( (string) $itt_chrome['header_cta'] ); ?>
 				<span aria-hidden="true">←</span>

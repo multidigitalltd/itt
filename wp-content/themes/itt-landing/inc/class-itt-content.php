@@ -90,6 +90,8 @@ final class ITT_Content {
 			'header_note'     => 'ההרשמה בעיצומה',
 			'phone'           => '*6163',
 			'header_cta'      => 'מהרו להצטרף',
+			'men_text'        => 'לדף גברים',
+			'men_url'         => '',
 			'whatsapp'        => 'https://wa.me/972722601903',
 			'whatsapp_label'  => '072-260-1903',
 			'email'           => 'office@m-yashir.com',

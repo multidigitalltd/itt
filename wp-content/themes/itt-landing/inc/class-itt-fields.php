@@ -93,6 +93,8 @@ final class ITT_Fields {
 					self::text( 'header_note', 'הערה בכותרת' ),
 					self::text( 'phone', 'טלפון מרכזייה' ),
 					self::text( 'header_cta', 'כפתור בכותרת' ),
+					self::text( 'men_text', 'כפתור מעבר לדף גברים' ),
+					self::url( 'men_url', 'כתובת דף הגברים', 'ריק = הכפתור לא מוצג.' ),
 					self::url( 'whatsapp', 'קישור וואטסאפ' ),
 					self::text( 'whatsapp_label', 'מספר וואטסאפ לתצוגה' ),
 					self::email( 'email', 'אימייל' ),

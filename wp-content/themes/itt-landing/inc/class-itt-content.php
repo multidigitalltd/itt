@@ -780,7 +780,7 @@ final class ITT_Content {
 	 */
 	private static function bonuses(): array {
 		return array(
-			'badge'         => '🎁 המוטו שלנו: לפנק, להשקיע, לפנק!',
+			'badge'         => 'המוטו שלנו: לפנק, להשקיע, לפנק!',
 			'heading'       => '[count:6] בונוסים ומתנות — [hl:gold]שלך בהצטרפות[/hl]',
 			'show_values'   => 1,
 			'subtitle'      => 'מארז ליווי מלא בשווי [value]4,600 ₪[/value] — כלול במחיר הקורס',

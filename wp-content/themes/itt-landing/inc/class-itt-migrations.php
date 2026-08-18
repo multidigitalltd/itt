@@ -68,6 +68,7 @@ final class ITT_Migrations {
 			self::video_gallery_heading( $post_id );
 			self::quotes_into_voices( $post_id );
 			self::companion_course_line( $post_id );
+			self::bonuses_badge_emoji( $post_id );
 		}
 
 		update_option( self::OPTION, ITT_VERSION, false );
@@ -120,6 +121,28 @@ final class ITT_Migrations {
 				'cache_results'  => false,
 			)
 		);
+	}
+
+	/**
+	 * 1.7.3 — drop the gift emoji from the bonuses badge.
+	 *
+	 * Leading emoji is stripped rather than the whole string replaced, so the
+	 * rest of a badge the editor has since rewritten survives.
+	 *
+	 * @param int $post_id Landing page ID.
+	 */
+	private static function bonuses_badge_emoji( int $post_id ): void {
+		$bonuses = ITT_Meta::get( 'bonuses', $post_id );
+		$badge   = (string) ( $bonuses['badge'] ?? '' );
+		$clean   = trim( str_replace( '🎁', '', $badge ) );
+
+		if ( $clean === $badge ) {
+			return;
+		}
+
+		$bonuses['badge'] = $clean;
+
+		ITT_Meta::save( $post_id, 'bonuses', $bonuses );
 	}
 
 	/**

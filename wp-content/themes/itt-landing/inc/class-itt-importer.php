@@ -67,7 +67,28 @@ final class ITT_Importer {
 			'sections' => '',
 			'content'  => '',
 		),
+		'terms'         => array(
+			'title'    => 'תקנון ותנאי שימוש',
+			'slug'     => 'takanon',
+			'template' => '',
+			'sections' => '',
+			'content'  => '',
+		),
+		'privacy'       => array(
+			'title'    => 'מדיניות פרטיות',
+			'slug'     => 'mediniyut-pratiyut',
+			'template' => '',
+			'sections' => '',
+			'content'  => '',
+		),
 	);
+
+	/**
+	 * The legal pages linked from the footer and from the consent checkbox.
+	 *
+	 * @var array<string, string>
+	 */
+	private const LEGAL_PAGES = array( 'accessibility', 'terms', 'privacy' );
 
 	/**
 	 * Hook the importer.
@@ -91,6 +112,28 @@ final class ITT_Importer {
 		$id = is_array( $pages ) ? absint( $pages[ $template ] ?? 0 ) : 0;
 
 		return 'publish' === get_post_status( $id ) ? $id : 0;
+	}
+
+	/**
+	 * The published legal pages, in the order they should be listed.
+	 *
+	 * Missing or unpublished pages simply drop out, so the footer never prints
+	 * a link to a page that is not there.
+	 *
+	 * @return int[]
+	 */
+	public static function legal_pages(): array {
+		$ids = array();
+
+		foreach ( self::LEGAL_PAGES as $key ) {
+			$id = self::page_id( $key );
+
+			if ( 0 !== $id ) {
+				$ids[] = $id;
+			}
+		}
+
+		return $ids;
 	}
 
 	/**
@@ -171,7 +214,7 @@ final class ITT_Importer {
 				'post_status'    => 'publish',
 				'post_title'     => $blueprint['title'],
 				'post_name'      => $blueprint['slug'],
-				'post_content'   => 'hatsharat-negishut' === $blueprint['slug'] ? self::accessibility_statement() : '',
+				'post_content'   => self::starter_content( $blueprint['slug'] ),
 				'comment_status' => 'closed',
 				'ping_status'    => 'closed',
 				'meta_input'     => array( '_wp_page_template' => $template ),
@@ -180,6 +223,28 @@ final class ITT_Importer {
 		);
 
 		return is_wp_error( $id ) ? 0 : (int) $id;
+	}
+
+	/**
+	 * The body a provisioned page starts with, if any.
+	 *
+	 * The two legal pages get a visible placeholder rather than an empty body:
+	 * an empty page published at a URL the consent checkbox links to is worse
+	 * than one that says out loud it is still waiting for its text.
+	 *
+	 * @param string $slug Page slug.
+	 * @return string Block markup for the page content.
+	 */
+	private static function starter_content( string $slug ): string {
+		if ( 'hatsharat-negishut' === $slug ) {
+			return self::accessibility_statement();
+		}
+
+		if ( 'takanon' === $slug || 'mediniyut-pratiyut' === $slug ) {
+			return '<!-- wp:paragraph --><p>[יש להשלים: יש להדביק כאן את הנוסח המלא. עד שהתוכן יוזן, העמוד מוצג עם ההודעה הזו.]</p><!-- /wp:paragraph -->';
+		}
+
+		return '';
 	}
 
 	/**

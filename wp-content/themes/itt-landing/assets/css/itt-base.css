@@ -1732,6 +1732,17 @@ html:has(.itt-page) {
 	font-weight: 700;
 	text-decoration: underline;
 	text-underline-offset: 3px;
+	/**
+	 * Padded to clear the 24px target 2.5.8 asks for, with the same amount
+	 * taken back as negative margin so the consent sentence keeps its line
+	 * spacing. These are inline links inside a sentence and so are exempt from
+	 * the rule anyway, but a comfortable tap costs nothing here — and the 44px
+	 * the standard wants for standalone controls would need padding deep
+	 * enough to overlap the line above.
+	 */
+	display: inline-block;
+	padding-block: 6px;
+	margin-block: -6px;
 }
 
 .itt-consent__link:hover {

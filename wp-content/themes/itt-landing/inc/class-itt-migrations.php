@@ -73,6 +73,7 @@ final class ITT_Migrations {
 			self::sticky_course_line( $post_id );
 			self::bonuses_badge_emoji( $post_id );
 			self::bonuses_totals( $post_id );
+			self::consent_links( $post_id );
 		}
 
 		// Autoloaded: read on every request by maybe_run(), so it should come
@@ -127,6 +128,39 @@ final class ITT_Migrations {
 				'cache_results'  => false,
 			)
 		);
+	}
+
+	/**
+	 * 1.9.0 — point the consent checkbox at the legal pages.
+	 *
+	 * The checkbox has always carried [terms] and [privacy] tokens, but with no
+	 * addresses behind them they rendered as plain words. Now that the two
+	 * pages exist, the fields are filled in — only where they are still empty,
+	 * so an address the client set by hand is never overwritten.
+	 *
+	 * @param int $post_id Landing page ID.
+	 */
+	private static function consent_links( int $post_id ): void {
+		$targets = array(
+			'terms_url'   => ITT_Importer::page_id( 'terms' ),
+			'privacy_url' => ITT_Importer::page_id( 'privacy' ),
+		);
+
+		$form    = ITT_Meta::get( 'form', $post_id );
+		$changed = false;
+
+		foreach ( $targets as $field => $page_id ) {
+			if ( 0 === $page_id || '' !== trim( (string) ( $form[ $field ] ?? '' ) ) ) {
+				continue;
+			}
+
+			$form[ $field ] = (string) get_permalink( $page_id );
+			$changed        = true;
+		}
+
+		if ( $changed ) {
+			ITT_Meta::save( $post_id, 'form', $form );
+		}
 	}
 
 	/**

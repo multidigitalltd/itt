@@ -366,6 +366,16 @@
 	box-sizing: border-box;
 }
 
+/*
+ * The browser's own `[hidden] { display: none }` is a bare attribute selector,
+ * so any class that sets `display` outruns it — which meant hiding a `.msl-btn`
+ * by setting `hidden` did nothing at all, silently. Every place this sheet
+ * toggles `hidden` from script depends on this rule holding.
+ */
+.msl-page [hidden] {
+	display: none !important;
+}
+
 .msl-page h1,
 .msl-page h2,
 .msl-page h3,

@@ -24,7 +24,7 @@ final class MSL_DB {
 	/**
 	 * Bumped whenever the schema below changes.
 	 */
-	private const SCHEMA_VERSION = '1';
+	private const SCHEMA_VERSION = '2';
 
 	/**
 	 * Option holding the installed schema version.
@@ -106,6 +106,13 @@ final class MSL_DB {
 		// Note the deliberate omissions: no full name, no address, no free-text
 		// beyond the dedication, and no raw phone/email/IP — only salted hashes,
 		// which are enough for dedup and rate limiting and useless to a thief.
+		//
+		// page_piece is UNIQUE rather than a plain key. Two joins arriving at the
+		// same moment can both read the same free position before either has
+		// written, and a duplicate position makes one of the two participants
+		// disappear from the artwork — /pieces is keyed by position, so the
+		// second row silently replaces the first. The uniqueness is what turns
+		// that race into a failed insert that MSL_Joins::record() can retry.
 		$sql = array(
 			"CREATE TABLE {$joins} (
 				id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -132,7 +139,7 @@ final class MSL_DB {
 				UNIQUE KEY uuid (uuid),
 				UNIQUE KEY referral_code (referral_code),
 				KEY page_created (page_id, created_at),
-				KEY page_piece (page_id, piece_index),
+				UNIQUE KEY page_piece (page_id, piece_index),
 				KEY referred_by (referred_by),
 				KEY page_country (page_id, country(40)),
 				KEY page_city (page_id, city(40)),

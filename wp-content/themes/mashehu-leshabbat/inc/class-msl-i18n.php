@@ -40,11 +40,28 @@ final class MSL_I18N {
 	private static ?string $lang = null;
 
 	/**
-	 * The language to render: query string, then cookie, then the site locale.
+	 * The language to render on the server.
 	 *
-	 * The query string wins so a shared link can pin a language, and the choice
-	 * is persisted by the browser rather than here — writing a cookie from PHP
-	 * would make the HTML uncacheable for the sake of one attribute.
+	 * Deliberately blind to the visitor's cookie. The whole caching story for
+	 * this page rests on the HTML being identical for everyone, and reading
+	 * `msl_lang` here quietly broke that: behind LiteSpeed or Cloudflare APO the
+	 * cache key does not include the cookie, so the first English visitor's
+	 * response would be handed to every Hebrew visitor after them, and a cached
+	 * Hebrew response would ignore a returning English visitor entirely.
+	 *
+	 * So the server renders Hebrew — the product's primary language — and the
+	 * browser applies the stored preference on load, which msl-app.js already
+	 * knows how to do without a reload or a second request.
+	 *
+	 * `?lang=` is still honoured, because a query string varies the cache key in
+	 * every mainstream page cache. That gives a shareable link that pins a
+	 * language and arrives already rendered in it, with no flash. The client
+	 * re-checks it too, in case a cache is configured to strip query strings.
+	 *
+	 * Deriving the default from the site locale was tried and reverted: most
+	 * installs sit at en_US until someone changes it, which served the entire
+	 * campaign in English — including a brand name the client has explicitly
+	 * not signed off on.
 	 *
 	 * @return string 'he' or 'en'.
 	 */
@@ -59,24 +76,9 @@ final class MSL_I18N {
 		if ( isset( $_GET['lang'] ) ) {
 			// phpcs:ignore WordPress.Security.NonceVerification.Recommended
 			$requested = sanitize_key( wp_unslash( (string) $_GET['lang'] ) );
-		} elseif ( isset( $_COOKIE[ self::COOKIE ] ) ) {
-			$requested = sanitize_key( wp_unslash( (string) $_COOKIE[ self::COOKIE ] ) );
 		}
 
-		if ( in_array( $requested, self::LANGS, true ) ) {
-			self::$lang = $requested;
-
-			return self::$lang;
-		}
-
-		/*
-		 * Hebrew, always, until the visitor says otherwise. Deriving this from
-		 * the site locale looked tidier but meant a WordPress installed in
-		 * en_US — which is most of them, before anyone changes it — served the
-		 * whole campaign in English, including a brand name the client has
-		 * explicitly not signed off on.
-		 */
-		self::$lang = 'he';
+		self::$lang = in_array( $requested, self::LANGS, true ) ? $requested : 'he';
 
 		return self::$lang;
 	}

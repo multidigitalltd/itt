@@ -196,38 +196,64 @@ final class MSL_Joins {
 		}
 
 		$code       = self::generate_code();
-		$piece      = MSL_Stats::next_piece_index( $page_id );
+		$uuid       = wp_generate_uuid4();
 		$table      = MSL_DB::joins_table();
 		$referrer   = self::is_code( (string) $data['referred_by'] ) ? (string) $data['referred_by'] : '';
 		$reminder   = '' !== (string) $data['phone'] || '' !== (string) $data['email'];
 		$coordinate = self::locate( (string) $data['city'], (string) $data['country'] );
 
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery -- purpose-built table; see MSL_DB.
-		$inserted = $wpdb->insert(
-			$table,
-			array(
-				'uuid'           => wp_generate_uuid4(),
-				'page_id'        => $page_id,
-				'piece_index'    => $piece,
-				'first_name'     => (string) $data['first_name'],
-				'city'           => (string) $data['city'],
-				'country'        => (string) $data['country'],
-				'lat'            => $coordinate[0],
-				'lng'            => $coordinate[1],
-				'is_anonymous'   => (int) $data['is_anonymous'],
-				'lang'           => (string) $data['lang'],
-				'referral_code'  => $code,
-				'referred_by'    => $referrer,
-				'phone_hash'     => $phone_hash,
-				'email_hash'     => $email_hash,
-				'ip_hash'        => $ip_hash,
-				'reminder_optin' => $reminder ? 1 : 0,
-				'reminder_phone' => '' !== (string) $data['phone'] ? self::protect( (string) $data['phone'] ) : null,
-				'reminder_email' => '' !== (string) $data['email'] ? self::protect( (string) $data['email'] ) : null,
-				'created_at'     => current_time( 'mysql', true ),
-			),
-			array( '%s', '%d', '%d', '%s', '%s', '%s', '%f', '%f', '%d', '%s', '%s', '%s', '%s', '%s', '%s', '%d', '%s', '%s', '%s' )
-		);
+		/*
+		 * Reading the next free position and writing it are two statements, and
+		 * on a Friday afternoon two joins land between them constantly. The
+		 * position is UNIQUE per campaign (see MSL_DB), so the loser of that race
+		 * gets a failed insert rather than a duplicate position — and a duplicate
+		 * position is not a cosmetic problem: /pieces is keyed by position, so
+		 * one of the two participants would simply vanish from the artwork and
+		 * both would watch their candle land on the same spot.
+		 *
+		 * Re-reading and retrying is enough. The window is a single statement
+		 * wide, so even a handful of simultaneous joins settle within a few
+		 * attempts, and this needs no lock and no separate sequence table.
+		 */
+		$inserted = false;
+		$piece    = 0;
+
+		for ( $attempt = 0; $attempt < 10 && ! $inserted; $attempt++ ) {
+			$piece = MSL_Stats::next_piece_index( $page_id );
+
+			// Errors are expected here — that is the point — so the failed
+			// insert must not be reported to the caller as a broken query.
+			$suppress = $wpdb->suppress_errors( true );
+
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery -- purpose-built table; see MSL_DB.
+			$inserted = $wpdb->insert(
+				$table,
+				array(
+					'uuid'           => $uuid,
+					'page_id'        => $page_id,
+					'piece_index'    => $piece,
+					'first_name'     => (string) $data['first_name'],
+					'city'           => (string) $data['city'],
+					'country'        => (string) $data['country'],
+					'lat'            => $coordinate[0],
+					'lng'            => $coordinate[1],
+					'is_anonymous'   => (int) $data['is_anonymous'],
+					'lang'           => (string) $data['lang'],
+					'referral_code'  => $code,
+					'referred_by'    => $referrer,
+					'phone_hash'     => $phone_hash,
+					'email_hash'     => $email_hash,
+					'ip_hash'        => $ip_hash,
+					'reminder_optin' => $reminder ? 1 : 0,
+					'reminder_phone' => '' !== (string) $data['phone'] ? self::protect( (string) $data['phone'] ) : null,
+					'reminder_email' => '' !== (string) $data['email'] ? self::protect( (string) $data['email'] ) : null,
+					'created_at'     => current_time( 'mysql', true ),
+				),
+				array( '%s', '%d', '%d', '%s', '%s', '%s', '%f', '%f', '%d', '%s', '%s', '%s', '%s', '%s', '%s', '%d', '%s', '%s', '%s' )
+			);
+
+			$wpdb->suppress_errors( $suppress );
+		}
 
 		if ( ! $inserted ) {
 			return new WP_Error( 'msl_insert_failed', 'generic' );
@@ -241,7 +267,7 @@ final class MSL_Joins {
 		MSL_Stats::flush( $page_id );
 
 		return array(
-			'uuid'           => (string) $wpdb->get_var( $wpdb->prepare( "SELECT uuid FROM {$table} WHERE id = %d", $join_id ) ), // phpcs:ignore WordPress.DB
+			'uuid'           => $uuid,
 			'referral_code'  => $code,
 			'piece_index'    => $piece,
 			'participants'   => MSL_Stats::participants( $page_id ),

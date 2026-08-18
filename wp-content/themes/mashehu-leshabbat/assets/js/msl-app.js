@@ -180,9 +180,31 @@
 		$$(selector).forEach(function (node) { node.textContent = num(value); });
 	}
 
+	/*
+	 * An editor can close the campaign while a visitor is sitting on the page —
+	 * or the page may have come from a cache that predates the closure. Letting
+	 * them walk through all three steps only to be refused at the end is the
+	 * worst possible way to tell them, so the entry points go the moment /stats
+	 * says so.
+	 */
+	function renderClosed() {
+		$$('[data-msl-open-join]').forEach(function (button) {
+			button.hidden = config.campaign.closed;
+		});
+
+		if (config.campaign.closed && modal && !modal.hidden) { closeJoin(); }
+
+		renderUrgency();
+	}
+
 	function applyStats(data) {
 		state.participants = data.participants;
 		state.pct = data.pct;
+
+		if (typeof data.closed === 'boolean' && data.closed !== config.campaign.closed) {
+			config.campaign.closed = data.closed;
+			renderClosed();
+		}
 
 		state.last10 = data.last10;
 		state.countries = data.countries;
@@ -1135,6 +1157,20 @@
 
 		state.refCode = readCookie(config.cookies.mine);
 
+		/*
+		 * The server renders Hebrew so the HTML stays identical for every
+		 * visitor and a full-page cache cannot hand one visitor's language to
+		 * the next. Applying the stored preference is therefore this side's job:
+		 * `?lang=` first (it is also honoured server-side, so this only matters
+		 * when a cache strips query strings), then the cookie.
+		 */
+		var requested = new URLSearchParams(window.location.search).get('lang');
+		var preferred = config.langs.indexOf(requested) !== -1 ? requested : readCookie(config.cookies.lang);
+
+		if (config.langs.indexOf(preferred) !== -1 && preferred !== state.lang) {
+			state.lang = preferred;
+		}
+
 		canvasEngine.init({
 			target: config.campaign.target,
 			count: state.participants,
@@ -1154,11 +1190,8 @@
 		startCollage();
 
 		syncOptions();
-		renderCounters();
-		renderReferral();
-		renderHints();
-		renderCountdown();
-		renderUrgency();
+		applyLanguage();
+		renderClosed();
 
 		if (state.refCode) { pollReferral(); }
 

@@ -65,6 +65,14 @@ final class ITT_Migrations {
 	 * Apply every migration, then record the version.
 	 */
 	public static function run(): void {
+		// Pages first. A version that introduces a new page — the legal pages in
+		// 1.9.0, the men's pages before them — only creates it on theme
+		// activation, and an update uploaded over the top never activates
+		// anything. Without this, a migration that wires something up to a new
+		// page found nothing to wire, did nothing, and still recorded the
+		// version, so it never tried again.
+		ITT_Importer::provision();
+
 		foreach ( self::landing_pages() as $post_id ) {
 			self::envelope_seminars_card( $post_id );
 			self::show_email_field( $post_id );

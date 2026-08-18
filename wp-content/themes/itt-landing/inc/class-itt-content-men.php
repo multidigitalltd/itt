@@ -58,7 +58,7 @@ final class ITT_Content_Men {
 	private static function overrides(): array {
 		return array(
 			'chrome'   => array(
-				'men_text' => 'לפרטים על קורס נשים חייגו *6163',
+				'sticky_text' => 'מחזור 20 · הקבלה בראיון ושיחת התאמה בלבד · [flash]להרשמה על קורס נשים חייגו *6163[/flash]',
 			),
 			'hero'     => array(
 				'image_alt' => 'אדם עומד בראש גרם מדרגות נייר, מביט אל אופק זריחה — אמנות קיפולי נייר',

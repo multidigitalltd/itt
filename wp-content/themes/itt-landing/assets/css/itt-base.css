@@ -552,6 +552,22 @@ html:has(.itt-page) {
 	color: var(--itt-gold);
 }
 
+/**
+ * Bold gold that pulses — for a standing offer that should keep catching the
+ * eye without moving anything. Opacity only, so it never shifts layout, and
+ * the base state is fully opaque: with animation off it is simply bold gold.
+ */
+.itt-flash {
+	font-weight: 700;
+	color: var(--itt-gold);
+	animation: itt-flash 1.6s ease-in-out infinite;
+}
+
+@keyframes itt-flash {
+	0%, 100% { opacity: 1; }
+	50% { opacity: 0.45; }
+}
+
 /* Generic card surface reused across sections. */
 .itt-card {
 	display: grid;
@@ -747,29 +763,6 @@ html:has(.itt-page) {
 	font-size: 26px;
 	font-weight: 700;
 	color: var(--itt-purple);
-}
-
-/**
- * Pointer to the companion course. It reads as a sentence now rather than a
- * button — it names a phone number, not a destination — so it is set as quiet
- * text with a dotted underline on the number, and stays well below the orange
- * CTA in weight so the primary conversion path keeps the eye.
- */
-.itt-header__men {
-	display: inline-flex;
-	align-items: center;
-	min-height: 44px;
-	font-size: 16px;
-	font-weight: 600;
-	color: var(--itt-purple-mid);
-	border-bottom: 1px dashed var(--itt-border-purple);
-	text-wrap: balance;
-}
-
-.itt-header__men:hover,
-.itt-header__men:focus-visible {
-	color: var(--itt-orange-dark);
-	border-bottom-color: currentColor;
 }
 
 /**
@@ -1191,24 +1184,6 @@ html:has(.itt-page) {
 		font-size: 20px;
 	}
 
-	/**
-	 * Now a sentence rather than a pill, it cannot share the single header row
-	 * with the logo and the phone number. It wraps to its own line underneath
-	 * instead of being hidden — a phone visitor should still learn the other
-	 * course exists, and the whole line is one tap to dial.
-	 */
-	.itt-header__men {
-		flex: 1 0 100%;
-		justify-content: center;
-		/* A standalone link, not one inline in a sentence, so it keeps the
-		   full 44px touch target the standard asks for on mobile. */
-		min-height: 44px;
-		padding: 0;
-		font-size: 13px;
-		border-bottom: 0;
-		text-align: center;
-	}
-
 	.itt-header__cta {
 		display: none;
 	}
@@ -1288,9 +1263,6 @@ html:has(.itt-page) {
 		font-size: 18px;
 	}
 
-	.itt-header__men {
-		font-size: 12.5px;
-	}
 }
 
 /**

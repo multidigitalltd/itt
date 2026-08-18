@@ -63,12 +63,14 @@ function itt_rich( string $text ): string {
 			'/\[blink\](.+?)\[\/blink\]/u',
 			'/\[value\](.+?)\[\/value\]/u',
 			'/\[gold\](.+?)\[\/gold\]/u',
+			'/\[flash\](.+?)\[\/flash\]/u',
 		),
 		array(
 			'<span class="itt-pop" data-pop>$1</span>',
 			'<span class="itt-blink">$1</span>',
 			'<span class="itt-pop itt-blink" data-pop>$1</span>',
 			'<span class="itt-gold">$1</span>',
+			'<span class="itt-flash">$1</span>',
 		),
 		$html
 	);

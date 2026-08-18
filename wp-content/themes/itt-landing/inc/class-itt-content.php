@@ -13,6 +13,7 @@
  *   [blink]…[/blink]             colour blink (orange <-> cyan)
  *   [value]…[/value]             pop-in + colour blink (price figures)
  *   [gold]…[/gold]               static gold text
+ *   [flash]…[/flash]             bold gold that pulses, for a standing offer
  *   [count:N] / [count:N,comma]  count-up from zero
  *
  * @package ITT_Landing
@@ -90,14 +91,13 @@ final class ITT_Content {
 			'header_note'     => 'ההרשמה בעיצומה',
 			'phone'           => '*6163',
 			'header_cta'      => 'מהרו להצטרף',
-			'men_text'        => 'לפרטים על קורס גברים חייגו *6163',
 			'whatsapp'        => 'https://wa.me/972722601903',
 			'whatsapp_label'  => '072-260-1903',
 			'email'           => 'office@m-yashir.com',
 			'footer_tagline'  => 'מרכז ישיר · ללמוד. להגשים. להתפרנס',
 			'credit_text'     => 'uxui & dev by multi digital',
 			'credit_url'      => 'https://m-d.co.il/',
-			'sticky_text'     => 'מחזור 20 · הקבלה בראיון ושיחת התאמה בלבד',
+			'sticky_text'     => 'מחזור 20 · הקבלה בראיון ושיחת התאמה בלבד · [flash]להרשמה על קורס גברים חייגו *6163[/flash]',
 			'sticky_whatsapp' => 'וואטסאפ',
 			'sticky_cta'      => 'לבדיקת התאמה — ללא עלות',
 		);

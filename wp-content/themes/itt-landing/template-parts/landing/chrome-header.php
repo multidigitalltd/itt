@@ -76,19 +76,6 @@ defined( 'ABSPATH' ) || exit;
 			<a class="itt-header__phone" href="<?php echo esc_url( 'tel:' . preg_replace( '/[^\d*]/', '', (string) $itt_chrome['phone'] ) ); ?>">
 				<span dir="ltr"><?php echo esc_html( (string) $itt_chrome['phone'] ); ?></span>
 			</a>
-			<?php if ( '' !== trim( (string) ( $itt_chrome['men_text'] ?? '' ) ) ) : ?>
-				<?php
-				/**
-				 * Pointer to the companion course. It used to link across to the
-				 * other landing page; it now names the phone number instead, so
-				 * it is a tel: link — on a phone that is one tap to dial, and on
-				 * a desktop it still reads as the sentence it is.
-				 */
-				?>
-				<a class="itt-header__men" href="<?php echo esc_url( 'tel:' . preg_replace( '/[^\d*+]/', '', (string) $itt_chrome['phone'] ) ); ?>">
-					<?php echo esc_html( (string) $itt_chrome['men_text'] ); ?>
-				</a>
-			<?php endif; ?>
 
 			<a class="itt-btn itt-btn--orange itt-header__cta" href="#form">
 				<?php echo esc_html( (string) $itt_chrome['header_cta'] ); ?>

@@ -70,7 +70,7 @@ final class ITT_Migrations {
 			self::show_email_field( $post_id );
 			self::video_gallery_heading( $post_id );
 			self::quotes_into_voices( $post_id );
-			self::companion_course_line( $post_id );
+			self::sticky_course_line( $post_id );
 			self::bonuses_badge_emoji( $post_id );
 			self::bonuses_totals( $post_id );
 		}
@@ -201,29 +201,41 @@ final class ITT_Migrations {
 	}
 
 	/**
-	 * 1.7.2 — the companion-course link becomes a phone line.
+	 * 1.8.3 — the companion-course line moves to the fixed bar.
 	 *
-	 * "לדף גברים" was a button across to the other landing page; it is now a
-	 * sentence naming the phone number instead. Only the two old default labels
-	 * are replaced — a label the editor has written themselves is left alone,
-	 * and the address the button used to carry is dropped by the schema.
+	 * It sat in the header, where it crowded the logo and the phone number and
+	 * had to wrap to its own row on a phone. The fixed bar already carries a
+	 * standing line of copy, so the sentence goes there — set in [flash], which
+	 * is bold gold that pulses.
+	 *
+	 * The header field is retired; the schema drops it on the next save. Only
+	 * the known previous defaults are replaced, so a bar the editor has already
+	 * rewritten is left alone.
 	 *
 	 * @param int $post_id Landing page ID.
 	 */
-	private static function companion_course_line( int $post_id ): void {
-		$replacements = array(
-			'לדף גברים' => 'לפרטים על קורס גברים חייגו *6163',
-			'לדף נשים'  => 'לפרטים על קורס נשים חייגו *6163',
-		);
-
+	private static function sticky_course_line( int $post_id ): void {
 		$chrome = ITT_Meta::get( 'chrome', $post_id );
-		$label  = trim( (string) ( $chrome['men_text'] ?? '' ) );
 
-		if ( ! isset( $replacements[ $label ] ) ) {
+		// Which course this page points at is decided by the header line it was
+		// carrying, falling back to the women's page wording.
+		$stored = get_post_meta( $post_id, ITT_Meta::key( 'chrome' ), true );
+		$stored = is_array( $stored ) ? $stored : array();
+		$was    = trim( (string) ( $stored['men_text'] ?? '' ) );
+		$other  = str_contains( $was, 'נשים' ) ? 'נשים' : 'גברים';
+
+		$sticky = trim( (string) ( $chrome['sticky_text'] ?? '' ) );
+
+		// Already carries the line, in any wording: nothing to do.
+		if ( str_contains( $sticky, 'להרשמה על קורס' ) ) {
 			return;
 		}
 
-		$chrome['men_text'] = $replacements[ $label ];
+		if ( 'מחזור 20 · הקבלה בראיון ושיחת התאמה בלבד' !== $sticky ) {
+			return;
+		}
+
+		$chrome['sticky_text'] = $sticky . ' · [flash]להרשמה על קורס ' . $other . ' חייגו *6163[/flash]';
 
 		ITT_Meta::save( $post_id, 'chrome', $chrome );
 	}

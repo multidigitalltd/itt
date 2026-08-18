@@ -87,7 +87,7 @@ $itt_show_sticky ??= is_page_template( 'template-itt-landing.php' );
 <?php if ( $itt_show_sticky ) : ?>
 	<aside class="itt-sticky" aria-label="<?php esc_attr_e( 'פעולות מהירות', 'itt-landing' ); ?>">
 		<div class="itt-shell itt-sticky__inner">
-			<p class="itt-sticky__text"><?php echo esc_html( (string) $itt_chrome['sticky_text'] ); ?></p>
+			<p class="itt-sticky__text"><?php itt_the_rich( (string) $itt_chrome['sticky_text'] ); ?></p>
 			<div class="itt-sticky__actions">
 				<a class="itt-btn itt-btn--ghost-cyan itt-sticky__wa" href="<?php echo esc_url( (string) $itt_chrome['whatsapp'] ); ?>" rel="noopener">
 					<?php itt_icon( 'whatsapp' ); ?>

@@ -1,55 +1,62 @@
 #!/bin/sh
 #
-# Refuse a commit that changes the theme without bumping its version.
+# Refuse a commit that changes a theme without bumping its version.
 #
 # The asset URLs bust their own cache from filemtime, so a stale stylesheet is
 # no longer a risk — but the Version header is what tells anyone which build is
 # actually installed, and it was silently left behind twice. This makes that
 # impossible rather than merely discouraged.
 #
+# Every theme under wp-content/themes/ is checked, so a theme added later is
+# covered without touching this file.
+#
 # Enable with:  git config core.hooksPath .githooks
 # Bypass once:  git commit --no-verify
 
 set -e
 
-THEME='wp-content/themes/itt-landing'
-STYLE="$THEME/style.css"
-
-# Nothing from the theme in this commit? Nothing to check.
-if git diff --cached --name-only | grep -q "^$THEME/"; then
-	:
-else
-	exit 0
-fi
-
 version_of() {
-	# $1 is a git revision spec, e.g. ":$STYLE" (staged) or "HEAD:$STYLE".
+	# $1 is a git revision spec, e.g. ":path/style.css" or "HEAD:path/style.css".
 	git show "$1" 2>/dev/null | sed -n 's/^Version:[[:space:]]*//p' | head -n 1
 }
 
-staged=$( version_of ":$STYLE" )
-head=$( version_of "HEAD:$STYLE" )
+status=0
 
-if [ -z "$staged" ]; then
-	echo "pre-commit: no Version header found in $STYLE" >&2
-	exit 1
-fi
+# Which themes does this commit touch?
+themes=$(
+	git diff --cached --name-only \
+		| sed -n 's#^\(wp-content/themes/[^/]*\)/.*#\1#p' \
+		| sort -u
+)
 
-# First commit of the theme: there is no previous version to differ from.
-if [ -z "$head" ]; then
-	exit 0
-fi
+for theme in $themes; do
+	style="$theme/style.css"
 
-if [ "$staged" = "$head" ]; then
-	cat >&2 <<EOF
-pre-commit: the theme changed but its version did not.
+	staged=$( version_of ":$style" )
+	head=$( version_of "HEAD:$style" )
 
-  $STYLE still reads  Version: $staged
+	if [ -z "$staged" ]; then
+		echo "pre-commit: no Version header found in $style" >&2
+		status=1
+		continue
+	fi
+
+	# First commit of a theme: there is no previous version to differ from.
+	if [ -z "$head" ]; then
+		continue
+	fi
+
+	if [ "$staged" = "$head" ]; then
+		cat >&2 <<EOF
+pre-commit: $theme changed but its version did not.
+
+  $style still reads  Version: $staged
 
 Bump it, stage it, and commit again. To skip this check for one commit:
   git commit --no-verify
 EOF
-	exit 1
-fi
+		status=1
+	fi
+done
 
-exit 0
+exit $status

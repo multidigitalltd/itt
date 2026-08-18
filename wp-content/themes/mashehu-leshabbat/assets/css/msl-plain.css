@@ -1,0 +1,96 @@
+/*
+ * Everything that is not the campaign page.
+ *
+ * The accessibility statement and any privacy or terms page the client adds
+ * land here. Small on purpose: it exists so a stray page is readable and
+ * accessible, not so it can be designed.
+ */
+
+:root {
+	--msl-plain-ink: #2B211B;
+	--msl-plain-ink: oklch(0.20 0.03 50);
+	--msl-plain-body: #6E594B;
+	--msl-plain-body: oklch(0.48 0.035 55);
+	--msl-plain-canvas: #F8F2E8;
+	--msl-plain-canvas: oklch(0.962 0.014 78);
+	--msl-plain-accent: #C44C00;
+	--msl-plain-accent: oklch(0.565 0.17 45);
+	--msl-plain-border: #E8E1D6;
+	--msl-plain-border: oklch(0.91 0.02 78);
+}
+
+body {
+	margin: 0;
+	background: var(--msl-plain-canvas);
+	color: var(--msl-plain-ink);
+	font-family: "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+	font-size: calc((18px) * var(--msl-scale, 1));
+	line-height: 1.7;
+}
+
+.msl-plain {
+	max-width: 44rem;
+	margin: 0 auto;
+	padding: 3rem 1.5rem 5rem;
+}
+
+.msl-plain__title {
+	font-size: calc((clamp(2rem, 5vw, 2.75rem)) * var(--msl-scale, 1));
+	line-height: 1.15;
+	margin: 0 0 1.5rem;
+}
+
+.msl-plain__content h2 {
+	margin: 2.5rem 0 .75rem;
+	font-size: calc((1.5rem) * var(--msl-scale, 1));
+	line-height: 1.3;
+}
+
+.msl-plain__content p,
+.msl-plain__content li {
+	color: var(--msl-plain-body);
+}
+
+.msl-plain__content ul,
+.msl-plain__content ol {
+	padding-inline-start: 1.5rem;
+}
+
+.msl-plain__content li {
+	margin-block-end: .5rem;
+}
+
+.msl-plain__content a {
+	color: var(--msl-plain-accent);
+	text-underline-offset: 3px;
+}
+
+.msl-plain__content hr {
+	border: 0;
+	border-block-start: 1px solid var(--msl-plain-border);
+	margin-block: 2.5rem;
+}
+
+:focus-visible {
+	outline: 3px solid var(--msl-plain-accent);
+	outline-offset: 3px;
+}
+
+.msl-skip-link {
+	position: fixed;
+	inset-block-start: 8px;
+	inset-inline-start: 8px;
+	z-index: 200;
+	padding: 12px 20px;
+	border-radius: 999px;
+	background: var(--msl-plain-ink);
+	color: #fff;
+	font-weight: 700;
+	text-decoration: none;
+	transform: translateY(-200%);
+	transition: transform .18s ease;
+}
+
+.msl-skip-link:focus {
+	transform: translateY(0);
+}

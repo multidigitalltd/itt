@@ -523,6 +523,7 @@
 	function initVideoGalleries() {
 		document.querySelectorAll( '[data-itt-vgallery]' ).forEach( function ( gallery ) {
 			var tabs = Array.prototype.slice.call( gallery.querySelectorAll( '[role="tab"]' ) );
+			var counter = gallery.querySelector( '[data-itt-vgallery-current]' );
 
 			if ( tabs.length < 2 ) {
 				return;
@@ -536,6 +537,21 @@
 			 */
 			function select( index, moveFocus ) {
 				var next = ( index + tabs.length ) % tabs.length;
+
+				// Retrigger the fade on the entry that is about to show. The
+				// class has to come off and go back on for the animation to
+				// replay when the same panel is reselected.
+				var incoming = document.getElementById( tabs[ next ].getAttribute( 'aria-controls' ) );
+
+				if ( incoming ) {
+					incoming.classList.remove( 'is-entering' );
+					void incoming.offsetWidth;
+					incoming.classList.add( 'is-entering' );
+				}
+
+				if ( counter ) {
+					counter.textContent = String( next + 1 );
+				}
 
 				tabs.forEach( function ( tab, i ) {
 					var on = i === next;

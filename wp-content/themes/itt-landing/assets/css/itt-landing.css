@@ -278,11 +278,74 @@
 	text-wrap: pretty;
 }
 
+.itt-vgallery__nav {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+/* Position readout between the arrows, so the pair reads as one control
+   rather than two buttons with no sense of where they are going. */
+.itt-vgallery__count {
+	font-size: 17px;
+	font-weight: 700;
+	color: var(--itt-purple);
+	font-variant-numeric: tabular-nums;
+	min-width: 3.5em;
+	text-align: center;
+	direction: ltr;
+}
+
+.itt-vgallery__count-sep {
+	margin-inline: 3px;
+	color: var(--itt-muted-3);
+	font-weight: 400;
+}
+
 .itt-vstage {
 	display: grid;
-	grid-template-columns: 1.35fr 1fr;
+	grid-template-columns: 1.5fr 1fr;
 	gap: 34px;
 	align-items: center;
+}
+
+/**
+ * A short quote used to leave most of the copy column empty. It is anchored
+ * to the top of the video instead of floated in the middle, and carries an
+ * oversized quote mark so the column reads as deliberate rather than unfilled.
+ */
+.itt-vstage__copy {
+	position: relative;
+	padding-top: 46px;
+}
+
+.itt-vstage__copy::before {
+	content: "”";
+	position: absolute;
+	top: -12px;
+	inset-inline-start: 0;
+	font-size: 96px;
+	line-height: 1;
+	color: var(--itt-gold);
+	opacity: 0.5;
+	pointer-events: none;
+}
+
+/* Cross-fade on switch, so stepping through reads as one gallery changing
+   rather than separate panels blinking in and out. */
+.itt-vstage.is-entering {
+	animation: itt-vstage-in 0.45s var(--itt-ease-out) both;
+}
+
+@keyframes itt-vstage-in {
+	from {
+		opacity: 0;
+		transform: translateY(10px);
+	}
+	to {
+		opacity: 1;
+		transform: none;
+	}
 }
 
 /* Beats the [hidden] default, which `display: grid` would otherwise outrank. */
@@ -360,7 +423,9 @@
 	overflow: hidden;
 	background: var(--itt-placeholder);
 	border: 3px solid transparent;
-	transition: border-color 0.25s ease, transform 0.25s ease;
+	transition: border-color 0.25s ease, transform 0.25s ease, opacity 0.25s ease;
+	/* Unselected thumbnails sit back so the chosen one carries the row. */
+	opacity: 0.62;
 }
 
 .itt-vthumb__img {
@@ -390,8 +455,10 @@
 	line-height: 1.35;
 }
 
-.itt-vthumb:hover .itt-vthumb__media {
+.itt-vthumb:hover .itt-vthumb__media,
+.itt-vthumb:focus-visible .itt-vthumb__media {
 	transform: translateY(-4px);
+	opacity: 1;
 }
 
 /**
@@ -400,6 +467,14 @@
  */
 .itt-vthumb.is-active .itt-vthumb__media {
 	border-color: var(--itt-purple);
+	opacity: 1;
+	box-shadow: var(--itt-sh-cool-sm);
+}
+
+/* The play badge on the chosen thumbnail picks up the brand orange, a second
+   non-colour-only cue alongside the ring and the bolder label. */
+.itt-vthumb.is-active .itt-vthumb__play {
+	background: var(--itt-orange);
 }
 
 .itt-vthumb.is-active .itt-vthumb__name {

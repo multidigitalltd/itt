@@ -69,6 +69,7 @@ final class ITT_Migrations {
 			self::quotes_into_voices( $post_id );
 			self::companion_course_line( $post_id );
 			self::bonuses_badge_emoji( $post_id );
+			self::bonuses_totals( $post_id );
 		}
 
 		update_option( self::OPTION, ITT_VERSION, false );
@@ -121,6 +122,55 @@ final class ITT_Migrations {
 				'cache_results'  => false,
 			)
 		);
+	}
+
+	/**
+	 * 1.7.4 — price the documented-material bonus and restate the total.
+	 *
+	 * That bonus was the only one without a value, and the headline total left
+	 * it out. Adding 700 ₪ brings the six cards to 5,300 ₪, so both places
+	 * quoting the total move with it — a page that advertises one number while
+	 * its own cards add up to another is worse than either number alone.
+	 *
+	 * Each edit is conditional on finding the old value, so a page whose
+	 * pricing the client has already revised is left as it is.
+	 *
+	 * @param int $post_id Landing page ID.
+	 */
+	private static function bonuses_totals( int $post_id ): void {
+		$bonuses = ITT_Meta::get( 'bonuses', $post_id );
+		$cards   = array_values( (array) ( $bonuses['cards'] ?? array() ) );
+		$changed = false;
+
+		foreach ( $cards as $index => $card ) {
+			if ( 'גישה מלאה לחומר מתועד' === ( $card['title'] ?? '' ) && '' === trim( (string) ( $card['value'] ?? '' ) ) ) {
+				$cards[ $index ]['value'] = 'שווי 700 ₪';
+				$changed                  = true;
+			}
+		}
+
+		$totals = array(
+			'subtitle'    => array( '4,600 ₪', '5,300 ₪' ),
+			'total_title' => array( 'count:4600,comma', 'count:5300,comma' ),
+		);
+
+		foreach ( $totals as $field => $pair ) {
+			list( $from, $to ) = $pair;
+			$value             = (string) ( $bonuses[ $field ] ?? '' );
+
+			if ( str_contains( $value, $from ) ) {
+				$bonuses[ $field ] = str_replace( $from, $to, $value );
+				$changed           = true;
+			}
+		}
+
+		if ( ! $changed ) {
+			return;
+		}
+
+		$bonuses['cards'] = $cards;
+
+		ITT_Meta::save( $post_id, 'bonuses', $bonuses );
 	}
 
 	/**

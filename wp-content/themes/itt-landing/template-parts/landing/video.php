@@ -73,17 +73,6 @@ if ( array() === $itt_items ) {
 						<?php itt_chevron( 'prev' ); ?>
 					</button>
 
-					<?php
-					/**
-					 * Position readout. aria-hidden because the tablist already
-					 * tells assistive tech which testimonial of how many is
-					 * selected; repeating it here would only be read twice.
-					 */
-					?>
-					<p class="itt-vgallery__count" aria-hidden="true">
-						<span data-itt-vgallery-current>1</span><span class="itt-vgallery__count-sep">/</span><?php echo (int) count( $itt_items ); ?>
-					</p>
-
 					<button type="button" class="itt-slider__btn" data-itt-vgallery-step="1" aria-label="<?php esc_attr_e( 'ההמלצה הבאה', 'itt-landing' ); ?>" aria-controls="itt-vgallery-tabs">
 						<?php itt_chevron( 'next' ); ?>
 					</button>

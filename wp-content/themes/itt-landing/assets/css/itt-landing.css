@@ -284,24 +284,6 @@
 	gap: 12px;
 }
 
-/* Position readout between the arrows, so the pair reads as one control
-   rather than two buttons with no sense of where they are going. */
-.itt-vgallery__count {
-	font-size: 17px;
-	font-weight: 700;
-	color: var(--itt-purple);
-	font-variant-numeric: tabular-nums;
-	min-width: 3.5em;
-	text-align: center;
-	direction: ltr;
-}
-
-.itt-vgallery__count-sep {
-	margin-inline: 3px;
-	color: var(--itt-muted-3);
-	font-weight: 400;
-}
-
 .itt-vstage {
 	display: grid;
 	grid-template-columns: 1.5fr 1fr;

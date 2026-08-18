@@ -523,7 +523,6 @@
 	function initVideoGalleries() {
 		document.querySelectorAll( '[data-itt-vgallery]' ).forEach( function ( gallery ) {
 			var tabs = Array.prototype.slice.call( gallery.querySelectorAll( '[role="tab"]' ) );
-			var counter = gallery.querySelector( '[data-itt-vgallery-current]' );
 
 			if ( tabs.length < 2 ) {
 				return;
@@ -547,10 +546,6 @@
 					incoming.classList.remove( 'is-entering' );
 					void incoming.offsetWidth;
 					incoming.classList.add( 'is-entering' );
-				}
-
-				if ( counter ) {
-					counter.textContent = String( next + 1 );
 				}
 
 				tabs.forEach( function ( tab, i ) {

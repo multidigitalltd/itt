@@ -2,7 +2,7 @@
  * ITT landing page interactions.
  *
  * Semester tabs, single-open accordions, the testimonial slider, the video
- * facades, the rotating quote and the lead form. Everything is progressive:
+ * facades and the lead form. Everything is progressive:
  * the markup works without this file, the script only adds the behaviour from
  * the design.
  */
@@ -17,7 +17,10 @@
 	 * ----------------------------------------------------------------- */
 
 	function initTabs() {
-		var tablist = document.querySelector( '[role="tablist"]' );
+		// Explicitly the syllabus tablist. Selecting on [role="tablist"] alone
+		// picked whichever came first in the document, which broke the moment
+		// the video gallery — also a tablist — landed above it in the page.
+		var tablist = document.querySelector( '[data-itt-tabs]' );
 
 		if ( ! tablist ) {
 			return;
@@ -285,85 +288,6 @@
 		} );
 	}
 
-	/* --------------------------------------------------------------------
-	 * Rotating quote
-	 * ----------------------------------------------------------------- */
-
-	function initQuotes() {
-		var wrapper = document.querySelector( '[data-itt-quotes]' );
-
-		if ( ! wrapper ) {
-			return;
-		}
-
-		var quotes = Array.prototype.slice.call( wrapper.querySelectorAll( '[data-itt-quote]' ) );
-
-		if ( quotes.length < 2 ) {
-			return;
-		}
-
-		var current = 0;
-		var timer = null;
-
-		/**
-		 * Show one quote.
-		 *
-		 * @param {number} index Quote to show.
-		 */
-		function show( index ) {
-			current = ( index + quotes.length ) % quotes.length;
-
-			quotes.forEach( function ( quote, i ) {
-				quote.hidden = i !== current;
-			} );
-		}
-
-		function stop() {
-			window.clearInterval( timer );
-			timer = null;
-		}
-
-		function play() {
-			// Auto-rotation is a courtesy, never a requirement: it stays off for
-			// visitors who asked for reduced motion, and stops on interaction.
-			if ( timer || document.querySelector( '.itt-page.itt-no-motion' ) ) {
-				return;
-			}
-
-			timer = window.setInterval( function () {
-				show( current + 1 );
-			}, 7000 );
-		}
-
-		wrapper.querySelectorAll( '[data-itt-quote-nav]' ).forEach( function ( button ) {
-			button.addEventListener( 'click', function () {
-				stop();
-				show( current + ( 'next' === button.getAttribute( 'data-itt-quote-nav' ) ? 1 : -1 ) );
-			} );
-		} );
-
-		wrapper.addEventListener( 'mouseenter', stop );
-		wrapper.addEventListener( 'focusin', stop );
-		wrapper.addEventListener( 'mouseleave', play );
-
-		document.addEventListener( 'visibilitychange', function () {
-			if ( document.hidden ) {
-				stop();
-			} else {
-				play();
-			}
-		} );
-
-		window.addEventListener( 'beforeunload', stop );
-
-		show( 0 );
-		play();
-	}
-
-	/* --------------------------------------------------------------------
-	 * Lead form
-	 * ----------------------------------------------------------------- */
-
 	function initForm() {
 		var form = document.querySelector( '[data-itt-form]' );
 
@@ -587,11 +511,120 @@
 		}
 	}
 
+	/**
+	 * The testimonial video gallery: one stage, many thumbnails.
+	 *
+	 * Thumbnails are a tablist and each stage entry its tabpanel, so the
+	 * keyboard behaviour people already expect from tabs — arrows to move,
+	 * Home/End to jump, one stop in the tab order — comes with the pattern.
+	 * The prev/next buttons at the top drive exactly the same selection, which
+	 * is the point: they change the large video, not a separate row.
+	 */
+	function initVideoGalleries() {
+		document.querySelectorAll( '[data-itt-vgallery]' ).forEach( function ( gallery ) {
+			var tabs = Array.prototype.slice.call( gallery.querySelectorAll( '[role="tab"]' ) );
+
+			if ( tabs.length < 2 ) {
+				return;
+			}
+
+			/**
+			 * Show one testimonial and mark its thumbnail.
+			 *
+			 * @param {number}  index     Position to show.
+			 * @param {boolean} moveFocus Whether to focus the thumbnail.
+			 */
+			function select( index, moveFocus ) {
+				var next = ( index + tabs.length ) % tabs.length;
+
+				tabs.forEach( function ( tab, i ) {
+					var on = i === next;
+					var panel = document.getElementById( tab.getAttribute( 'aria-controls' ) );
+
+					tab.setAttribute( 'aria-selected', on ? 'true' : 'false' );
+					tab.setAttribute( 'tabindex', on ? '0' : '-1' );
+					tab.classList.toggle( 'is-active', on );
+
+					if ( panel ) {
+						panel.hidden = ! on;
+					}
+				} );
+
+				// Keep the chosen thumbnail in view when the strip scrolls.
+				if ( tabs[ next ].scrollIntoView ) {
+					tabs[ next ].scrollIntoView( { block: 'nearest', inline: 'nearest' } );
+				}
+
+				if ( moveFocus ) {
+					tabs[ next ].focus();
+				}
+			}
+
+			/**
+			 * Index of the thumbnail currently selected.
+			 *
+			 * @return {number} Zero-based position.
+			 */
+			function current() {
+				var found = tabs.findIndex( function ( tab ) {
+					return 'true' === tab.getAttribute( 'aria-selected' );
+				} );
+
+				return found > -1 ? found : 0;
+			}
+
+			tabs.forEach( function ( tab, i ) {
+				tab.addEventListener( 'click', function () {
+					select( i, false );
+				} );
+			} );
+
+			gallery.querySelectorAll( '[data-itt-vgallery-step]' ).forEach( function ( button ) {
+				button.addEventListener( 'click', function () {
+					select( current() + parseInt( button.getAttribute( 'data-itt-vgallery-step' ), 10 ), false );
+				} );
+			} );
+
+			gallery.addEventListener( 'keydown', function ( event ) {
+				if ( ! event.target.closest( '[role="tab"]' ) ) {
+					return;
+				}
+
+				// RTL: ArrowLeft advances, because the strip reads right to left.
+				var moves = {
+					ArrowLeft: 1,
+					ArrowRight: -1,
+					ArrowDown: 1,
+					ArrowUp: -1
+				};
+
+				if ( 'Home' === event.key ) {
+					event.preventDefault();
+					select( 0, true );
+					return;
+				}
+
+				if ( 'End' === event.key ) {
+					event.preventDefault();
+					select( tabs.length - 1, true );
+					return;
+				}
+
+				if ( undefined === moves[ event.key ] ) {
+					return;
+				}
+
+				event.preventDefault();
+				select( current() + moves[ event.key ], true );
+			} );
+		} );
+	}
+
 	initTabs();
 	initAccordions();
 	initSliders();
+	initVideoGalleries();
 	initReadMore();
 	initFacades();
-	initQuotes();
 	initForm();
 }() );

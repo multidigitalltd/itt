@@ -246,35 +246,31 @@
 
 /* 04 — video and slider -------------------------------------------------- */
 
-.itt-video__lead {
+/**
+ * The testimonial gallery: one stage with a thumbnail strip, replacing the
+ * old "featured video plus a separate slider" pair. The arrows live in the
+ * head so they sit above the stage they drive.
+ */
+.itt-vgallery {
 	display: grid;
-	grid-template-columns: 1fr 1fr;
-	gap: 40px;
-	align-items: center;
-	padding-bottom: 44px;
+	gap: 26px;
 }
 
-.itt-video__media {
-	position: relative;
-	min-width: 0;
+.itt-vgallery__head {
+	display: flex;
+	align-items: flex-end;
+	justify-content: space-between;
+	gap: 20px;
+	flex-wrap: wrap;
 }
 
-.itt-video__poster,
-.itt-facade__poster {
-	width: 100%;
-	height: 100%;
-	object-fit: cover;
-	border-radius: var(--itt-r-card);
-}
-
-.itt-video__copy {
+.itt-vgallery__intro {
 	display: grid;
-	gap: 18px;
-	align-content: start;
+	gap: 12px;
 	justify-items: start;
 }
 
-.itt-video__title {
+.itt-vgallery__title {
 	font-size: clamp(26px, 3vw, 36px);
 	line-height: 1.25;
 	font-weight: 700;
@@ -282,10 +278,133 @@
 	text-wrap: pretty;
 }
 
-.itt-video__text {
+.itt-vstage {
+	display: grid;
+	grid-template-columns: 1.35fr 1fr;
+	gap: 34px;
+	align-items: center;
+}
+
+/* Beats the [hidden] default, which `display: grid` would otherwise outrank. */
+.itt-vstage[hidden] {
+	display: none;
+}
+
+.itt-vstage__media {
+	position: relative;
+	min-width: 0;
+}
+
+.itt-vstage__poster,
+.itt-facade__poster {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	border-radius: var(--itt-r-card);
+}
+
+.itt-vstage__media > .itt-facade,
+.itt-vstage__media > .itt-vstage__poster {
+	height: 380px;
+}
+
+.itt-vstage__copy {
+	display: grid;
+	gap: 16px;
+	align-content: start;
+}
+
+.itt-vstage__name {
+	font-size: clamp(24px, 2.6vw, 32px);
+	font-weight: 700;
+	color: var(--itt-purple);
+	line-height: 1.25;
+}
+
+.itt-vstage__quote {
 	font-size: 19px;
 	line-height: 1.7;
 	color: var(--itt-muted);
+}
+
+.itt-vgallery__thumbs {
+	display: flex;
+	gap: 14px;
+	overflow-x: auto;
+	padding-bottom: 6px;
+	scrollbar-width: none;
+	/* Positioned so the visually-hidden labels inside the thumbnails are
+	   clipped by this scroll container rather than escaping it. */
+	position: relative;
+}
+
+.itt-vgallery__thumbs::-webkit-scrollbar {
+	display: none;
+}
+
+.itt-vthumb {
+	flex: 0 0 190px;
+	display: grid;
+	gap: 8px;
+	padding: 0;
+	border: 0;
+	background: none;
+	cursor: pointer;
+	text-align: start;
+}
+
+.itt-vthumb__media {
+	position: relative;
+	display: block;
+	border-radius: var(--itt-r-media);
+	overflow: hidden;
+	background: var(--itt-placeholder);
+	border: 3px solid transparent;
+	transition: border-color 0.25s ease, transform 0.25s ease;
+}
+
+.itt-vthumb__img {
+	width: 100%;
+	height: 108px;
+	object-fit: cover;
+}
+
+.itt-vthumb__play {
+	position: absolute;
+	inset: 0;
+	margin: auto;
+	width: 34px;
+	height: 34px;
+	border-radius: var(--itt-r-pill);
+	background: rgba(59, 34, 100, 0.82);
+	color: var(--itt-white);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.itt-vthumb__name {
+	font-size: 16px;
+	font-weight: 600;
+	color: var(--itt-muted);
+	line-height: 1.35;
+}
+
+.itt-vthumb:hover .itt-vthumb__media {
+	transform: translateY(-4px);
+}
+
+/**
+ * The selected thumbnail is marked by a ring *and* by the label turning to
+ * the brand purple at full weight — colour alone would fail 1.4.1.
+ */
+.itt-vthumb.is-active .itt-vthumb__media {
+	border-color: var(--itt-purple);
+}
+
+.itt-vthumb.is-active .itt-vthumb__name {
+	color: var(--itt-purple);
+	font-weight: 700;
 }
 
 .itt-facade {
@@ -336,11 +455,6 @@
 	border: 0;
 	border-radius: var(--itt-r-card);
 	display: block;
-}
-
-.itt-video__media > .itt-facade,
-.itt-video__media > .itt-video__poster {
-	height: 340px;
 }
 
 .itt-slider {
@@ -639,68 +753,6 @@
 	font-size: 19px;
 	line-height: 1.7;
 	color: var(--itt-text-soft);
-}
-
-.itt-quotes {
-	margin-top: 40px;
-	background: var(--itt-purple);
-	border-radius: var(--itt-r-lg);
-	padding: 40px 44px;
-	display: grid;
-	gap: 22px;
-}
-
-.itt-quotes__viewport {
-	min-height: 5.2em;
-}
-
-.itt-quotes__item {
-	display: grid;
-	gap: 14px;
-}
-
-/* `display: grid` above outranks the UA rule for [hidden], so restate it. */
-.itt-quotes__item[hidden] {
-	display: none;
-}
-
-.itt-quotes__text {
-	font-size: clamp(19px, 2.2vw, 24px);
-	line-height: 1.65;
-	color: var(--itt-white);
-	text-wrap: pretty;
-}
-
-.itt-quotes__author {
-	font-size: 19px;
-	font-weight: 600;
-	color: var(--itt-gold);
-}
-
-.itt-quotes__nav {
-	display: flex;
-	gap: 10px;
-	justify-content: flex-end;
-}
-
-.itt-quotes__btn {
-	width: 44px;
-	height: 44px;
-	border: none;
-	border-radius: var(--itt-r-pill);
-	background: rgba(255, 255, 255, 0.12);
-	color: var(--itt-white);
-	cursor: pointer;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	transition: background 0.25s ease;
-}
-
-.itt-quotes__btn:hover,
-.itt-quotes__btn:focus-visible {
-	background: var(--itt-cyan);
-	color: var(--itt-purple-deep);
 }
 
 /* 07 — outcomes --------------------------------------------------------- */
@@ -1752,7 +1804,7 @@
 
 @media (max-width: 900px) {
 	.itt-hero__inner,
-	.itt-video__lead,
+	.itt-vstage,
 	.itt-form__inner,
 	.itt-process__steps,
 	.itt-skills__cards,
@@ -1829,13 +1881,20 @@
 		padding: 32px 24px;
 	}
 
-	.itt-quotes {
-		padding: 28px 24px;
+	/* Stage first, thumbnails under it; the media shrinks so the quote is not
+	   pushed off the screen with it. */
+	.itt-vstage__media > .itt-facade,
+	.itt-vstage__media > .itt-vstage__poster,
+	.itt-vstage__media > .itt-facade__frame {
+		height: 240px;
 	}
 
-	.itt-video__media > .itt-facade,
-	.itt-video__media > .itt-video__poster {
-		height: 240px;
+	.itt-vthumb {
+		flex-basis: 150px;
+	}
+
+	.itt-vthumb__img {
+		height: 88px;
 	}
 }
 
@@ -1882,8 +1941,8 @@
 }
 
 /* The player that replaces a facade fills the same box. */
-.itt-video__media > .itt-facade__frame {
-	height: 340px;
+.itt-vstage__media > .itt-facade__frame {
+	height: 380px;
 	object-fit: cover;
 	background: #000;
 }

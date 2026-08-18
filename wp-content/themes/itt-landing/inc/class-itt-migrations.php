@@ -65,6 +65,8 @@ final class ITT_Migrations {
 		foreach ( self::landing_pages() as $post_id ) {
 			self::envelope_seminars_card( $post_id );
 			self::show_email_field( $post_id );
+			self::video_gallery_heading( $post_id );
+			self::quotes_into_voices( $post_id );
 		}
 
 		update_option( self::OPTION, ITT_VERSION, false );
@@ -117,6 +119,93 @@ final class ITT_Migrations {
 				'cache_results'  => false,
 			)
 		);
+	}
+
+	/**
+	 * 1.7.0 — fold the rotating quote box into the written testimonials.
+	 *
+	 * The purple box under section 06 showed one quote at a time behind its own
+	 * pair of arrows, which is a second testimonial gallery a few screens above
+	 * the real one. Its quotes move down to join the written testimonials and
+	 * the box is retired.
+	 *
+	 * The two shapes differ — a quote has no title, a testimonial card does —
+	 * so a moved quote arrives with an empty title, which the card template now
+	 * renders without. Colour variants are dealt round so the added cards do
+	 * not all land in the same one.
+	 *
+	 * @param int $post_id Landing page ID.
+	 */
+	private static function quotes_into_voices( int $post_id ): void {
+		// Read the raw row, not ITT_Meta::get(): that intersects the stored
+		// value with the current schema, and 'quotes' has just been removed
+		// from it — so the very data this migration exists to move would be
+		// invisible to it.
+		$stored = get_post_meta( $post_id, ITT_Meta::key( 'skills' ), true );
+		$stored = is_array( $stored ) ? $stored : array();
+		$quotes = array_values( (array) ( $stored['quotes'] ?? array() ) );
+
+		if ( array() === $quotes ) {
+			return;
+		}
+
+		$voices   = ITT_Meta::get( 'voices', $post_id );
+		$cards    = array_values( (array) ( $voices['cards'] ?? array() ) );
+		$existing = array_column( $cards, 'text' );
+		$palette  = array( 'gray', 'cyan', 'orange', 'purple', 'gold' );
+
+		foreach ( $quotes as $quote ) {
+			$text = (string) ( $quote['text'] ?? '' );
+
+			// Idempotent, and safe if a quote was already copied down by hand.
+			if ( '' === trim( $text ) || in_array( $text, $existing, true ) ) {
+				continue;
+			}
+
+			$cards[]    = array(
+				'title'   => '',
+				'text'    => $text,
+				'author'  => (string) ( $quote['author'] ?? '' ),
+				'variant' => $palette[ count( $cards ) % count( $palette ) ],
+			);
+			$existing[] = $text;
+		}
+
+		$voices['cards'] = $cards;
+		ITT_Meta::save( $post_id, 'voices', $voices );
+
+		// Saving through ITT_Meta drops 'quotes' on its way out, because the
+		// key no longer exists in the schema — which is exactly the retirement
+		// this migration is completing.
+		ITT_Meta::save( $post_id, 'skills', ITT_Meta::get( 'skills', $post_id ) );
+	}
+
+	/**
+	 * 1.7.0 — retitle the video heading now that it heads the whole gallery.
+	 *
+	 * The lead video and the strip below it became one gallery, so the strip's
+	 * old title ("עוד סרטוני המלצות…" — *more* testimonials) now sits above the
+	 * first one and reads wrong. Replaced only where it is still the old
+	 * default; a heading the editor has written themselves is left alone.
+	 *
+	 * @param int $post_id Landing page ID.
+	 */
+	private static function video_gallery_heading( int $post_id ): void {
+		$stale = array(
+			'עוד סרטוני המלצות מתלמידות' => 'סרטוני המלצות מהבוגרות',
+			'עוד סרטוני המלצות מתלמידים' => 'סרטוני המלצות מהבוגרים',
+		);
+
+		$video   = ITT_Meta::get( 'video', $post_id );
+		$heading = trim( (string) ( $video['slider_heading'] ?? '' ) );
+
+		if ( ! isset( $stale[ $heading ] ) ) {
+			return;
+		}
+
+		$video['slider_heading'] = $stale[ $heading ];
+
+		ITT_Meta::save( $post_id, 'video', $video );
 	}
 
 	/**

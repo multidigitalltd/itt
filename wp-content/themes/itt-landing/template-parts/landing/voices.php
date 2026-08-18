@@ -32,9 +32,11 @@ $itt_render_voice = static function ( array $card, int $index ): void {
 	$text_id = 'itt-voice-text-' . $index;
 	?>
 	<figure class="itt-voice">
-		<p class="itt-voice__title itt-voice__title--<?php echo esc_attr( (string) $card['variant'] ); ?>">
-			<?php echo esc_html( (string) $card['title'] ); ?>
-		</p>
+		<?php if ( '' !== trim( (string) $card['title'] ) ) : ?>
+			<p class="itt-voice__title itt-voice__title--<?php echo esc_attr( (string) $card['variant'] ); ?>">
+				<?php echo esc_html( (string) $card['title'] ); ?>
+			</p>
+		<?php endif; ?>
 
 		<blockquote class="itt-voice__text" id="<?php echo esc_attr( $text_id ); ?>">
 			<?php echo esc_html( (string) $card['text'] ); ?>

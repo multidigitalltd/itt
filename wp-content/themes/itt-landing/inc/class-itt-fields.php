@@ -191,16 +191,16 @@ final class ITT_Fields {
 				'landing',
 				array(
 					self::text( 'badge', 'תגית' ),
-					self::text( 'heading', 'כותרת (H2)' ),
-					self::textarea( 'text', 'טקסט' ),
-					self::image( 'poster', 'תמונת פתיח לוידאו' ),
+					self::text( 'heading', 'הסרטון הראשון · שם' , 'הסרטון הראשי הוא הסרטון הראשון בגלריה.' ),
+					self::textarea( 'text', 'הסרטון הראשון · ציטוט' ),
+					self::image( 'poster', 'הסרטון הראשון · תמונת פתיח' ),
 					self::text( 'poster_alt', 'טקסט חלופי לתמונת הפתיח' ),
-					self::video( 'video_file', 'קובץ וידאו מהמדיה' ),
-					self::url( 'video_url', 'או קישור לוידאו', 'YouTube או Vimeo. אם הועלה קובץ וידאו הוא קודם. ריק בשניהם = מוצגת תמונה בלבד ללא כפתור נגן.' ),
-					self::text( 'slider_heading', 'כותרת הסליידר (H3)' ),
+					self::video( 'video_file', 'הסרטון הראשון · קובץ מהמדיה' ),
+					self::url( 'video_url', 'הסרטון הראשון · או קישור', 'YouTube או Vimeo. אם הועלה קובץ וידאו הוא קודם. ריק בשניהם = מוצגת תמונה בלבד ללא כפתור נגן.' ),
+					self::text( 'slider_heading', 'כותרת הגלריה (H2)', 'הכותרת מעל גלריית הסרטונים כולה.' ),
 					self::repeater(
 						'slides',
-						'סרטוני המלצות (אפשר להוסיף כמה שרוצים)',
+						'שאר הסרטונים בגלריה (אפשר להוסיף כמה שרוצים)',
 						array(
 							self::image( 'image', 'תמונת פתיח' ),
 							self::text( 'image_alt', 'טקסט חלופי' ),
@@ -263,15 +263,6 @@ final class ITT_Fields {
 							self::select( 'variant', 'סגנון', self::VARIANTS ),
 						),
 						'badge'
-					),
-					self::repeater(
-						'quotes',
-						'ציטוטים מתחלפים',
-						array(
-							self::textarea( 'text', 'ציטוט', 4 ),
-							self::text( 'author', 'שם' ),
-						),
-						'author'
 					),
 				)
 			),

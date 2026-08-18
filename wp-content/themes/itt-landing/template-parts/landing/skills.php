@@ -11,7 +11,6 @@ declare( strict_types = 1 );
 
 defined( 'ABSPATH' ) || exit;
 
-$itt_quotes = (array) $itt['quotes'];
 ?>
 <section class="itt-section itt-skills" aria-labelledby="itt-skills-title">
 	<div class="itt-shell">
@@ -28,28 +27,5 @@ $itt_quotes = (array) $itt['quotes'];
 			<?php endforeach; ?>
 		</ul>
 
-		<?php if ( array() !== $itt_quotes ) : ?>
-			<div class="itt-quotes itt-reveal" data-itt-quotes>
-				<div class="itt-quotes__viewport" aria-live="polite" aria-atomic="true">
-					<?php foreach ( $itt_quotes as $itt_i => $itt_quote ) : ?>
-						<figure class="itt-quotes__item" data-itt-quote<?php echo 0 === $itt_i ? '' : ' hidden'; ?>>
-							<blockquote class="itt-quotes__text"><?php echo esc_html( (string) $itt_quote['text'] ); ?></blockquote>
-							<figcaption class="itt-quotes__author"><?php echo esc_html( (string) $itt_quote['author'] ); ?></figcaption>
-						</figure>
-					<?php endforeach; ?>
-				</div>
-
-				<?php if ( count( $itt_quotes ) > 1 ) : ?>
-					<div class="itt-quotes__nav">
-						<button type="button" class="itt-quotes__btn" data-itt-quote-nav="prev" aria-label="<?php esc_attr_e( 'הציטוט הקודם', 'itt-landing' ); ?>">
-							<?php itt_chevron( 'prev' ); ?>
-						</button>
-						<button type="button" class="itt-quotes__btn" data-itt-quote-nav="next" aria-label="<?php esc_attr_e( 'הציטוט הבא', 'itt-landing' ); ?>">
-							<?php itt_chevron( 'next' ); ?>
-						</button>
-					</div>
-				<?php endif; ?>
-			</div>
-		<?php endif; ?>
 	</div>
 </section>

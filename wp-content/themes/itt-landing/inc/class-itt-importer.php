@@ -292,7 +292,13 @@ final class ITT_Importer {
 
 		echo '<div class="wrap"><h1>' . esc_html__( 'עמודי ITT', 'itt-landing' ) . '</h1>';
 
-		echo '<p>' . esc_html__( 'התוכן של כל העמודים נשמר בתוך העמודים עצמם ונערך בעורך העמוד. מכאן אפשר ליצור עמוד חסר מחדש, או להחזיר עמוד לתוכן המקורי מהעיצוב.', 'itt-landing' ) . '</p>';
+		echo '<p>' . esc_html__( 'התוכן של כל העמודים נשמר בתוך העמודים עצמם ונערך בעורך העמוד. מכאן אפשר ליצור עמוד חסר מחדש, להחיל את עדכוני התוכן של הגרסה הנוכחית, או להחזיר עמוד לתוכן המקורי מהעיצוב.', 'itt-landing' ) . '</p>';
+
+		printf(
+			'<p><strong>%s</strong> %s</p>',
+			esc_html__( 'גרסת התבנית:', 'itt-landing' ),
+			esc_html( ITT_VERSION )
+		);
 
 		echo '<table class="widefat striped" style="max-width:760px"><tbody>';
 
@@ -323,6 +329,8 @@ final class ITT_Importer {
 		wp_nonce_field( 'itt_provision' );
 		echo '<input type="hidden" name="action" value="itt_provision">';
 		submit_button( __( 'יצירת עמודים חסרים', 'itt-landing' ), 'primary', 'create', false );
+		echo ' ';
+		submit_button( __( 'החלת עדכוני התוכן של הגרסה', 'itt-landing' ), 'secondary', 'migrate', false );
 		echo ' ';
 		submit_button(
 			__( 'איפוס לתוכן המקורי (מוחק עריכות)', 'itt-landing' ),
@@ -420,6 +428,14 @@ final class ITT_Importer {
 		check_admin_referer( 'itt_provision' );
 
 		$pages = self::provision();
+
+		// Content updates that ship with a theme version normally apply by
+		// themselves on the first page load after the upload. This button is
+		// the manual way to ask for them again — after restoring a backup, for
+		// instance, or when a cache has kept the old version around.
+		if ( isset( $_POST['migrate'] ) ) {
+			ITT_Migrations::run();
+		}
 
 		if ( isset( $_POST['reset'] ) ) {
 			foreach ( array_keys( self::PAGES ) as $template ) {

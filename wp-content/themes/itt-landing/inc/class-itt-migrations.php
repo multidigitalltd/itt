@@ -40,15 +40,18 @@ final class ITT_Migrations {
 	 */
 	public static function init(): void {
 		add_action( 'after_switch_theme', array( self::class, 'run' ) );
-		add_action( 'admin_init', array( self::class, 'maybe_run' ) );
+		add_action( 'init', array( self::class, 'maybe_run' ) );
 	}
 
 	/**
 	 * Run the migrations when the theme version has moved on.
 	 *
-	 * Checked in the admin rather than on the front end: an update uploaded by
-	 * FTP or by the theme uploader does not fire after_switch_theme, and the
-	 * next admin page load is the first reliable moment afterwards.
+	 * On every request, not only in the admin. An update uploaded by FTP or by
+	 * the theme uploader never fires after_switch_theme, and checking only in
+	 * wp-admin meant someone who uploaded the theme and then refreshed the
+	 * front page saw nothing change and had no way to know why. The guard is a
+	 * single autoloaded option, already in memory by the time this runs, so an
+	 * up-to-date site pays nothing for it.
 	 */
 	public static function maybe_run(): void {
 		if ( get_option( self::OPTION ) === ITT_VERSION ) {
@@ -72,7 +75,9 @@ final class ITT_Migrations {
 			self::bonuses_totals( $post_id );
 		}
 
-		update_option( self::OPTION, ITT_VERSION, false );
+		// Autoloaded: read on every request by maybe_run(), so it should come
+		// with the rest of the options rather than costing its own query.
+		update_option( self::OPTION, ITT_VERSION, true );
 	}
 
 	/**

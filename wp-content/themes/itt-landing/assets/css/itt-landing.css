@@ -1412,17 +1412,6 @@
 	border-bottom-color: var(--itt-gold);
 }
 
-.itt-bonus__ghost {
-	position: absolute;
-	top: -14px;
-	inset-inline-start: -10px;
-	font-size: 110px;
-	font-weight: 700;
-	color: rgba(255, 200, 30, 0.16);
-	line-height: 1;
-	pointer-events: none;
-}
-
 .itt-bonus__head {
 	display: flex;
 	align-items: center;
@@ -1929,10 +1918,6 @@
 	.itt-bonus,
 	.itt-exclude {
 		padding-inline: 22px;
-	}
-
-	.itt-bonus__ghost {
-		font-size: 84px;
 	}
 
 	.itt-section__title--start {

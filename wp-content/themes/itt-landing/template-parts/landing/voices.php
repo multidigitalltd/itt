@@ -20,7 +20,14 @@ declare( strict_types = 1 );
 defined( 'ABSPATH' ) || exit;
 
 $itt_cards  = array_values( (array) $itt['cards'] );
-$itt_slider = count( $itt_cards ) > 3;
+/**
+ * Anything past a single testimonial is paginated. The threshold used to be
+ * three, which meant a page with exactly three showed a static grid and no way
+ * to browse — and three is the common case. The arrows disable themselves when
+ * the track cannot scroll, so a set that already fits shows them greyed rather
+ * than pretending there is more.
+ */
+$itt_slider = count( $itt_cards ) > 1;
 
 /**
  * Render one testimonial.

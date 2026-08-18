@@ -377,6 +377,15 @@ html:has(.itt-page) {
 	color: var(--itt-white);
 }
 
+/**
+ * No glow inside a band. The drop shadow is tuned to lift the button off a
+ * light page; on a band's own dark panel the orange bleeds into the purple
+ * and reads as a halo around the button rather than a shadow under it.
+ */
+.itt-band .itt-btn--orange {
+	box-shadow: none;
+}
+
 .itt-btn--gold {
 	background: var(--itt-gold);
 	color: var(--itt-purple);

@@ -67,6 +67,7 @@ final class ITT_Migrations {
 			self::show_email_field( $post_id );
 			self::video_gallery_heading( $post_id );
 			self::quotes_into_voices( $post_id );
+			self::companion_course_line( $post_id );
 		}
 
 		update_option( self::OPTION, ITT_VERSION, false );
@@ -119,6 +120,34 @@ final class ITT_Migrations {
 				'cache_results'  => false,
 			)
 		);
+	}
+
+	/**
+	 * 1.7.2 — the companion-course link becomes a phone line.
+	 *
+	 * "לדף גברים" was a button across to the other landing page; it is now a
+	 * sentence naming the phone number instead. Only the two old default labels
+	 * are replaced — a label the editor has written themselves is left alone,
+	 * and the address the button used to carry is dropped by the schema.
+	 *
+	 * @param int $post_id Landing page ID.
+	 */
+	private static function companion_course_line( int $post_id ): void {
+		$replacements = array(
+			'לדף גברים' => 'לפרטים על קורס גברים חייגו *6163',
+			'לדף נשים'  => 'לפרטים על קורס נשים חייגו *6163',
+		);
+
+		$chrome = ITT_Meta::get( 'chrome', $post_id );
+		$label  = trim( (string) ( $chrome['men_text'] ?? '' ) );
+
+		if ( ! isset( $replacements[ $label ] ) ) {
+			return;
+		}
+
+		$chrome['men_text'] = $replacements[ $label ];
+
+		ITT_Meta::save( $post_id, 'chrome', $chrome );
 	}
 
 	/**

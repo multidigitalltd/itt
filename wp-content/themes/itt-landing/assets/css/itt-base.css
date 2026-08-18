@@ -750,26 +750,26 @@ html:has(.itt-page) {
 }
 
 /**
- * Secondary header link to the companion (men's) landing page. Deliberately
- * quieter than the orange CTA so the primary conversion path stays dominant.
+ * Pointer to the companion course. It reads as a sentence now rather than a
+ * button — it names a phone number, not a destination — so it is set as quiet
+ * text with a dotted underline on the number, and stays well below the orange
+ * CTA in weight so the primary conversion path keeps the eye.
  */
 .itt-header__men {
 	display: inline-flex;
 	align-items: center;
 	min-height: 44px;
-	padding: 0 16px;
-	border: 1px solid var(--itt-purple);
-	border-radius: var(--itt-r-pill);
-	font-size: 17px;
-	font-weight: 700;
-	color: var(--itt-purple);
-	white-space: nowrap;
+	font-size: 16px;
+	font-weight: 600;
+	color: var(--itt-purple-mid);
+	border-bottom: 1px dashed var(--itt-border-purple);
+	text-wrap: balance;
 }
 
 .itt-header__men:hover,
 .itt-header__men:focus-visible {
-	background: var(--itt-purple);
-	color: var(--itt-white);
+	color: var(--itt-orange-dark);
+	border-bottom-color: currentColor;
 }
 
 /**
@@ -1173,7 +1173,7 @@ html:has(.itt-page) {
 
 	.itt-header__inner {
 		gap: 10px;
-		padding-block: 6px;
+		padding-block: 4px;
 	}
 
 	.itt-header__logo-img {
@@ -1181,17 +1181,32 @@ html:has(.itt-page) {
 	}
 
 	.itt-header__actions {
-		gap: 10px;
-		flex-wrap: nowrap;
+		gap: 10px 12px;
+		flex-wrap: wrap;
+		justify-content: flex-end;
+		flex: 1 1 auto;
 	}
 
 	.itt-header__phone {
 		font-size: 20px;
 	}
 
+	/**
+	 * Now a sentence rather than a pill, it cannot share the single header row
+	 * with the logo and the phone number. It wraps to its own line underneath
+	 * instead of being hidden — a phone visitor should still learn the other
+	 * course exists, and the whole line is one tap to dial.
+	 */
 	.itt-header__men {
-		padding: 0 12px;
-		font-size: 15px;
+		flex: 1 0 100%;
+		justify-content: center;
+		/* A standalone link, not one inline in a sentence, so it keeps the
+		   full 44px touch target the standard asks for on mobile. */
+		min-height: 44px;
+		padding: 0;
+		font-size: 13px;
+		border-bottom: 0;
+		text-align: center;
 	}
 
 	.itt-header__cta {
@@ -1274,8 +1289,7 @@ html:has(.itt-page) {
 	}
 
 	.itt-header__men {
-		padding: 0 10px;
-		font-size: 14px;
+		font-size: 12.5px;
 	}
 }
 

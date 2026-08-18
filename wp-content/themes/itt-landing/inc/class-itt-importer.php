@@ -24,15 +24,6 @@ final class ITT_Importer {
 	public const OPTION = 'itt_pages';
 
 	/**
-	 * Flag recording that the two landing pages have been linked to each other.
-	 *
-	 * Kept apart from the page IDs so the linking is a one-time seeding step:
-	 * once it is set, an empty men_url means "the editor hid the button", not
-	 * "this has never been filled in".
-	 */
-	private const LINKED_OPTION = 'itt_pages_linked';
-
-	/**
 	 * Page blueprints.
 	 *
 	 * 'sections' is the field-schema key the page's meta boxes follow, and
@@ -155,11 +146,6 @@ final class ITT_Importer {
 		// screen need it, and both are happy to pay for one extra query.
 		update_option( self::OPTION, $pages, false );
 
-		// One-time only: see cross_link().
-		if ( ! get_option( self::LINKED_OPTION, false ) && self::cross_link( $pages ) ) {
-			update_option( self::LINKED_OPTION, true, false );
-		}
-
 		return $pages;
 	}
 
@@ -261,55 +247,6 @@ final class ITT_Importer {
 		return 'men' === ( self::PAGES[ $template ]['content'] ?? '' )
 			? ITT_Content_Men::section( $section )
 			: ITT_Content::section( $section );
-	}
-
-	/**
-	 * Point the two landing pages at each other through the header button.
-	 *
-	 * Callers decide *when* this may run; it never decides for itself. If an
-	 * editor clears the field to hide the button, and provisioning runs again
-	 * on the next theme activation or "create missing pages", the address must
-	 * not come back — so an empty field is not on its own a licence to fill it.
-	 * provision() gates the call behind a one-time flag, and reset() calls it
-	 * because restoring the seeded state includes restoring the links.
-	 *
-	 * The return value lets provision() hold the flag back when a page could
-	 * not be created, so the linking is still pending on the next run rather
-	 * than silently skipped forever.
-	 *
-	 * @param array<string, int> $pages Page IDs keyed by blueprint.
-	 * @return bool Whether every pair was resolved.
-	 */
-	private static function cross_link( array $pages ): bool {
-		$pairs = array(
-			'landing'     => 'landing-men',
-			'landing-men' => 'landing',
-		);
-
-		$complete = true;
-
-		foreach ( $pairs as $from => $to ) {
-			$source = absint( $pages[ $from ] ?? 0 );
-			$target = absint( $pages[ $to ] ?? 0 );
-
-			if ( 0 === $source || 0 === $target ) {
-				$complete = false;
-
-				continue;
-			}
-
-			$chrome = ITT_Meta::get( 'chrome', $source );
-
-			if ( '' !== trim( (string) ( $chrome['men_url'] ?? '' ) ) ) {
-				continue;
-			}
-
-			$chrome['men_url'] = (string) get_permalink( $target );
-
-			ITT_Meta::save( $source, 'chrome', $chrome );
-		}
-
-		return $complete;
 	}
 
 	/**
@@ -488,11 +425,6 @@ final class ITT_Importer {
 			foreach ( array_keys( self::PAGES ) as $template ) {
 				self::reset( $template );
 			}
-
-			// Resetting rewrites chrome from the seed, whose men_url is empty.
-			// The companion links are part of the state being restored, so they
-			// are written back rather than left for the next activation.
-			self::cross_link( $pages );
 		}
 
 		wp_safe_redirect(

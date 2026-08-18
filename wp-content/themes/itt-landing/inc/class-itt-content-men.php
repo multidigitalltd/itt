@@ -58,7 +58,7 @@ final class ITT_Content_Men {
 	private static function overrides(): array {
 		return array(
 			'chrome'   => array(
-				'men_text' => 'לדף נשים',
+				'men_text' => 'לפרטים על קורס נשים חייגו *6163',
 			),
 			'hero'     => array(
 				'image_alt' => 'אדם עומד בראש גרם מדרגות נייר, מביט אל אופק זריחה — אמנות קיפולי נייר',

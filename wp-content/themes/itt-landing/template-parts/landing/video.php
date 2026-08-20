@@ -59,7 +59,7 @@ if ( array() === $itt_items ) {
 }
 ?>
 <section class="itt-section itt-video" aria-labelledby="itt-video-title">
-	<div class="itt-shell itt-shell--narrow itt-vgallery itt-reveal" data-itt-vgallery>
+	<div class="itt-shell itt-shell--narrow itt-vgallery itt-reveal" data-itt-gallery>
 
 		<div class="itt-vgallery__head">
 			<div class="itt-vgallery__intro">
@@ -69,11 +69,11 @@ if ( array() === $itt_items ) {
 
 			<?php if ( count( $itt_items ) > 1 ) : ?>
 				<div class="itt-vgallery__nav">
-					<button type="button" class="itt-slider__btn" data-itt-vgallery-step="-1" aria-label="<?php esc_attr_e( 'ההמלצה הקודמת', 'itt-landing' ); ?>" aria-controls="itt-vgallery-tabs">
+					<button type="button" class="itt-slider__btn" data-itt-gallery-step="-1" aria-label="<?php esc_attr_e( 'ההמלצה הקודמת', 'itt-landing' ); ?>" aria-controls="itt-vgallery-tabs">
 						<?php itt_chevron( 'prev' ); ?>
 					</button>
 
-					<button type="button" class="itt-slider__btn" data-itt-vgallery-step="1" aria-label="<?php esc_attr_e( 'ההמלצה הבאה', 'itt-landing' ); ?>" aria-controls="itt-vgallery-tabs">
+					<button type="button" class="itt-slider__btn" data-itt-gallery-step="1" aria-label="<?php esc_attr_e( 'ההמלצה הבאה', 'itt-landing' ); ?>" aria-controls="itt-vgallery-tabs">
 						<?php itt_chevron( 'next' ); ?>
 					</button>
 				</div>

@@ -512,7 +512,8 @@
 	}
 
 	/**
-	 * The testimonial video gallery: one stage, many thumbnails.
+	 * The galleries: one stage, many thumbnails. Used by both the testimonial
+	 * videos and the photo gallery, which share this markup contract.
 	 *
 	 * Thumbnails are a tablist and each stage entry its tabpanel, so the
 	 * keyboard behaviour people already expect from tabs — arrows to move,
@@ -520,8 +521,8 @@
 	 * The prev/next buttons at the top drive exactly the same selection, which
 	 * is the point: they change the large video, not a separate row.
 	 */
-	function initVideoGalleries() {
-		document.querySelectorAll( '[data-itt-vgallery]' ).forEach( function ( gallery ) {
+	function initGalleries() {
+		document.querySelectorAll( '[data-itt-gallery]' ).forEach( function ( gallery ) {
 			var tabs = Array.prototype.slice.call( gallery.querySelectorAll( '[role="tab"]' ) );
 
 			if ( tabs.length < 2 ) {
@@ -590,9 +591,9 @@
 				} );
 			} );
 
-			gallery.querySelectorAll( '[data-itt-vgallery-step]' ).forEach( function ( button ) {
+			gallery.querySelectorAll( '[data-itt-gallery-step]' ).forEach( function ( button ) {
 				button.addEventListener( 'click', function () {
-					select( current() + parseInt( button.getAttribute( 'data-itt-vgallery-step' ), 10 ), false );
+					select( current() + parseInt( button.getAttribute( 'data-itt-gallery-step' ), 10 ), false );
 				} );
 			} );
 
@@ -634,7 +635,7 @@
 	initTabs();
 	initAccordions();
 	initSliders();
-	initVideoGalleries();
+	initGalleries();
 	initReadMore();
 	initFacades();
 	initForm();

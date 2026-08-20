@@ -1005,30 +1005,89 @@
 
 /* 08b — gallery --------------------------------------------------------- */
 
-.itt-gallery__grid {
+/**
+ * The photo gallery browses like the testimonial one: a single large frame
+ * with a thumbnail strip under it. It was a static mosaic, which showed six
+ * pictures at once but gave none of them room and offered no way through a
+ * larger set.
+ */
+.itt-pgallery {
 	display: grid;
-	grid-template-columns: repeat(3, 1fr);
-	grid-auto-rows: 200px;
-	gap: 16px;
+	gap: 24px;
 }
 
-.itt-gallery__cell {
+.itt-pgallery__stage {
 	border-radius: var(--itt-r-card);
 	overflow: hidden;
 	background: var(--itt-placeholder);
-	box-shadow: 0 14px 40px rgba(43, 26, 74, 0.08);
-}
-
-.itt-gallery__cell:first-child {
-	grid-column: span 2;
-	grid-row: span 2;
 	box-shadow: var(--itt-sh-cool);
 }
 
-.itt-gallery__image {
+.itt-pstage {
+	display: block;
+}
+
+/* Beats the UA rule for [hidden], which `display: block` would outrank. */
+.itt-pstage[hidden] {
+	display: none;
+}
+
+.itt-pstage.is-entering {
+	animation: itt-vstage-in 0.45s var(--itt-ease-out) both;
+}
+
+.itt-pstage__image {
 	width: 100%;
-	height: 100%;
+	height: 520px;
 	object-fit: cover;
+}
+
+.itt-pgallery__thumbs {
+	display: flex;
+	gap: 12px;
+	overflow-x: auto;
+	padding-bottom: 4px;
+	scrollbar-width: none;
+	/* Positioned so the visually-hidden labels inside the thumbnails are
+	   clipped by this scroll container rather than escaping it and adding
+	   horizontal scroll to the whole document. */
+	position: relative;
+}
+
+.itt-pgallery__thumbs::-webkit-scrollbar {
+	display: none;
+}
+
+.itt-pthumb {
+	flex: 0 0 132px;
+	padding: 0;
+	border: 3px solid transparent;
+	border-radius: var(--itt-r-media);
+	overflow: hidden;
+	background: var(--itt-placeholder);
+	cursor: pointer;
+	line-height: 0;
+	/* Unselected thumbnails sit back so the chosen one carries the row. */
+	opacity: 0.62;
+	transition: border-color 0.25s ease, transform 0.25s ease, opacity 0.25s ease;
+}
+
+.itt-pthumb__img {
+	width: 100%;
+	height: 84px;
+	object-fit: cover;
+}
+
+.itt-pthumb:hover,
+.itt-pthumb:focus-visible {
+	transform: translateY(-4px);
+	opacity: 1;
+}
+
+.itt-pthumb.is-active {
+	border-color: var(--itt-purple);
+	opacity: 1;
+	box-shadow: var(--itt-sh-cool-sm);
 }
 
 /* 09 — syllabus --------------------------------------------------------- */
@@ -1909,14 +1968,8 @@
 		grid-template-columns: 1fr 1fr;
 	}
 
-	.itt-gallery__grid {
-		grid-template-columns: repeat(2, 1fr);
-		grid-auto-rows: 180px;
-	}
-
-	.itt-gallery__cell:first-child {
-		grid-column: span 2;
-		grid-row: span 1;
+	.itt-pstage__image {
+		height: 360px;
 	}
 
 	.itt-slide {
@@ -1955,13 +2008,16 @@
 		grid-template-columns: 1fr;
 	}
 
-	.itt-gallery__grid {
-		grid-template-columns: 1fr;
-		grid-auto-rows: 220px;
+	.itt-pstage__image {
+		height: 240px;
 	}
 
-	.itt-gallery__cell:first-child {
-		grid-column: span 1;
+	.itt-pthumb {
+		flex-basis: 104px;
+	}
+
+	.itt-pthumb__img {
+		height: 68px;
 	}
 
 	.itt-slide {

@@ -32,6 +32,10 @@ final class ITT_Settings {
 	private const DEFAULTS = array(
 		'turnstile_site_key'   => '',
 		'turnstile_secret_key' => '',
+		// Where new-lead emails go. Empty means the WordPress admin email —
+		// the pre-existing behaviour, so an upgrade changes nothing until the
+		// owner fills the field in.
+		'lead_email'           => '',
 	);
 
 	/**
@@ -59,18 +63,71 @@ final class ITT_Settings {
 	/**
 	 * Write the settings, dropping unknown keys.
 	 *
+	 * Only the keys present in $values are changed. The Tools screen has more
+	 * than one form saving into this option, and a form that did not carry a
+	 * field must not blank the setting another form manages.
+	 *
 	 * @param array<string, mixed> $values Raw values, typically from $_POST.
 	 */
 	public static function save( array $values ): void {
-		$clean = array();
+		$clean = self::all();
 
 		foreach ( array_keys( self::DEFAULTS ) as $key ) {
-			$clean[ $key ] = sanitize_text_field( (string) ( $values[ $key ] ?? '' ) );
+			if ( ! array_key_exists( $key, $values ) ) {
+				continue;
+			}
+
+			$clean[ $key ] = 'lead_email' === $key
+				? self::clean_email_list( (string) $values[ $key ] )
+				: sanitize_text_field( (string) $values[ $key ] );
 		}
 
 		// Autoloaded: the site key is needed on every landing page render, and
-		// the pair is two short strings.
+		// the option is a handful of short strings.
 		update_option( self::OPTION, $clean, true );
+	}
+
+	/**
+	 * Keep only real email addresses out of a comma-separated list.
+	 *
+	 * A typo is dropped rather than stored, so a broken address can never
+	 * quietly swallow the lead notifications.
+	 *
+	 * @param string $raw Raw value as typed.
+	 * @return string Valid addresses, comma-separated.
+	 */
+	private static function clean_email_list( string $raw ): string {
+		$valid = array();
+
+		foreach ( explode( ',', $raw ) as $candidate ) {
+			$email = sanitize_email( trim( $candidate ) );
+
+			if ( '' !== $email && is_email( $email ) ) {
+				$valid[] = $email;
+			}
+		}
+
+		return implode( ', ', array_unique( $valid ) );
+	}
+
+	/**
+	 * Everyone a new lead should be emailed to.
+	 *
+	 * The configured owner addresses when set, the WordPress admin email
+	 * otherwise — so notifications always go somewhere.
+	 *
+	 * @return array<int, string>
+	 */
+	public static function lead_recipients(): array {
+		$configured = array_filter( array_map( 'trim', explode( ',', self::get( 'lead_email' ) ) ) );
+
+		if ( array() !== $configured ) {
+			return array_values( $configured );
+		}
+
+		$admin = (string) get_option( 'admin_email' );
+
+		return is_email( $admin ) ? array( $admin ) : array();
 	}
 
 	/**

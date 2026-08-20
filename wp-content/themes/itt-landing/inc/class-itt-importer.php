@@ -437,7 +437,26 @@ final class ITT_Importer {
 				: ' · ' . esc_html__( 'האחרונה:', 'itt-landing' ) . ' ' . esc_html( $summary['last'] )
 		);
 
-		echo '<p>' . esc_html__( 'הבדיקה שולחת פנייה ריקה בכוונה לכל אחד ממסלולי השליחה ובודקת שהשרת עונה. שום פנייה לא נשמרת בבדיקה.', 'itt-landing' ) . '</p>';
+		echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
+		wp_nonce_field( 'itt_settings' );
+		echo '<input type="hidden" name="action" value="itt_settings">';
+
+		echo '<table class="form-table" role="presentation"><tbody>';
+
+		printf(
+			'<tr><th scope="row"><label for="itt-lead-email">%s</label></th><td><input type="text" class="regular-text" id="itt-lead-email" name="lead_email" value="%s" dir="ltr" autocomplete="off" placeholder="%s"><p class="description">%s</p></td></tr>',
+			esc_html__( 'מייל לקבלת פניות', 'itt-landing' ),
+			esc_attr( ITT_Settings::get( 'lead_email' ) ),
+			esc_attr( (string) get_option( 'admin_email' ) ),
+			esc_html__( 'כל פנייה חדשה נשלחת גם למייל. אפשר כמה כתובות מופרדות בפסיק. כשהשדה ריק, המייל נשלח לכתובת המנהל של וורדפרס.', 'itt-landing' )
+		);
+
+		echo '</tbody></table>';
+
+		submit_button( __( 'שמירת המייל', 'itt-landing' ), 'primary', 'save-lead-email', false );
+		echo '</form>';
+
+		echo '<p style="margin-top:20px">' . esc_html__( 'הבדיקה שולחת פנייה ריקה בכוונה לכל אחד ממסלולי השליחה ובודקת שהשרת עונה. שום פנייה לא נשמרת בבדיקה.', 'itt-landing' ) . '</p>';
 
 		echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
 		wp_nonce_field( 'itt_lead_selftest' );
@@ -519,12 +538,17 @@ final class ITT_Importer {
 
 		check_admin_referer( 'itt_settings' );
 
-		ITT_Settings::save(
-			array(
-				'turnstile_site_key'   => wp_unslash( (string) ( $_POST['turnstile_site_key'] ?? '' ) ),
-				'turnstile_secret_key' => wp_unslash( (string) ( $_POST['turnstile_secret_key'] ?? '' ) ),
-			)
-		);
+		// Only the fields this form actually carried are saved, so the
+		// Turnstile form and the lead-email form never blank each other.
+		$values = array();
+
+		foreach ( array( 'turnstile_site_key', 'turnstile_secret_key', 'lead_email' ) as $field ) {
+			if ( isset( $_POST[ $field ] ) ) {
+				$values[ $field ] = wp_unslash( (string) $_POST[ $field ] );
+			}
+		}
+
+		ITT_Settings::save( $values );
 
 		wp_safe_redirect(
 			add_query_arg(

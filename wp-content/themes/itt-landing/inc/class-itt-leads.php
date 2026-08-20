@@ -727,9 +727,13 @@ final class ITT_Leads {
 	 * @param string $message Free-text message.
 	 */
 	private static function notify( string $name, string $phone, string $email, string $message ): void {
-		$to = apply_filters( 'itt_lead_notification_email', get_option( 'admin_email' ) );
+		// The owner's addresses from Tools → "עמודי ITT" when configured, the
+		// WordPress admin email otherwise. The filter still runs last so a
+		// site-specific plugin can override either.
+		$to = apply_filters( 'itt_lead_notification_email', ITT_Settings::lead_recipients() );
+		$to = array_filter( array_map( 'trim', (array) $to ), 'is_email' );
 
-		if ( ! is_string( $to ) || ! is_email( $to ) ) {
+		if ( array() === $to ) {
 			return;
 		}
 

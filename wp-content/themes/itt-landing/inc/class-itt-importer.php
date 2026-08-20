@@ -387,6 +387,7 @@ final class ITT_Importer {
 
 		echo '</tbody></table>';
 
+		self::render_leads_status();
 		self::render_turnstile_form();
 
 		echo '<h2>' . esc_html__( 'ניהול עמודים', 'itt-landing' ) . '</h2>';
@@ -405,6 +406,61 @@ final class ITT_Importer {
 			array( 'onclick' => "return confirm('" . esc_js( __( 'הפעולה תחליף את כל התוכן בכל עמודי ITT בתוכן המקורי מהעיצוב. להמשיך?', 'itt-landing' ) ) . "');" )
 		);
 		echo '</form></div>';
+	}
+
+	/**
+	 * Where the leads are, and whether the form can still reach the server.
+	 *
+	 * The check exists because a blocked submission route looks like nothing at
+	 * all from the outside: the visitor sees an error they will not report, and
+	 * the office simply stops receiving leads.
+	 */
+	private static function render_leads_status(): void {
+		$summary = ITT_Leads::summary();
+		$test    = get_transient( 'itt_lead_selftest' );
+
+		echo '<h2 id="itt-selftest">' . esc_html__( 'פניות מהטופס', 'itt-landing' ) . '</h2>';
+
+		printf(
+			'<p>%s <a href="%s"><strong>%s</strong></a>.</p>',
+			esc_html__( 'כל פנייה שנשלחת מהטופס נשמרת בתפריט', 'itt-landing' ),
+			esc_url( admin_url( 'edit.php?post_type=' . ITT_Leads::POST_TYPE ) ),
+			esc_html__( 'פניות ITT', 'itt-landing' )
+		);
+
+		printf(
+			'<p><strong>%s</strong> %d%s</p>',
+			esc_html__( 'פניות שנשמרו:', 'itt-landing' ),
+			(int) $summary['count'],
+			'' === $summary['last']
+				? ''
+				: ' · ' . esc_html__( 'האחרונה:', 'itt-landing' ) . ' ' . esc_html( $summary['last'] )
+		);
+
+		echo '<p>' . esc_html__( 'הבדיקה שולחת פנייה ריקה בכוונה לכל אחד ממסלולי השליחה ובודקת שהשרת עונה. שום פנייה לא נשמרת בבדיקה.', 'itt-landing' ) . '</p>';
+
+		echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
+		wp_nonce_field( 'itt_lead_selftest' );
+		echo '<input type="hidden" name="action" value="itt_lead_selftest">';
+		submit_button( __( 'בדיקת מסלולי השליחה', 'itt-landing' ), 'secondary', 'test', false );
+		echo '</form>';
+
+		if ( ! is_array( $test ) ) {
+			return;
+		}
+
+		echo '<table class="widefat striped" style="max-width:760px;margin-top:16px"><tbody>';
+
+		foreach ( $test as $row ) {
+			printf(
+				'<tr><th scope="row">%s</th><td>%s %s</td></tr>',
+				esc_html( (string) $row['label'] ),
+				esc_html( $row['ok'] ? '✔' : '✖' ),
+				esc_html( (string) $row['note'] )
+			);
+		}
+
+		echo '</tbody></table>';
 	}
 
 	/**

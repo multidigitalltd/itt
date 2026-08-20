@@ -361,7 +361,11 @@
 				errors.consent = i18n.consentRequired || 'שדה חובה — יש לאשר את תנאי השימוש ומדיניות הפרטיות.';
 			}
 
-			if ( config.turnstile && ! turnstileToken() ) {
+			// Only asked for when the widget is actually there. If Cloudflare's
+			// script never loaded — an ad blocker, a corporate network, a bad
+			// minute at their end — the visitor has no box to tick, and asking
+			// for one would leave them stuck on a step they cannot complete.
+			if ( config.turnstile && turnstileRendered() && ! turnstileToken() ) {
 				errors.turnstile = i18n.turnstileMissing || 'נא להשלים את אימות האבטחה שמתחת לטופס.';
 			}
 
@@ -377,6 +381,17 @@
 			var input = form.querySelector( '[name="cf-turnstile-response"]' );
 
 			return input ? input.value : '';
+		}
+
+		/**
+		 * Whether Cloudflare's widget actually drew itself into the page.
+		 *
+		 * @return {boolean} True once the widget is present.
+		 */
+		function turnstileRendered() {
+			var box = form.querySelector( '.cf-turnstile' );
+
+			return !! ( box && box.childElementCount );
 		}
 
 		/**
@@ -440,24 +455,21 @@
 				page: parseInt( form.getAttribute( 'data-itt-page' ), 10 ) || 0
 			};
 
-			// credentials: 'omit' on purpose. With a WordPress auth cookie
-			// attached, WordPress runs its REST cookie-nonce check before the
-			// endpoint is reached and rejects the request with "Cookie check
-			// failed" whenever that nonce has gone stale — which a page cache
-			// or an expired session makes routine. The endpoint is public, so
-			// there is nothing for the cookie to authenticate anyway.
-			fetch( config.submitUrl, {
-				method: 'POST',
-				credentials: 'omit',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify( payload )
-			} )
-				.then( function ( response ) {
-					return response.json().then( function ( data ) {
-						return { ok: response.ok, data: data };
-					} );
+			// Three transports, tried in order, because losing a lead is the
+			// worst outcome this form has. The REST route is the fast path;
+			// hosting firewalls that block POSTs to /wp-json/ answer with an
+			// HTML page the browser cannot read as JSON, so the request is
+			// retried through admin-ajax.php, and if that is unreachable too
+			// the form is posted the plain way and the browser follows the
+			// redirect. Only a real answer from the server — including a
+			// validation error — stops the ladder.
+			postJson( config.submitUrl, JSON.stringify( payload ), 'application/json' )
+				.catch( function ( error ) {
+					if ( ! error.transport || ! config.ajaxUrl ) {
+						throw error;
+					}
+
+					return postJson( config.ajaxUrl, encodeForm( payload ), 'application/x-www-form-urlencoded;charset=UTF-8' );
 				} )
 				.then( function ( result ) {
 					if ( ! result.ok ) {
@@ -472,6 +484,14 @@
 					succeed();
 				} )
 				.catch( function ( error ) {
+					// Nothing answered. Post the form for real and let the
+					// server redirect: the details reach the office even when
+					// the background request never got through.
+					if ( error && error.transport ) {
+						nativeSubmit();
+						return;
+					}
+
 					if ( submit ) {
 						submit.removeAttribute( 'aria-disabled' );
 						submit.textContent = submitLabel;
@@ -491,6 +511,110 @@
 					}
 				} );
 		} );
+
+		/**
+		 * Post to one endpoint and insist on a JSON answer.
+		 *
+		 * Rejects with `transport` set when nothing usable came back — the
+		 * connection failed, or something in front of WordPress answered with
+		 * an HTML block page. That flag is what tells the caller to try the
+		 * next transport rather than blaming the visitor.
+		 *
+		 * @param {string} url  Endpoint.
+		 * @param {string} body Encoded request body.
+		 * @param {string} type Content type of the body.
+		 * @return {Promise<Object>} Resolves with { ok, data }.
+		 */
+		function postJson( url, body, type ) {
+			// credentials: 'omit' on purpose. With a WordPress auth cookie
+			// attached, WordPress runs its REST cookie-nonce check before the
+			// endpoint is reached and rejects the request with "Cookie check
+			// failed" whenever that nonce has gone stale — which a page cache
+			// or an expired session makes routine. The endpoint is public, so
+			// there is nothing for the cookie to authenticate anyway.
+			return fetch( url, {
+				method: 'POST',
+				credentials: 'omit',
+				headers: { 'Content-Type': type },
+				body: body
+			} )
+				.catch( function () {
+					throw transportError();
+				} )
+				.then( function ( response ) {
+					return response.text().then( function ( text ) {
+						var data;
+
+						try {
+							data = JSON.parse( text );
+						} catch ( e ) {
+							throw transportError();
+						}
+
+						return { ok: response.ok, data: data };
+					} );
+				} );
+		}
+
+		/**
+		 * An error that means "this route did not work", not "this lead is bad".
+		 *
+		 * @return {Error} Flagged error.
+		 */
+		function transportError() {
+			var error = new Error( i18n.genericError );
+
+			error.transport = true;
+
+			return error;
+		}
+
+		/**
+		 * Encode the payload the way a normal form would.
+		 *
+		 * @param {Object} data Payload.
+		 * @return {string} URL-encoded body.
+		 */
+		function encodeForm( data ) {
+			var parts = [ 'action=itt_lead' ];
+
+			Object.keys( data ).forEach( function ( key ) {
+				var value = true === data[ key ] ? '1' : ( false === data[ key ] ? '' : data[ key ] );
+
+				parts.push( encodeURIComponent( key ) + '=' + encodeURIComponent( value ) );
+			} );
+
+			return parts.join( '&' );
+		}
+
+		/**
+		 * Last resort: submit the form the way the browser would without us.
+		 */
+		function nativeSubmit() {
+			hidden( 'ts', String( rendered ) );
+			hidden( 'turnstile', turnstileToken() );
+
+			form.submit();
+		}
+
+		/**
+		 * Set a hidden field on the form, adding it if it is not there yet.
+		 *
+		 * @param {string} name  Field name.
+		 * @param {string} value Field value.
+		 */
+		function hidden( name, value ) {
+			var field = form.querySelector( 'input[type="hidden"][name="' + name + '"]' );
+
+			if ( ! field ) {
+				field = document.createElement( 'input' );
+				field.type = 'hidden';
+				field.name = name;
+				form.appendChild( field );
+			}
+
+			field.value = value;
+		}
 
 		/**
 		 * Replace the form with a confirmation when no thank-you page is set.

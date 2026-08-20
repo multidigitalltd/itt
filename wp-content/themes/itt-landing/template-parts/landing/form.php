@@ -66,17 +66,29 @@ $itt_bullets = itt_lines( (string) $itt['bullets'] );
 			<h3 class="itt-form__card-title"><?php echo esc_html( (string) $itt['form_title'] ); ?></h3>
 			<p class="itt-form__card-subtitle"><?php echo esc_html( (string) $itt['form_subtitle'] ); ?></p>
 
-			<noscript>
-				<p class="itt-form__noscript">
-					<?php esc_html_e( 'שליחת הטופס דורשת JavaScript. אפשר לפנות אלינו בטלפון או בוואטסאפ ונחזור אלייך:', 'itt-landing' ); ?>
-					<a href="<?php echo esc_url( 'tel:' . preg_replace( '/[^\d*]/', '', (string) $itt_chrome['phone'] ) ); ?>" dir="ltr"><?php echo esc_html( (string) $itt_chrome['phone'] ); ?></a>
-					·
-					<a href="<?php echo esc_url( (string) $itt_chrome['whatsapp'] ); ?>" rel="noopener" dir="ltr"><?php echo esc_html( (string) $itt_chrome['whatsapp_label'] ); ?></a>
-				</p>
-			</noscript>
+			<?php
+			// The form posts to admin-post.php for real. JavaScript intercepts
+			// that and sends the same values in the background for a smoother
+			// answer, but when the background request cannot get through — a
+			// hosting firewall blocking /wp-json/, a broken connection — the
+			// browser falls back to this plain POST, and a visitor with no
+			// JavaScript at all can still send their details.
+			$itt_error = isset( $_GET['itt_error'] ) ? sanitize_text_field( wp_unslash( (string) $_GET['itt_error'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only message echoed back after a redirect.
+			?>
+			<form
+				class="itt-form__form"
+				id="itt-form"
+				method="post"
+				action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>"
+				data-itt-form
+				data-itt-page="<?php echo esc_attr( (string) get_queried_object_id() ); ?>"
+				novalidate
+			>
+				<div class="itt-form__errors" data-itt-form-errors role="alert" tabindex="-1" <?php echo '' === $itt_error ? 'hidden' : ''; ?>><?php echo esc_html( $itt_error ); ?></div>
 
-			<form class="itt-form__form" data-itt-form data-itt-page="<?php echo esc_attr( (string) get_queried_object_id() ); ?>" novalidate>
-				<div class="itt-form__errors" data-itt-form-errors role="alert" tabindex="-1" hidden></div>
+				<input type="hidden" name="action" value="itt_lead">
+				<input type="hidden" name="page" value="<?php echo esc_attr( (string) get_queried_object_id() ); ?>">
+				<input type="hidden" name="ts" value="<?php echo esc_attr( (string) time() ); ?>">
 
 				<p class="itt-field">
 					<label for="itt-name"><?php echo esc_html( (string) $itt['label_name'] ); ?></label>

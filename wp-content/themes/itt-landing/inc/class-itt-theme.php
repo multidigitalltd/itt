@@ -188,6 +188,9 @@ final class ITT_Theme {
 	private static function script_data(): array {
 		return array(
 			'submitUrl' => esc_url_raw( rest_url( ITT_Leads::REST_NAMESPACE . '/lead' ) ),
+			// Second transport, used when a hosting firewall answers the REST
+			// route with an HTML block page instead of JSON.
+			'ajaxUrl'   => esc_url_raw( admin_url( 'admin-ajax.php' ) ),
 			'turnstile' => ITT_Settings::turnstile_enabled(),
 			'i18n'      => array(
 				'nameRequired'     => __( 'נא למלא שם מלא.', 'itt-landing' ),

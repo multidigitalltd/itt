@@ -37,19 +37,23 @@ $itt_show_sticky ??= is_page_template( 'template-itt-landing.php' );
 		</ul>
 
 		<?php
-		$itt_a11y = ITT_Importer::page_id( 'accessibility' );
+		$itt_legal = ITT_Importer::legal_pages();
 
-		if ( ! has_nav_menu( 'itt_legal' ) && $itt_a11y > 0 ) :
+		if ( ! has_nav_menu( 'itt_legal' ) && array() !== $itt_legal ) :
 			// No legal menu assigned yet: still surface the accessibility
-			// statement, which ת"י 5568 requires to be reachable from every page.
+			// statement, which ת"י 5568 requires to be reachable from every
+			// page, along with the terms and the privacy policy the consent
+			// checkbox refers to.
 			?>
 			<nav class="itt-footer__legal" aria-label="<?php esc_attr_e( 'קישורים משפטיים', 'itt-landing' ); ?>">
 				<ul class="itt-footer__legal-list">
-					<li>
-						<a href="<?php echo esc_url( (string) get_permalink( $itt_a11y ) ); ?>">
-							<?php echo esc_html( get_the_title( $itt_a11y ) ); ?>
-						</a>
-					</li>
+					<?php foreach ( $itt_legal as $itt_legal_id ) : ?>
+						<li>
+							<a href="<?php echo esc_url( (string) get_permalink( $itt_legal_id ) ); ?>">
+								<?php echo esc_html( get_the_title( $itt_legal_id ) ); ?>
+							</a>
+						</li>
+					<?php endforeach; ?>
 				</ul>
 			</nav>
 			<?php
@@ -87,12 +91,13 @@ $itt_show_sticky ??= is_page_template( 'template-itt-landing.php' );
 <?php if ( $itt_show_sticky ) : ?>
 	<aside class="itt-sticky" aria-label="<?php esc_attr_e( 'פעולות מהירות', 'itt-landing' ); ?>">
 		<div class="itt-shell itt-sticky__inner">
-			<p class="itt-sticky__text"><?php echo esc_html( (string) $itt_chrome['sticky_text'] ); ?></p>
+			<p class="itt-sticky__text"><?php itt_the_rich( (string) $itt_chrome['sticky_text'] ); ?></p>
 			<div class="itt-sticky__actions">
-				<a class="itt-btn itt-btn--ghost-cyan" href="<?php echo esc_url( (string) $itt_chrome['whatsapp'] ); ?>" rel="noopener">
-					<?php echo esc_html( (string) $itt_chrome['sticky_whatsapp'] ); ?>
+				<a class="itt-btn itt-btn--ghost-cyan itt-sticky__wa" href="<?php echo esc_url( (string) $itt_chrome['whatsapp'] ); ?>" rel="noopener">
+					<?php itt_icon( 'whatsapp' ); ?>
+					<span class="itt-sticky__wa-label"><?php echo esc_html( (string) $itt_chrome['sticky_whatsapp'] ); ?></span>
 				</a>
-				<a class="itt-btn itt-btn--orange" href="#form">
+				<a class="itt-btn itt-btn--orange itt-sticky__cta" href="#form">
 					<?php echo esc_html( (string) $itt_chrome['sticky_cta'] ); ?>
 				</a>
 			</div>

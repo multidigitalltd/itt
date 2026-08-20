@@ -377,6 +377,15 @@ html:has(.itt-page) {
 	color: var(--itt-white);
 }
 
+/**
+ * No glow inside a band. The drop shadow is tuned to lift the button off a
+ * light page; on a band's own dark panel the orange bleeds into the purple
+ * and reads as a halo around the button rather than a shadow under it.
+ */
+.itt-band .itt-btn--orange {
+	box-shadow: none;
+}
+
 .itt-btn--gold {
 	background: var(--itt-gold);
 	color: var(--itt-purple);
@@ -543,6 +552,22 @@ html:has(.itt-page) {
 	color: var(--itt-gold);
 }
 
+/**
+ * Bold gold that pulses — for a standing offer that should keep catching the
+ * eye without moving anything. Opacity only, so it never shifts layout, and
+ * the base state is fully opaque: with animation off it is simply bold gold.
+ */
+.itt-flash {
+	font-weight: 700;
+	color: var(--itt-gold);
+	animation: itt-flash 1.6s ease-in-out infinite;
+}
+
+@keyframes itt-flash {
+	0%, 100% { opacity: 1; }
+	50% { opacity: 0.45; }
+}
+
 /* Generic card surface reused across sections. */
 .itt-card {
 	display: grid;
@@ -659,6 +684,15 @@ html:has(.itt-page) {
 	gap: 14px;
 	flex-wrap: wrap;
 	padding-block: 10px;
+}
+
+.itt-topbar__track {
+	display: contents;
+}
+
+/* The clone only earns its place inside the phone marquee. */
+.itt-topbar__track--clone {
+	display: none;
 }
 
 .itt-topbar__dot {
@@ -962,9 +996,42 @@ html:has(.itt-page) {
  * Reduced motion, and the in-page "stop animations" control required by
  * WCAG 2.2.2 for the blinking CTAs. Both land on the finished state.
  */
+/**
+ * Announcement ticker.
+ *
+ * Two identical tracks sit on one nowrap line. In RTL the line starts at the
+ * right, so the first track occupies the rightmost slot and the clone sits
+ * immediately to its left; sliding both rightwards by exactly one track width
+ * lands the clone where the original was, which is what makes the loop
+ * seamless rather than snapping. These templates are always RTL.
+ */
+@keyframes itt-ticker {
+	from { transform: translateX(0); }
+	to { transform: translateX(100%); }
+}
+
 @media (prefers-reduced-motion: reduce) {
 	html:has(.itt-page) {
 		scroll-behavior: auto;
+	}
+
+	/* Same fallback as the "stop animations" switch: a static wrapped bar,
+	   with the clone removed so the notice is not printed twice. */
+	.itt-topbar__inner {
+		flex-wrap: wrap !important;
+		justify-content: center !important;
+		overflow: visible !important;
+		mask-image: none !important;
+	}
+
+	.itt-topbar__track {
+		white-space: normal !important;
+		flex-wrap: wrap;
+		justify-content: center;
+	}
+
+	.itt-topbar__track--clone {
+		display: none !important;
 	}
 
 	.itt-page *,
@@ -1024,29 +1091,178 @@ html:has(.itt-page) {
 	}
 }
 
+/**
+ * Phone chrome. On a 320-414px screen the announcement bar and the sticky
+ * header together used to eat 279px — most of the first viewport — because
+ * both flex rows wrapped. Below 600px they are compacted into one line each:
+ * the decorative dot goes, type steps down, and the header CTA is dropped
+ * because the fixed bottom bar already carries the same "check your fit"
+ * action permanently and within thumb reach.
+ */
 @media (max-width: 600px) {
-	.itt-header__phone {
-		font-size: 22px;
+	/**
+	 * The notice becomes a single scrolling line. Wrapped over three lines it
+	 * cost ~95px of a 844px screen before the header had even started.
+	 */
+	.itt-topbar__inner {
+		display: flex;
+		flex-wrap: nowrap;
+		justify-content: flex-start;
+		gap: 0;
+		overflow: hidden;
+		padding-block: 8px;
+		padding-inline: 0;
+		/* Fade the edges so the text reads as passing through rather than
+		   being chopped off at the viewport. */
+		mask-image: linear-gradient(to left, transparent, #000 24px, #000 calc(100% - 24px), transparent);
 	}
 
-	/* Padding shrinks on small screens, the size does not: white on the brand
-	   orange only clears AA as large text (>=19px/700). */
+	.itt-topbar__track {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		flex: none;
+		padding-inline: 20px;
+		white-space: nowrap;
+		animation: itt-ticker 18s linear infinite;
+	}
+
+	.itt-topbar__track--clone {
+		display: flex;
+	}
+
+	.itt-topbar__dot {
+		width: 7px;
+		height: 7px;
+	}
+
+	.itt-topbar__text,
+	.itt-topbar__link {
+		font-size: 14px;
+		white-space: nowrap;
+	}
+
+	/**
+	 * No motion: the marquee would run indefinitely, so it is replaced by the
+	 * static wrapped bar rather than left animating. The clone goes with it,
+	 * otherwise the notice would simply appear twice.
+	 */
+	.itt-page.itt-no-motion .itt-topbar__inner {
+		flex-wrap: wrap;
+		justify-content: center;
+		overflow: visible;
+		mask-image: none;
+	}
+
+	.itt-page.itt-no-motion .itt-topbar__track {
+		white-space: normal;
+		flex-wrap: wrap;
+		justify-content: center;
+	}
+
+	.itt-page.itt-no-motion .itt-topbar__track--clone {
+		display: none;
+	}
+
+	.itt-header__inner {
+		gap: 10px;
+		padding-block: 4px;
+	}
+
+	.itt-header__logo-img {
+		height: 38px;
+	}
+
+	.itt-header__actions {
+		gap: 10px 12px;
+		flex-wrap: wrap;
+		justify-content: flex-end;
+		flex: 1 1 auto;
+	}
+
+	.itt-header__phone {
+		font-size: 20px;
+	}
+
 	.itt-header__cta {
-		padding: 12px 18px;
+		display: none;
 	}
 
 	.itt-sticky__text {
 		display: none;
 	}
 
+	/**
+	 * One row, always. Side by side the two labels needed ~403px of a 350px
+	 * line, so the bar wrapped and stood 138px tall — a sixth of the screen,
+	 * permanently. The WhatsApp label is hidden and its icon kept, which buys
+	 * back the ~70px that makes both fit even at 320px. The label stays in the
+	 * markup as the link's accessible name.
+	 */
+	.itt-sticky__inner {
+		flex-wrap: nowrap;
+		gap: 8px;
+		padding-inline: 12px;
+		padding-block: 10px;
+	}
+
 	.itt-sticky__actions {
 		width: 100%;
+		flex-wrap: nowrap;
+		gap: 8px;
+	}
+
+	.itt-sticky__wa {
+		flex: none;
+		width: 48px;
+		padding: 0;
 		justify-content: center;
+	}
+
+	.itt-sticky__wa-label {
+		position: absolute !important;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+		clip-path: inset(50%);
+		white-space: nowrap;
+	}
+
+	.itt-sticky__cta {
+		flex: 1;
+		min-width: 0;
+		justify-content: center;
+		white-space: nowrap;
+	}
+
+	/* Padding shrinks, the size does not: white on the brand orange only
+	   clears AA as large text (>=19px/700). */
+	.itt-sticky .itt-btn {
+		padding-inline: 10px;
+		min-height: 48px;
 	}
 
 	.itt-band {
 		padding: 26px 22px;
 	}
+}
+
+/* Narrowest phones: keep the header on one line rather than let the logo,
+   the men's link and the phone number fight for the same 280px. */
+@media (max-width: 400px) {
+	.itt-topbar__text,
+	.itt-topbar__link {
+		font-size: 13px;
+	}
+
+	.itt-header__logo-img {
+		height: 34px;
+	}
+
+	.itt-header__phone {
+		font-size: 18px;
+	}
+
 }
 
 /**
@@ -1516,6 +1732,17 @@ html:has(.itt-page) {
 	font-weight: 700;
 	text-decoration: underline;
 	text-underline-offset: 3px;
+	/**
+	 * Padded to clear the 24px target 2.5.8 asks for, with the same amount
+	 * taken back as negative margin so the consent sentence keeps its line
+	 * spacing. These are inline links inside a sentence and so are exempt from
+	 * the rule anyway, but a comfortable tap costs nothing here — and the 44px
+	 * the standard wants for standalone controls would need padding deep
+	 * enough to overlap the line above.
+	 */
+	display: inline-block;
+	padding-block: 6px;
+	margin-block: -6px;
 }
 
 .itt-consent__link:hover {

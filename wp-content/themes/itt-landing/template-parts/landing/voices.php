@@ -20,7 +20,14 @@ declare( strict_types = 1 );
 defined( 'ABSPATH' ) || exit;
 
 $itt_cards  = array_values( (array) $itt['cards'] );
-$itt_slider = count( $itt_cards ) > 3;
+/**
+ * Anything past a single testimonial is paginated. The threshold used to be
+ * three, which meant a page with exactly three showed a static grid and no way
+ * to browse — and three is the common case. The arrows disable themselves when
+ * the track cannot scroll, so a set that already fits shows them greyed rather
+ * than pretending there is more.
+ */
+$itt_slider = count( $itt_cards ) > 1;
 
 /**
  * Render one testimonial.
@@ -32,9 +39,11 @@ $itt_render_voice = static function ( array $card, int $index ): void {
 	$text_id = 'itt-voice-text-' . $index;
 	?>
 	<figure class="itt-voice">
-		<p class="itt-voice__title itt-voice__title--<?php echo esc_attr( (string) $card['variant'] ); ?>">
-			<?php echo esc_html( (string) $card['title'] ); ?>
-		</p>
+		<?php if ( '' !== trim( (string) $card['title'] ) ) : ?>
+			<p class="itt-voice__title itt-voice__title--<?php echo esc_attr( (string) $card['variant'] ); ?>">
+				<?php echo esc_html( (string) $card['title'] ); ?>
+			</p>
+		<?php endif; ?>
 
 		<blockquote class="itt-voice__text" id="<?php echo esc_attr( $text_id ); ?>">
 			<?php echo esc_html( (string) $card['text'] ); ?>

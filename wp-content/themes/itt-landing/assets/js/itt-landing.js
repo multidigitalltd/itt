@@ -2,7 +2,7 @@
  * ITT landing page interactions.
  *
  * Semester tabs, single-open accordions, the testimonial slider, the video
- * facades, the rotating quote and the lead form. Everything is progressive:
+ * facades and the lead form. Everything is progressive:
  * the markup works without this file, the script only adds the behaviour from
  * the design.
  */
@@ -17,7 +17,10 @@
 	 * ----------------------------------------------------------------- */
 
 	function initTabs() {
-		var tablist = document.querySelector( '[role="tablist"]' );
+		// Explicitly the syllabus tablist. Selecting on [role="tablist"] alone
+		// picked whichever came first in the document, which broke the moment
+		// the video gallery — also a tablist — landed above it in the page.
+		var tablist = document.querySelector( '[data-itt-tabs]' );
 
 		if ( ! tablist ) {
 			return;
@@ -285,85 +288,6 @@
 		} );
 	}
 
-	/* --------------------------------------------------------------------
-	 * Rotating quote
-	 * ----------------------------------------------------------------- */
-
-	function initQuotes() {
-		var wrapper = document.querySelector( '[data-itt-quotes]' );
-
-		if ( ! wrapper ) {
-			return;
-		}
-
-		var quotes = Array.prototype.slice.call( wrapper.querySelectorAll( '[data-itt-quote]' ) );
-
-		if ( quotes.length < 2 ) {
-			return;
-		}
-
-		var current = 0;
-		var timer = null;
-
-		/**
-		 * Show one quote.
-		 *
-		 * @param {number} index Quote to show.
-		 */
-		function show( index ) {
-			current = ( index + quotes.length ) % quotes.length;
-
-			quotes.forEach( function ( quote, i ) {
-				quote.hidden = i !== current;
-			} );
-		}
-
-		function stop() {
-			window.clearInterval( timer );
-			timer = null;
-		}
-
-		function play() {
-			// Auto-rotation is a courtesy, never a requirement: it stays off for
-			// visitors who asked for reduced motion, and stops on interaction.
-			if ( timer || document.querySelector( '.itt-page.itt-no-motion' ) ) {
-				return;
-			}
-
-			timer = window.setInterval( function () {
-				show( current + 1 );
-			}, 7000 );
-		}
-
-		wrapper.querySelectorAll( '[data-itt-quote-nav]' ).forEach( function ( button ) {
-			button.addEventListener( 'click', function () {
-				stop();
-				show( current + ( 'next' === button.getAttribute( 'data-itt-quote-nav' ) ? 1 : -1 ) );
-			} );
-		} );
-
-		wrapper.addEventListener( 'mouseenter', stop );
-		wrapper.addEventListener( 'focusin', stop );
-		wrapper.addEventListener( 'mouseleave', play );
-
-		document.addEventListener( 'visibilitychange', function () {
-			if ( document.hidden ) {
-				stop();
-			} else {
-				play();
-			}
-		} );
-
-		window.addEventListener( 'beforeunload', stop );
-
-		show( 0 );
-		play();
-	}
-
-	/* --------------------------------------------------------------------
-	 * Lead form
-	 * ----------------------------------------------------------------- */
-
 	function initForm() {
 		var form = document.querySelector( '[data-itt-form]' );
 
@@ -387,7 +311,7 @@
 			var slot = form.querySelector( '[data-itt-error="' + field + '"]' );
 
 			if ( slot ) {
-				slot.textContent = message;
+				slot.textContent = message || '';
 			}
 
 			if ( input ) {
@@ -395,6 +319,15 @@
 					input.setAttribute( 'aria-invalid', 'true' );
 				} else {
 					input.removeAttribute( 'aria-invalid' );
+				}
+
+				// aria-invalid on a checkbox has nothing to repaint, so the row
+				// carries the state instead — otherwise an unticked consent box
+				// is reported by the summary with nothing on screen to look at.
+				var field_el = input.closest( '.itt-field' );
+
+				if ( field_el ) {
+					field_el.classList.toggle( 'is-invalid', !! message );
 				}
 			}
 		}
@@ -425,10 +358,40 @@
 			// The server refuses a lead without consent; check here too so the
 			// visitor is told before a round trip.
 			if ( form.elements.consent && ! form.elements.consent.checked ) {
-				errors.consent = i18n.consentRequired;
+				errors.consent = i18n.consentRequired || 'שדה חובה — יש לאשר את תנאי השימוש ומדיניות הפרטיות.';
+			}
+
+			// Only asked for when the widget is actually there. If Cloudflare's
+			// script never loaded — an ad blocker, a corporate network, a bad
+			// minute at their end — the visitor has no box to tick, and asking
+			// for one would leave them stuck on a step they cannot complete.
+			if ( config.turnstile && turnstileRendered() && ! turnstileToken() ) {
+				errors.turnstile = i18n.turnstileMissing || 'נא להשלים את אימות האבטחה שמתחת לטופס.';
 			}
 
 			return errors;
+		}
+
+		/**
+		 * The Turnstile token, if the widget has produced one.
+		 *
+		 * @return {string} Token, or an empty string.
+		 */
+		function turnstileToken() {
+			var input = form.querySelector( '[name="cf-turnstile-response"]' );
+
+			return input ? input.value : '';
+		}
+
+		/**
+		 * Whether Cloudflare's widget actually drew itself into the page.
+		 *
+		 * @return {boolean} True once the widget is present.
+		 */
+		function turnstileRendered() {
+			var box = form.querySelector( '.cf-turnstile' );
+
+			return !! ( box && box.childElementCount );
 		}
 
 		/**
@@ -445,32 +408,10 @@
 			summary.hidden = ! message;
 		}
 
-		/**
-		 * Fetch a fresh REST nonce. Never printed into the cached HTML.
-		 *
-		 * @return {Promise<string>} The nonce, or an empty string.
-		 */
-		function fetchNonce() {
-			if ( ! config.nonceUrl ) {
-				return Promise.resolve( '' );
-			}
-
-			return fetch( config.nonceUrl, { credentials: 'same-origin' } )
-				.then( function ( response ) {
-					return response.ok ? response.json() : {};
-				} )
-				.then( function ( data ) {
-					return data.nonce || '';
-				} )
-				.catch( function () {
-					return '';
-				} );
-		}
-
 		form.addEventListener( 'submit', function ( event ) {
 			event.preventDefault();
 
-			[ 'name', 'phone', 'email', 'consent' ].forEach( function ( field ) {
+			[ 'name', 'phone', 'email', 'consent', 'turnstile' ].forEach( function ( field ) {
 				setFieldError( field, '' );
 			} );
 
@@ -509,25 +450,26 @@
 				message: form.elements.message ? form.elements.message.value.trim() : '',
 				consent: form.elements.consent ? form.elements.consent.checked : true,
 				hp: form.elements.hp ? form.elements.hp.value : '',
-				ts: rendered
+				ts: rendered,
+				turnstile: turnstileToken(),
+				page: parseInt( form.getAttribute( 'data-itt-page' ), 10 ) || 0
 			};
 
-			fetchNonce()
-				.then( function ( nonce ) {
-					return fetch( config.submitUrl, {
-						method: 'POST',
-						credentials: 'same-origin',
-						headers: {
-							'Content-Type': 'application/json',
-							'X-WP-Nonce': nonce
-						},
-						body: JSON.stringify( payload )
-					} );
-				} )
-				.then( function ( response ) {
-					return response.json().then( function ( data ) {
-						return { ok: response.ok, data: data };
-					} );
+			// Three transports, tried in order, because losing a lead is the
+			// worst outcome this form has. The REST route is the fast path;
+			// hosting firewalls that block POSTs to /wp-json/ answer with an
+			// HTML page the browser cannot read as JSON, so the request is
+			// retried through admin-ajax.php, and if that is unreachable too
+			// the form is posted the plain way and the browser follows the
+			// redirect. Only a real answer from the server — including a
+			// validation error — stops the ladder.
+			postJson( config.submitUrl, JSON.stringify( payload ), 'application/json' )
+				.catch( function ( error ) {
+					if ( ! error.transport || ! config.ajaxUrl ) {
+						throw error;
+					}
+
+					return postJson( config.ajaxUrl, encodeForm( payload ), 'application/x-www-form-urlencoded;charset=UTF-8' );
 				} )
 				.then( function ( result ) {
 					if ( ! result.ok ) {
@@ -542,9 +484,24 @@
 					succeed();
 				} )
 				.catch( function ( error ) {
+					// Nothing answered. Post the form for real and let the
+					// server redirect: the details reach the office even when
+					// the background request never got through.
+					if ( error && error.transport ) {
+						nativeSubmit();
+						return;
+					}
+
 					if ( submit ) {
 						submit.removeAttribute( 'aria-disabled' );
 						submit.textContent = submitLabel;
+					}
+
+					// A Turnstile token is good for one submission. Without a
+					// reset, a visitor who fixes a typo and tries again is
+					// rejected for a token that was already spent.
+					if ( config.turnstile && window.turnstile ) {
+						window.turnstile.reset();
 					}
 
 					announce( error.message || i18n.genericError );
@@ -554,6 +511,110 @@
 					}
 				} );
 		} );
+
+		/**
+		 * Post to one endpoint and insist on a JSON answer.
+		 *
+		 * Rejects with `transport` set when nothing usable came back — the
+		 * connection failed, or something in front of WordPress answered with
+		 * an HTML block page. That flag is what tells the caller to try the
+		 * next transport rather than blaming the visitor.
+		 *
+		 * @param {string} url  Endpoint.
+		 * @param {string} body Encoded request body.
+		 * @param {string} type Content type of the body.
+		 * @return {Promise<Object>} Resolves with { ok, data }.
+		 */
+		function postJson( url, body, type ) {
+			// credentials: 'omit' on purpose. With a WordPress auth cookie
+			// attached, WordPress runs its REST cookie-nonce check before the
+			// endpoint is reached and rejects the request with "Cookie check
+			// failed" whenever that nonce has gone stale — which a page cache
+			// or an expired session makes routine. The endpoint is public, so
+			// there is nothing for the cookie to authenticate anyway.
+			return fetch( url, {
+				method: 'POST',
+				credentials: 'omit',
+				headers: { 'Content-Type': type },
+				body: body
+			} )
+				.catch( function () {
+					throw transportError();
+				} )
+				.then( function ( response ) {
+					return response.text().then( function ( text ) {
+						var data;
+
+						try {
+							data = JSON.parse( text );
+						} catch ( e ) {
+							throw transportError();
+						}
+
+						return { ok: response.ok, data: data };
+					} );
+				} );
+		}
+
+		/**
+		 * An error that means "this route did not work", not "this lead is bad".
+		 *
+		 * @return {Error} Flagged error.
+		 */
+		function transportError() {
+			var error = new Error( i18n.genericError );
+
+			error.transport = true;
+
+			return error;
+		}
+
+		/**
+		 * Encode the payload the way a normal form would.
+		 *
+		 * @param {Object} data Payload.
+		 * @return {string} URL-encoded body.
+		 */
+		function encodeForm( data ) {
+			var parts = [ 'action=itt_lead' ];
+
+			Object.keys( data ).forEach( function ( key ) {
+				var value = true === data[ key ] ? '1' : ( false === data[ key ] ? '' : data[ key ] );
+
+				parts.push( encodeURIComponent( key ) + '=' + encodeURIComponent( value ) );
+			} );
+
+			return parts.join( '&' );
+		}
+
+		/**
+		 * Last resort: submit the form the way the browser would without us.
+		 */
+		function nativeSubmit() {
+			hidden( 'ts', String( rendered ) );
+			hidden( 'turnstile', turnstileToken() );
+
+			form.submit();
+		}
+
+		/**
+		 * Set a hidden field on the form, adding it if it is not there yet.
+		 *
+		 * @param {string} name  Field name.
+		 * @param {string} value Field value.
+		 */
+		function hidden( name, value ) {
+			var field = form.querySelector( 'input[type="hidden"][name="' + name + '"]' );
+
+			if ( ! field ) {
+				field = document.createElement( 'input' );
+				field.type = 'hidden';
+				field.name = name;
+				form.appendChild( field );
+			}
+
+			field.value = value;
+		}
 
 		/**
 		 * Replace the form with a confirmation when no thank-you page is set.
@@ -574,11 +635,132 @@
 		}
 	}
 
+	/**
+	 * The galleries: one stage, many thumbnails. Used by both the testimonial
+	 * videos and the photo gallery, which share this markup contract.
+	 *
+	 * Thumbnails are a tablist and each stage entry its tabpanel, so the
+	 * keyboard behaviour people already expect from tabs — arrows to move,
+	 * Home/End to jump, one stop in the tab order — comes with the pattern.
+	 * The prev/next buttons at the top drive exactly the same selection, which
+	 * is the point: they change the large video, not a separate row.
+	 */
+	function initGalleries() {
+		document.querySelectorAll( '[data-itt-gallery]' ).forEach( function ( gallery ) {
+			var tabs = Array.prototype.slice.call( gallery.querySelectorAll( '[role="tab"]' ) );
+
+			if ( tabs.length < 2 ) {
+				return;
+			}
+
+			/**
+			 * Show one testimonial and mark its thumbnail.
+			 *
+			 * @param {number}  index     Position to show.
+			 * @param {boolean} moveFocus Whether to focus the thumbnail.
+			 */
+			function select( index, moveFocus ) {
+				var next = ( index + tabs.length ) % tabs.length;
+
+				// Retrigger the fade on the entry that is about to show. The
+				// class has to come off and go back on for the animation to
+				// replay when the same panel is reselected.
+				var incoming = document.getElementById( tabs[ next ].getAttribute( 'aria-controls' ) );
+
+				if ( incoming ) {
+					incoming.classList.remove( 'is-entering' );
+					void incoming.offsetWidth;
+					incoming.classList.add( 'is-entering' );
+				}
+
+				tabs.forEach( function ( tab, i ) {
+					var on = i === next;
+					var panel = document.getElementById( tab.getAttribute( 'aria-controls' ) );
+
+					tab.setAttribute( 'aria-selected', on ? 'true' : 'false' );
+					tab.setAttribute( 'tabindex', on ? '0' : '-1' );
+					tab.classList.toggle( 'is-active', on );
+
+					if ( panel ) {
+						panel.hidden = ! on;
+					}
+				} );
+
+				// Keep the chosen thumbnail in view when the strip scrolls.
+				if ( tabs[ next ].scrollIntoView ) {
+					tabs[ next ].scrollIntoView( { block: 'nearest', inline: 'nearest' } );
+				}
+
+				if ( moveFocus ) {
+					tabs[ next ].focus();
+				}
+			}
+
+			/**
+			 * Index of the thumbnail currently selected.
+			 *
+			 * @return {number} Zero-based position.
+			 */
+			function current() {
+				var found = tabs.findIndex( function ( tab ) {
+					return 'true' === tab.getAttribute( 'aria-selected' );
+				} );
+
+				return found > -1 ? found : 0;
+			}
+
+			tabs.forEach( function ( tab, i ) {
+				tab.addEventListener( 'click', function () {
+					select( i, false );
+				} );
+			} );
+
+			gallery.querySelectorAll( '[data-itt-gallery-step]' ).forEach( function ( button ) {
+				button.addEventListener( 'click', function () {
+					select( current() + parseInt( button.getAttribute( 'data-itt-gallery-step' ), 10 ), false );
+				} );
+			} );
+
+			gallery.addEventListener( 'keydown', function ( event ) {
+				if ( ! event.target.closest( '[role="tab"]' ) ) {
+					return;
+				}
+
+				// RTL: ArrowLeft advances, because the strip reads right to left.
+				var moves = {
+					ArrowLeft: 1,
+					ArrowRight: -1,
+					ArrowDown: 1,
+					ArrowUp: -1
+				};
+
+				if ( 'Home' === event.key ) {
+					event.preventDefault();
+					select( 0, true );
+					return;
+				}
+
+				if ( 'End' === event.key ) {
+					event.preventDefault();
+					select( tabs.length - 1, true );
+					return;
+				}
+
+				if ( undefined === moves[ event.key ] ) {
+					return;
+				}
+
+				event.preventDefault();
+				select( current() + moves[ event.key ], true );
+			} );
+		} );
+	}
+
 	initTabs();
 	initAccordions();
 	initSliders();
+	initGalleries();
 	initReadMore();
 	initFacades();
-	initQuotes();
 	initForm();
 }() );

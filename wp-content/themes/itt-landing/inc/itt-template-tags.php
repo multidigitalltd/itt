@@ -63,12 +63,14 @@ function itt_rich( string $text ): string {
 			'/\[blink\](.+?)\[\/blink\]/u',
 			'/\[value\](.+?)\[\/value\]/u',
 			'/\[gold\](.+?)\[\/gold\]/u',
+			'/\[flash\](.+?)\[\/flash\]/u',
 		),
 		array(
 			'<span class="itt-pop" data-pop>$1</span>',
 			'<span class="itt-blink">$1</span>',
 			'<span class="itt-pop itt-blink" data-pop>$1</span>',
 			'<span class="itt-gold">$1</span>',
+			'<span class="itt-flash">$1</span>',
 		),
 		$html
 	);
@@ -187,6 +189,9 @@ function itt_icon( string $name ): void {
 		'calendar' => '<rect x="3" y="5" width="18" height="16" rx="3"></rect><path d="M3 10h18M8 3v4M16 3v4"></path><circle cx="12" cy="15" r="1.6" fill="currentColor" stroke="none"></circle>',
 		'pin'      => '<path d="M12 21s7-6.1 7-11a7 7 0 1 0-14 0c0 4.9 7 11 7 11z"></path><circle cx="12" cy="10" r="2.6"></circle>',
 		'cap'      => '<path d="M3 8.5 12 4l9 4.5-9 4.5-9-4.5z"></path><path d="M7 11v4.2c0 1.6 2.2 2.8 5 2.8s5-1.2 5-2.8V11"></path><path d="M20.5 10v5"></path>',
+		// Used by the fixed bar, where the label is visually hidden on a phone
+		// so the two buttons fit on one line.
+		'whatsapp' => '<path d="M3.5 20.5l1.2-4.3A8.2 8.2 0 1 1 7.9 19.3l-4.4 1.2z"></path><path d="M9 8.4c.2-.5.4-.5.6-.5h.5c.2 0 .4 0 .6.5l.7 1.6c.1.3 0 .5-.1.7l-.4.5c-.1.2-.2.3 0 .6a6 6 0 0 0 2.7 2.3c.3.1.5.1.6 0l.5-.6c.2-.2.4-.2.6-.1l1.6.8c.2.1.4.2.4.4v.5c-.1.5-.7 1.1-1.3 1.2-.5.1-1.2.2-3.6-.9a8.6 8.6 0 0 1-3.6-3.5c-.3-.6-.8-1.6-.7-2.5 0-.6.4-1.2.9-1.5z"></path>',
 	);
 
 	if ( ! isset( $paths[ $name ] ) ) {

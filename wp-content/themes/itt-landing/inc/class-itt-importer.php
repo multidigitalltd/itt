@@ -2,7 +2,7 @@
 /**
  * One-time page provisioning.
  *
- * Creates the landing page and the thank-you page and writes the approved copy
+ * Creates the landing pages and the thank-you page and writes the approved copy
  * into their own meta, so that straight after activation the content is really
  * there — inside the pages, editable in the page editor.
  *
@@ -14,7 +14,7 @@ declare( strict_types = 1 );
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Creates and repairs the two ITT pages.
+ * Creates and repairs the ITT pages.
  */
 final class ITT_Importer {
 
@@ -25,24 +25,70 @@ final class ITT_Importer {
 
 	/**
 	 * Page blueprints.
+	 *
+	 * 'sections' is the field-schema key the page's meta boxes follow, and
+	 * 'content' names the copy set it is seeded from. The men's page reuses the
+	 * landing template and the landing schema — it is the same page with a
+	 * different address — so only its seed differs.
 	 */
 	private const PAGES = array(
-		'landing'   => array(
+		'landing'       => array(
 			'title'    => 'הכשרת ITT Leader · מחזור 20',
 			'slug'     => 'itt-leader',
 			'template' => 'template-itt-landing.php',
+			'sections' => 'landing',
+			'content'  => 'women',
 		),
-		'thank-you' => array(
+		'landing-men'   => array(
+			'title'    => 'הכשרת ITT Leader · מחזור 20 · לגברים',
+			'slug'     => 'itt-leader-gvarim',
+			'template' => 'template-itt-landing.php',
+			'sections' => 'landing',
+			'content'  => 'men',
+		),
+		'thank-you'     => array(
 			'title'    => 'תודה — הפרטים התקבלו',
 			'slug'     => 'itt-leader-toda',
 			'template' => 'template-itt-thank-you.php',
+			'sections' => 'thank-you',
+			'content'  => 'women',
+		),
+		'thank-you-men' => array(
+			'title'    => 'תודה — הפרטים התקבלו · לגברים',
+			'slug'     => 'itt-leader-toda-gvarim',
+			'template' => 'template-itt-thank-you.php',
+			'sections' => 'thank-you',
+			'content'  => 'men',
 		),
 		'accessibility' => array(
 			'title'    => 'הצהרת נגישות',
 			'slug'     => 'hatsharat-negishut',
 			'template' => '',
+			'sections' => '',
+			'content'  => '',
+		),
+		'terms'         => array(
+			'title'    => 'תקנון ותנאי שימוש',
+			'slug'     => 'takanon',
+			'template' => '',
+			'sections' => '',
+			'content'  => '',
+		),
+		'privacy'       => array(
+			'title'    => 'מדיניות פרטיות',
+			'slug'     => 'mediniyut-pratiyut',
+			'template' => '',
+			'sections' => '',
+			'content'  => '',
 		),
 	);
+
+	/**
+	 * The legal pages linked from the footer and from the consent checkbox.
+	 *
+	 * @var array<string, string>
+	 */
+	private const LEGAL_PAGES = array( 'accessibility', 'terms', 'privacy' );
 
 	/**
 	 * Hook the importer.
@@ -51,6 +97,7 @@ final class ITT_Importer {
 		add_action( 'after_switch_theme', array( self::class, 'provision' ) );
 		add_action( 'admin_menu', array( self::class, 'menu' ) );
 		add_action( 'admin_post_itt_provision', array( self::class, 'handle_request' ) );
+		add_action( 'admin_post_itt_settings', array( self::class, 'handle_settings' ) );
 	}
 
 	/**
@@ -65,6 +112,50 @@ final class ITT_Importer {
 		$id = is_array( $pages ) ? absint( $pages[ $template ] ?? 0 ) : 0;
 
 		return 'publish' === get_post_status( $id ) ? $id : 0;
+	}
+
+	/**
+	 * The published legal pages, in the order they should be listed.
+	 *
+	 * Missing or unpublished pages simply drop out, so the footer never prints
+	 * a link to a page that is not there.
+	 *
+	 * @return int[]
+	 */
+	public static function legal_pages(): array {
+		$ids = array();
+
+		foreach ( self::LEGAL_PAGES as $key ) {
+			$id = self::page_id( $key );
+
+			if ( 0 !== $id ) {
+				$ids[] = $id;
+			}
+		}
+
+		return $ids;
+	}
+
+	/**
+	 * The thank-you page a given landing page should send visitors to.
+	 *
+	 * A man who submits the men's form must not land on a page addressed to a
+	 * woman, so the men's landing page has its own. Any other page — including
+	 * a copy an editor made themselves — falls back to the main thank-you page.
+	 *
+	 * @param int $landing_id Page the form was submitted from.
+	 * @return int Thank-you page ID, or 0 when none exists.
+	 */
+	public static function thank_you_for( int $landing_id ): int {
+		if ( $landing_id > 0 && self::page_id( 'landing-men' ) === $landing_id ) {
+			$men = self::page_id( 'thank-you-men' );
+
+			if ( 0 !== $men ) {
+				return $men;
+			}
+		}
+
+		return self::page_id( 'thank-you' );
 	}
 
 	/**
@@ -123,7 +214,7 @@ final class ITT_Importer {
 				'post_status'    => 'publish',
 				'post_title'     => $blueprint['title'],
 				'post_name'      => $blueprint['slug'],
-				'post_content'   => 'hatsharat-negishut' === $blueprint['slug'] ? self::accessibility_statement() : '',
+				'post_content'   => self::starter_content( $blueprint['slug'] ),
 				'comment_status' => 'closed',
 				'ping_status'    => 'closed',
 				'meta_input'     => array( '_wp_page_template' => $template ),
@@ -132,6 +223,28 @@ final class ITT_Importer {
 		);
 
 		return is_wp_error( $id ) ? 0 : (int) $id;
+	}
+
+	/**
+	 * The body a provisioned page starts with, if any.
+	 *
+	 * The two legal pages get a visible placeholder rather than an empty body:
+	 * an empty page published at a URL the consent checkbox links to is worse
+	 * than one that says out loud it is still waiting for its text.
+	 *
+	 * @param string $slug Page slug.
+	 * @return string Block markup for the page content.
+	 */
+	private static function starter_content( string $slug ): string {
+		if ( 'hatsharat-negishut' === $slug ) {
+			return self::accessibility_statement();
+		}
+
+		if ( 'takanon' === $slug || 'mediniyut-pratiyut' === $slug ) {
+			return '<!-- wp:paragraph --><p>[יש להשלים: יש להדביק כאן את הנוסח המלא. עד שהתוכן יוזן, העמוד מוצג עם ההודעה הזו.]</p><!-- /wp:paragraph -->';
+		}
+
+		return '';
 	}
 
 	/**
@@ -177,15 +290,28 @@ final class ITT_Importer {
 	 * @param string $template Template key.
 	 */
 	private static function seed( int $post_id, string $template ): void {
-		foreach ( ITT_Fields::sections_for( $template ) as $section ) {
+		foreach ( ITT_Fields::sections_for( self::PAGES[ $template ]['sections'] ) as $section ) {
 			$stored = get_post_meta( $post_id, ITT_Meta::key( $section ), true );
 
 			if ( is_array( $stored ) && array() !== $stored ) {
 				continue;
 			}
 
-			ITT_Meta::save( $post_id, $section, ITT_Content::section( $section ) );
+			ITT_Meta::save( $post_id, $section, self::copy( $template, $section ) );
 		}
+	}
+
+	/**
+	 * The approved copy for one section of one page.
+	 *
+	 * @param string $template Page blueprint key.
+	 * @param string $section  Section key.
+	 * @return array<string, mixed>
+	 */
+	private static function copy( string $template, string $section ): array {
+		return 'men' === ( self::PAGES[ $template ]['content'] ?? '' )
+			? ITT_Content_Men::section( $section )
+			: ITT_Content::section( $section );
 	}
 
 	/**
@@ -200,8 +326,8 @@ final class ITT_Importer {
 			return;
 		}
 
-		foreach ( ITT_Fields::sections_for( $template ) as $section ) {
-			ITT_Meta::save( $post_id, $section, ITT_Content::section( $section ) );
+		foreach ( ITT_Fields::sections_for( self::PAGES[ $template ]['sections'] ) as $section ) {
+			ITT_Meta::save( $post_id, $section, self::copy( $template, $section ) );
 		}
 	}
 
@@ -231,7 +357,13 @@ final class ITT_Importer {
 
 		echo '<div class="wrap"><h1>' . esc_html__( 'עמודי ITT', 'itt-landing' ) . '</h1>';
 
-		echo '<p>' . esc_html__( 'התוכן של שני העמודים נשמר בתוך העמודים עצמם ונערך בעורך העמוד. מכאן אפשר ליצור עמוד חסר מחדש, או להחזיר עמוד לתוכן המקורי מהעיצוב.', 'itt-landing' ) . '</p>';
+		echo '<p>' . esc_html__( 'התוכן של כל העמודים נשמר בתוך העמודים עצמם ונערך בעורך העמוד. מכאן אפשר ליצור עמוד חסר מחדש, להחיל את עדכוני התוכן של הגרסה הנוכחית, או להחזיר עמוד לתוכן המקורי מהעיצוב.', 'itt-landing' ) . '</p>';
+
+		printf(
+			'<p><strong>%s</strong> %s</p>',
+			esc_html__( 'גרסת התבנית:', 'itt-landing' ),
+			esc_html( ITT_VERSION )
+		);
 
 		echo '<table class="widefat striped" style="max-width:760px"><tbody>';
 
@@ -255,19 +387,179 @@ final class ITT_Importer {
 
 		echo '</tbody></table>';
 
+		self::render_leads_status();
+		self::render_turnstile_form();
+
+		echo '<h2>' . esc_html__( 'ניהול עמודים', 'itt-landing' ) . '</h2>';
 		echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" style="margin-top:20px">';
 		wp_nonce_field( 'itt_provision' );
 		echo '<input type="hidden" name="action" value="itt_provision">';
 		submit_button( __( 'יצירת עמודים חסרים', 'itt-landing' ), 'primary', 'create', false );
+		echo ' ';
+		submit_button( __( 'החלת עדכוני התוכן של הגרסה', 'itt-landing' ), 'secondary', 'migrate', false );
 		echo ' ';
 		submit_button(
 			__( 'איפוס לתוכן המקורי (מוחק עריכות)', 'itt-landing' ),
 			'delete',
 			'reset',
 			false,
-			array( 'onclick' => "return confirm('" . esc_js( __( 'הפעולה תחליף את כל התוכן בשני העמודים בתוכן המקורי מהעיצוב. להמשיך?', 'itt-landing' ) ) . "');" )
+			array( 'onclick' => "return confirm('" . esc_js( __( 'הפעולה תחליף את כל התוכן בכל עמודי ITT בתוכן המקורי מהעיצוב. להמשיך?', 'itt-landing' ) ) . "');" )
 		);
 		echo '</form></div>';
+	}
+
+	/**
+	 * Where the leads are, and whether the form can still reach the server.
+	 *
+	 * The check exists because a blocked submission route looks like nothing at
+	 * all from the outside: the visitor sees an error they will not report, and
+	 * the office simply stops receiving leads.
+	 */
+	private static function render_leads_status(): void {
+		$summary = ITT_Leads::summary();
+		$test    = get_transient( 'itt_lead_selftest' );
+
+		echo '<h2 id="itt-selftest">' . esc_html__( 'פניות מהטופס', 'itt-landing' ) . '</h2>';
+
+		printf(
+			'<p>%s <a href="%s"><strong>%s</strong></a>.</p>',
+			esc_html__( 'כל פנייה שנשלחת מהטופס נשמרת בתפריט', 'itt-landing' ),
+			esc_url( admin_url( 'edit.php?post_type=' . ITT_Leads::POST_TYPE ) ),
+			esc_html__( 'פניות ITT', 'itt-landing' )
+		);
+
+		printf(
+			'<p><strong>%s</strong> %d%s</p>',
+			esc_html__( 'פניות שנשמרו:', 'itt-landing' ),
+			(int) $summary['count'],
+			'' === $summary['last']
+				? ''
+				: ' · ' . esc_html__( 'האחרונה:', 'itt-landing' ) . ' ' . esc_html( $summary['last'] )
+		);
+
+		echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
+		wp_nonce_field( 'itt_settings' );
+		echo '<input type="hidden" name="action" value="itt_settings">';
+
+		echo '<table class="form-table" role="presentation"><tbody>';
+
+		printf(
+			'<tr><th scope="row"><label for="itt-lead-email">%s</label></th><td><input type="text" class="regular-text" id="itt-lead-email" name="lead_email" value="%s" dir="ltr" autocomplete="off" placeholder="%s"><p class="description">%s</p></td></tr>',
+			esc_html__( 'מייל לקבלת פניות', 'itt-landing' ),
+			esc_attr( ITT_Settings::get( 'lead_email' ) ),
+			esc_attr( (string) get_option( 'admin_email' ) ),
+			esc_html__( 'כל פנייה חדשה נשלחת גם למייל. אפשר כמה כתובות מופרדות בפסיק. כשהשדה ריק, המייל נשלח לכתובת המנהל של וורדפרס.', 'itt-landing' )
+		);
+
+		echo '</tbody></table>';
+
+		submit_button( __( 'שמירת המייל', 'itt-landing' ), 'primary', 'save-lead-email', false );
+		echo '</form>';
+
+		echo '<p style="margin-top:20px">' . esc_html__( 'הבדיקה שולחת פנייה ריקה בכוונה לכל אחד ממסלולי השליחה ובודקת שהשרת עונה. שום פנייה לא נשמרת בבדיקה.', 'itt-landing' ) . '</p>';
+
+		echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
+		wp_nonce_field( 'itt_lead_selftest' );
+		echo '<input type="hidden" name="action" value="itt_lead_selftest">';
+		submit_button( __( 'בדיקת מסלולי השליחה', 'itt-landing' ), 'secondary', 'test', false );
+		echo '</form>';
+
+		if ( ! is_array( $test ) ) {
+			return;
+		}
+
+		echo '<table class="widefat striped" style="max-width:760px;margin-top:16px"><tbody>';
+
+		foreach ( $test as $row ) {
+			printf(
+				'<tr><th scope="row">%s</th><td>%s %s</td></tr>',
+				esc_html( (string) $row['label'] ),
+				esc_html( $row['ok'] ? '✔' : '✖' ),
+				esc_html( (string) $row['note'] )
+			);
+		}
+
+		echo '</tbody></table>';
+	}
+
+	/**
+	 * The Cloudflare Turnstile key fields.
+	 *
+	 * Kept on this screen rather than in a page's meta boxes: the keys belong
+	 * to the site, and the secret must not travel with an exported page.
+	 */
+	private static function render_turnstile_form(): void {
+		$settings = ITT_Settings::all();
+
+		echo '<h2>' . esc_html__( 'הגנה מפני ספאם (Cloudflare Turnstile)', 'itt-landing' ) . '</h2>';
+
+		echo '<p>' . esc_html__( 'כל עוד השדות ריקים הטופס עובד בלי אימות כלל, ולא נשלחת שום בקשה ל-Cloudflare. אחרי מילוי שני המפתחות יוצג אימות מתחת לטופס, והשליחה תיבדק מול Cloudflare בצד השרת.', 'itt-landing' ) . '</p>';
+
+		printf(
+			'<p>%s <a href="%s" target="_blank" rel="noopener">%s</a></p>',
+			esc_html__( 'את המפתחות מפיקים בחינם בלוח הבקרה של Cloudflare, תחת Turnstile ← Add site:', 'itt-landing' ),
+			esc_url( 'https://dash.cloudflare.com/?to=/:account/turnstile' ),
+			esc_html__( 'פתיחת Turnstile ב-Cloudflare', 'itt-landing' )
+		);
+
+		echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
+		wp_nonce_field( 'itt_settings' );
+		echo '<input type="hidden" name="action" value="itt_settings">';
+
+		echo '<table class="form-table" role="presentation"><tbody>';
+
+		printf(
+			'<tr><th scope="row"><label for="itt-turnstile-site">%s</label></th><td><input type="text" class="regular-text code" id="itt-turnstile-site" name="turnstile_site_key" value="%s" dir="ltr" autocomplete="off"><p class="description">%s</p></td></tr>',
+			esc_html__( 'Site Key', 'itt-landing' ),
+			esc_attr( $settings['turnstile_site_key'] ),
+			esc_html__( 'מפתח ציבורי — מוטמע בעמוד.', 'itt-landing' )
+		);
+
+		printf(
+			'<tr><th scope="row"><label for="itt-turnstile-secret">%s</label></th><td><input type="password" class="regular-text code" id="itt-turnstile-secret" name="turnstile_secret_key" value="%s" dir="ltr" autocomplete="off"><p class="description">%s</p></td></tr>',
+			esc_html__( 'Secret Key', 'itt-landing' ),
+			esc_attr( $settings['turnstile_secret_key'] ),
+			esc_html__( 'מפתח סודי — נשמר בשרת בלבד ולעולם לא מוצג בעמוד.', 'itt-landing' )
+		);
+
+		echo '</tbody></table>';
+
+		submit_button( __( 'שמירת מפתחות', 'itt-landing' ) );
+		echo '</form>';
+	}
+
+	/**
+	 * Save the Turnstile keys.
+	 */
+	public static function handle_settings(): void {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'אין לך הרשאה לבצע את הפעולה הזו.', 'itt-landing' ), '', array( 'response' => 403 ) );
+		}
+
+		check_admin_referer( 'itt_settings' );
+
+		// Only the fields this form actually carried are saved, so the
+		// Turnstile form and the lead-email form never blank each other.
+		$values = array();
+
+		foreach ( array( 'turnstile_site_key', 'turnstile_secret_key', 'lead_email' ) as $field ) {
+			if ( isset( $_POST[ $field ] ) ) {
+				$values[ $field ] = wp_unslash( (string) $_POST[ $field ] );
+			}
+		}
+
+		ITT_Settings::save( $values );
+
+		wp_safe_redirect(
+			add_query_arg(
+				array(
+					'page'       => 'itt-pages',
+					'itt-saved'  => 1,
+				),
+				admin_url( 'tools.php' )
+			)
+		);
+		exit;
 	}
 
 	/**
@@ -281,6 +573,14 @@ final class ITT_Importer {
 		check_admin_referer( 'itt_provision' );
 
 		$pages = self::provision();
+
+		// Content updates that ship with a theme version normally apply by
+		// themselves on the first page load after the upload. This button is
+		// the manual way to ask for them again — after restoring a backup, for
+		// instance, or when a cache has kept the old version around.
+		if ( isset( $_POST['migrate'] ) ) {
+			ITT_Migrations::run();
+		}
 
 		if ( isset( $_POST['reset'] ) ) {
 			foreach ( array_keys( self::PAGES ) as $template ) {

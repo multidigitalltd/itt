@@ -1,0 +1,157 @@
+/*
+ * The page editor.
+ *
+ * Every section of the design is a meta box on the page itself, and each box is
+ * a plain stack of core WordPress fields. The only real work here is making the
+ * Hebrew/English pairs read as pairs rather than as twice as many fields.
+ */
+
+.msl-fields {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.msl-field {
+	margin: 0 0 14px;
+}
+
+.msl-field > label,
+.msl-label {
+	display: block;
+	margin-bottom: 4px;
+}
+
+/* The English half of a pair sits tucked under its Hebrew half, so a long
+   section still reads as a list of strings rather than a wall of inputs. */
+.msl-field--en {
+	margin-top: -10px;
+	margin-bottom: 18px;
+	padding-inline-start: 14px;
+	border-inline-start: 3px solid #dcdcde;
+}
+
+.msl-field--en > label strong {
+	font-weight: 400;
+	color: #646970;
+}
+
+.msl-help {
+	display: block;
+	margin-top: 4px;
+}
+
+.msl-input-number {
+	width: 12rem;
+}
+
+.msl-image {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	flex-wrap: wrap;
+}
+
+.msl-image__preview {
+	max-width: 120px;
+	height: auto;
+	border-radius: 8px;
+	border: 1px solid #dcdcde;
+	background: #f6f7f7;
+}
+
+.msl-image__preview.is-empty {
+	display: none;
+}
+
+.msl-repeater {
+	margin: 0 0 20px;
+	padding: 14px;
+	border: 1px solid #dcdcde;
+	border-radius: 8px;
+	background: #fbfbfb;
+}
+
+.msl-repeater__title {
+	margin: 0 0 8px;
+	font-size: 14px;
+}
+
+.msl-repeater__rows {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	margin-bottom: 12px;
+}
+
+.msl-row {
+	border: 1px solid #dcdcde;
+	border-radius: 6px;
+	background: #fff;
+}
+
+.msl-row__head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	padding: 8px 12px;
+	background: #f6f7f7;
+	border-bottom: 1px solid #dcdcde;
+}
+
+.msl-row__summary {
+	font-weight: 600;
+}
+
+.msl-row__remove {
+	color: #b32d2e;
+}
+
+.msl-row__body {
+	padding: 12px;
+}
+
+.msl-row__body .msl-field:last-child {
+	margin-bottom: 0;
+}
+
+.msl-checkbox {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+}
+
+/* The overview screen. */
+
+.msl-admin__cards {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+	gap: 12px;
+	margin: 18px 0 24px;
+}
+
+.msl-admin__card {
+	padding: 18px 20px;
+	border: 1px solid #dcdcde;
+	border-radius: 8px;
+	background: #fff;
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.msl-admin__card strong {
+	font-size: 28px;
+	line-height: 1.1;
+	font-variant-numeric: tabular-nums;
+}
+
+.msl-admin__card span {
+	color: #646970;
+}
+
+.msl-admin table {
+	max-width: 60rem;
+	margin-bottom: 24px;
+}

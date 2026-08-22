@@ -756,6 +756,54 @@
 		} );
 	}
 
+	/**
+	 * Open the page at a chosen section instead of the top.
+	 *
+	 * The hero carries data-itt-open-at with the section's anchor when the
+	 * page asks for this. Only a fresh visit jumps: a reload or back/forward
+	 * keeps the browser's restored position, a URL that already carries an
+	 * anchor goes where it pointed, and a redirect back from a failed
+	 * submission stays on the form's error.
+	 */
+	function initOpenAt() {
+		var host = document.querySelector( '[data-itt-open-at]' );
+		var target = host && document.getElementById( host.getAttribute( 'data-itt-open-at' ) );
+
+		if ( ! target || window.location.hash ) {
+			return;
+		}
+
+		var nav = window.performance && performance.getEntriesByType && performance.getEntriesByType( 'navigation' )[ 0 ];
+
+		if ( nav && 'navigate' !== nav.type ) {
+			return;
+		}
+
+		// 'instant', not 'auto': the page styles scrolling as smooth, and the
+		// visitor should simply find themselves at the section — watching the
+		// whole page fly past would only advertise everything being skipped.
+		target.scrollIntoView( { behavior: 'instant', block: 'start' } );
+
+		// Images above the section load lazily and nudge the layout after the
+		// first jump, leaving the section slightly off. Align once more when
+		// the page has finished loading — unless the visitor has started
+		// scrolling themselves, in which case the page is theirs now.
+		var interacted = false;
+
+		[ 'wheel', 'touchstart', 'keydown' ].forEach( function ( kind ) {
+			window.addEventListener( kind, function () {
+				interacted = true;
+			}, { once: true, passive: true } );
+		} );
+
+		window.addEventListener( 'load', function () {
+			if ( ! interacted ) {
+				target.scrollIntoView( { behavior: 'instant', block: 'start' } );
+			}
+		} );
+	}
+
+	initOpenAt();
 	initTabs();
 	initAccordions();
 	initSliders();

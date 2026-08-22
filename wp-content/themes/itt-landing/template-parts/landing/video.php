@@ -58,7 +58,7 @@ if ( array() === $itt_items ) {
 	return;
 }
 ?>
-<section class="itt-section itt-video" aria-labelledby="itt-video-title">
+<section class="itt-section itt-video" id="video" aria-labelledby="itt-video-title" tabindex="-1">
 	<div class="itt-shell itt-shell--narrow itt-vgallery itt-reveal" data-itt-gallery>
 
 		<div class="itt-vgallery__head">

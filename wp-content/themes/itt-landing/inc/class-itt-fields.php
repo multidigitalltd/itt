@@ -111,6 +111,18 @@ final class ITT_Fields {
 				'01 · הירו',
 				'landing',
 				array(
+					self::select(
+						'open_at',
+						'מיקום פתיחת העמוד',
+						array(
+							''         => 'ראש העמוד (רגיל)',
+							'voices'   => 'ההמלצות הכתובות',
+							'video'    => 'סרטוני ההמלצות',
+							'outcomes' => 'עם מה יוצאים',
+							'syllabus' => 'הסילבוס',
+							'form'     => 'טופס ההרשמה',
+						)
+					),
 					self::text( 'badge', 'תגית עליונה' ),
 					self::rich( 'heading', 'כותרת ראשית (H1)' ),
 					self::textarea( 'lead', 'פסקת פתיחה' ),

@@ -13,7 +13,13 @@ defined( 'ABSPATH' ) || exit;
 
 $itt_chrome = ITT_Meta::get( 'chrome' );
 ?>
-<section class="itt-hero" aria-labelledby="itt-hero-title">
+<section
+	class="itt-hero"
+	aria-labelledby="itt-hero-title"
+	<?php if ( '' !== (string) $itt['open_at'] ) : ?>
+		data-itt-open-at="<?php echo esc_attr( (string) $itt['open_at'] ); ?>"
+	<?php endif; ?>
+>
 	<div class="itt-hero__birds" aria-hidden="true">
 		<?php for ( $itt_bird = 1; $itt_bird <= 4; $itt_bird++ ) : ?>
 			<span class="itt-bird itt-bird--<?php echo (int) $itt_bird; ?>">

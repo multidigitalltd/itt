@@ -110,6 +110,10 @@ final class ITT_Content {
 	 */
 	private static function hero(): array {
 		return array(
+			// The page opens scrolled to the written testimonials — the
+			// client's request: social proof first, and the visitor scrolls
+			// up to the hero or down to the form from there.
+			'open_at'      => 'voices',
 			'badge'        => 'מחזור 20 יוצא לדרך',
 			'heading'      => 'להיות שם בשביל אחרים [blink]ולתת לעצמך[/blink] [hl:gold]הזדמנות לחיים חדשים[/hl]',
 			'lead'         => 'מחזור 20 של הכשרת ITT Leader יוצא לדרך! המסלול הפרקטי להובלת תהליכי שינוי, שחרור חסמים ואיזון רגשי – עבור עצמך ועבור הסביבה שלך.',

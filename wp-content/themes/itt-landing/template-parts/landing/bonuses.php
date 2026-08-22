@@ -27,8 +27,6 @@ $itt_show_values = ! empty( $itt['show_values'] );
 		<ul class="itt-bonuses__cards">
 			<?php foreach ( (array) $itt['cards'] as $itt_i => $itt_card ) : ?>
 				<li class="itt-bonus itt-rise" data-rise>
-					<span class="itt-bonus__ghost" aria-hidden="true"><?php echo esc_html( (string) ( (int) $itt_i + 1 ) ); ?></span>
-
 					<div class="itt-bonus__head">
 						<span class="itt-bonus__index" aria-hidden="true"><?php echo esc_html( (string) ( (int) $itt_i + 1 ) ); ?></span>
 

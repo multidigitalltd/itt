@@ -51,7 +51,7 @@ $itt_tabs = array(
 			<?php endif; ?>
 		</div>
 
-		<div class="itt-syllabus__tabs" role="tablist" aria-label="<?php esc_attr_e( 'בחירת סמסטר', 'itt-landing' ); ?>">
+		<div class="itt-syllabus__tabs" data-itt-tabs role="tablist" aria-label="<?php esc_attr_e( 'בחירת סמסטר', 'itt-landing' ); ?>">
 			<?php foreach ( $itt_tabs as $itt_key => $itt_tab ) : ?>
 				<button
 					type="button"

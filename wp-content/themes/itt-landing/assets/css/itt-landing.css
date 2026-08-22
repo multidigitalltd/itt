@@ -246,35 +246,31 @@
 
 /* 04 — video and slider -------------------------------------------------- */
 
-.itt-video__lead {
+/**
+ * The testimonial gallery: one stage with a thumbnail strip, replacing the
+ * old "featured video plus a separate slider" pair. The arrows live in the
+ * head so they sit above the stage they drive.
+ */
+.itt-vgallery {
 	display: grid;
-	grid-template-columns: 1fr 1fr;
-	gap: 40px;
-	align-items: center;
-	padding-bottom: 44px;
+	gap: 26px;
 }
 
-.itt-video__media {
-	position: relative;
-	min-width: 0;
+.itt-vgallery__head {
+	display: flex;
+	align-items: flex-end;
+	justify-content: space-between;
+	gap: 20px;
+	flex-wrap: wrap;
 }
 
-.itt-video__poster,
-.itt-facade__poster {
-	width: 100%;
-	height: 100%;
-	object-fit: cover;
-	border-radius: var(--itt-r-card);
-}
-
-.itt-video__copy {
+.itt-vgallery__intro {
 	display: grid;
-	gap: 18px;
-	align-content: start;
+	gap: 12px;
 	justify-items: start;
 }
 
-.itt-video__title {
+.itt-vgallery__title {
 	font-size: clamp(26px, 3vw, 36px);
 	line-height: 1.25;
 	font-weight: 700;
@@ -282,10 +278,190 @@
 	text-wrap: pretty;
 }
 
-.itt-video__text {
+.itt-vgallery__nav {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+.itt-vstage {
+	display: grid;
+	grid-template-columns: 1.5fr 1fr;
+	gap: 34px;
+	align-items: center;
+}
+
+/**
+ * A short quote used to leave most of the copy column empty. It is anchored
+ * to the top of the video instead of floated in the middle, and carries an
+ * oversized quote mark so the column reads as deliberate rather than unfilled.
+ */
+.itt-vstage__copy {
+	position: relative;
+	padding-top: 46px;
+}
+
+.itt-vstage__copy::before {
+	content: "”";
+	position: absolute;
+	top: -12px;
+	inset-inline-start: 0;
+	font-size: 96px;
+	line-height: 1;
+	color: var(--itt-gold);
+	opacity: 0.5;
+	pointer-events: none;
+}
+
+/* Cross-fade on switch, so stepping through reads as one gallery changing
+   rather than separate panels blinking in and out. */
+.itt-vstage.is-entering {
+	animation: itt-vstage-in 0.45s var(--itt-ease-out) both;
+}
+
+@keyframes itt-vstage-in {
+	from {
+		opacity: 0;
+		transform: translateY(10px);
+	}
+	to {
+		opacity: 1;
+		transform: none;
+	}
+}
+
+/* Beats the [hidden] default, which `display: grid` would otherwise outrank. */
+.itt-vstage[hidden] {
+	display: none;
+}
+
+.itt-vstage__media {
+	position: relative;
+	min-width: 0;
+}
+
+.itt-vstage__poster,
+.itt-facade__poster {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	border-radius: var(--itt-r-card);
+}
+
+.itt-vstage__media > .itt-facade,
+.itt-vstage__media > .itt-vstage__poster {
+	height: 380px;
+}
+
+.itt-vstage__copy {
+	display: grid;
+	gap: 16px;
+	align-content: start;
+}
+
+.itt-vstage__name {
+	font-size: clamp(24px, 2.6vw, 32px);
+	font-weight: 700;
+	color: var(--itt-purple);
+	line-height: 1.25;
+}
+
+.itt-vstage__quote {
 	font-size: 19px;
 	line-height: 1.7;
 	color: var(--itt-muted);
+}
+
+.itt-vgallery__thumbs {
+	display: flex;
+	gap: 14px;
+	overflow-x: auto;
+	padding-bottom: 6px;
+	scrollbar-width: none;
+	/* Positioned so the visually-hidden labels inside the thumbnails are
+	   clipped by this scroll container rather than escaping it. */
+	position: relative;
+}
+
+.itt-vgallery__thumbs::-webkit-scrollbar {
+	display: none;
+}
+
+.itt-vthumb {
+	flex: 0 0 190px;
+	display: grid;
+	gap: 8px;
+	padding: 0;
+	border: 0;
+	background: none;
+	cursor: pointer;
+	text-align: start;
+}
+
+.itt-vthumb__media {
+	position: relative;
+	display: block;
+	border-radius: var(--itt-r-media);
+	overflow: hidden;
+	background: var(--itt-placeholder);
+	border: 3px solid transparent;
+	transition: border-color 0.25s ease, transform 0.25s ease, opacity 0.25s ease;
+	/* Unselected thumbnails sit back so the chosen one carries the row. */
+	opacity: 0.62;
+}
+
+.itt-vthumb__img {
+	width: 100%;
+	height: 108px;
+	object-fit: cover;
+}
+
+.itt-vthumb__play {
+	position: absolute;
+	inset: 0;
+	margin: auto;
+	width: 34px;
+	height: 34px;
+	border-radius: var(--itt-r-pill);
+	background: rgba(59, 34, 100, 0.82);
+	color: var(--itt-white);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.itt-vthumb__name {
+	font-size: 16px;
+	font-weight: 600;
+	color: var(--itt-muted);
+	line-height: 1.35;
+}
+
+.itt-vthumb:hover .itt-vthumb__media,
+.itt-vthumb:focus-visible .itt-vthumb__media {
+	transform: translateY(-4px);
+	opacity: 1;
+}
+
+/**
+ * The selected thumbnail is marked by a ring *and* by the label turning to
+ * the brand purple at full weight — colour alone would fail 1.4.1.
+ */
+.itt-vthumb.is-active .itt-vthumb__media {
+	border-color: var(--itt-purple);
+	opacity: 1;
+	box-shadow: var(--itt-sh-cool-sm);
+}
+
+/* The play badge on the chosen thumbnail picks up the brand orange, a second
+   non-colour-only cue alongside the ring and the bolder label. */
+.itt-vthumb.is-active .itt-vthumb__play {
+	background: var(--itt-orange);
+}
+
+.itt-vthumb.is-active .itt-vthumb__name {
+	color: var(--itt-purple);
+	font-weight: 700;
 }
 
 .itt-facade {
@@ -336,11 +512,6 @@
 	border: 0;
 	border-radius: var(--itt-r-card);
 	display: block;
-}
-
-.itt-video__media > .itt-facade,
-.itt-video__media > .itt-video__poster {
-	height: 340px;
 }
 
 .itt-slider {
@@ -396,6 +567,16 @@
 }
 
 .itt-slider__viewport {
+	/**
+	 * Positioned so the viewport is the containing block for anything absolute
+	 * inside a slide. The testimonial "read more" buttons carry a
+	 * .screen-reader-text span (position: absolute !important); with a static
+	 * viewport its containing block is the page itself, so it is laid out at
+	 * the off-screen coordinates of the slides that are scrolled out of view
+	 * and escapes this element's clip — adding ~600px of horizontal scroll to
+	 * the whole document on a phone.
+	 */
+	position: relative;
 	overflow-x: auto;
 	scroll-snap-type: x mandatory;
 	scroll-behavior: smooth;
@@ -576,6 +757,20 @@
 	gap: 22px;
 }
 
+/**
+ * An odd number of cards leaves one alone in a two-column grid with a hole
+ * beside it. The lead card takes the full width instead, which both fills the
+ * grid and gives the opening card the emphasis it is there for.
+ *
+ * Conditional on the count rather than hard-coded: :first-child that is also
+ * an odd position counted from the end only matches when the total is odd. Add
+ * or remove a card in the editor and the rule turns itself off and on — with
+ * six cards this stops matching and the grid goes back to three even rows.
+ */
+.itt-envelope__cards > li:first-child:nth-last-child(odd) {
+	grid-column: 1 / -1;
+}
+
 .itt-badge-card {
 	position: relative;
 	border-radius: var(--itt-r-card);
@@ -615,68 +810,6 @@
 	font-size: 19px;
 	line-height: 1.7;
 	color: var(--itt-text-soft);
-}
-
-.itt-quotes {
-	margin-top: 40px;
-	background: var(--itt-purple);
-	border-radius: var(--itt-r-lg);
-	padding: 40px 44px;
-	display: grid;
-	gap: 22px;
-}
-
-.itt-quotes__viewport {
-	min-height: 5.2em;
-}
-
-.itt-quotes__item {
-	display: grid;
-	gap: 14px;
-}
-
-/* `display: grid` above outranks the UA rule for [hidden], so restate it. */
-.itt-quotes__item[hidden] {
-	display: none;
-}
-
-.itt-quotes__text {
-	font-size: clamp(19px, 2.2vw, 24px);
-	line-height: 1.65;
-	color: var(--itt-white);
-	text-wrap: pretty;
-}
-
-.itt-quotes__author {
-	font-size: 19px;
-	font-weight: 600;
-	color: var(--itt-gold);
-}
-
-.itt-quotes__nav {
-	display: flex;
-	gap: 10px;
-	justify-content: flex-end;
-}
-
-.itt-quotes__btn {
-	width: 44px;
-	height: 44px;
-	border: none;
-	border-radius: var(--itt-r-pill);
-	background: rgba(255, 255, 255, 0.12);
-	color: var(--itt-white);
-	cursor: pointer;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	transition: background 0.25s ease;
-}
-
-.itt-quotes__btn:hover,
-.itt-quotes__btn:focus-visible {
-	background: var(--itt-cyan);
-	color: var(--itt-purple-deep);
 }
 
 /* 07 — outcomes --------------------------------------------------------- */
@@ -872,30 +1005,89 @@
 
 /* 08b — gallery --------------------------------------------------------- */
 
-.itt-gallery__grid {
+/**
+ * The photo gallery browses like the testimonial one: a single large frame
+ * with a thumbnail strip under it. It was a static mosaic, which showed six
+ * pictures at once but gave none of them room and offered no way through a
+ * larger set.
+ */
+.itt-pgallery {
 	display: grid;
-	grid-template-columns: repeat(3, 1fr);
-	grid-auto-rows: 200px;
-	gap: 16px;
+	gap: 24px;
 }
 
-.itt-gallery__cell {
+.itt-pgallery__stage {
 	border-radius: var(--itt-r-card);
 	overflow: hidden;
 	background: var(--itt-placeholder);
-	box-shadow: 0 14px 40px rgba(43, 26, 74, 0.08);
-}
-
-.itt-gallery__cell:first-child {
-	grid-column: span 2;
-	grid-row: span 2;
 	box-shadow: var(--itt-sh-cool);
 }
 
-.itt-gallery__image {
+.itt-pstage {
+	display: block;
+}
+
+/* Beats the UA rule for [hidden], which `display: block` would outrank. */
+.itt-pstage[hidden] {
+	display: none;
+}
+
+.itt-pstage.is-entering {
+	animation: itt-vstage-in 0.45s var(--itt-ease-out) both;
+}
+
+.itt-pstage__image {
 	width: 100%;
-	height: 100%;
+	height: 520px;
 	object-fit: cover;
+}
+
+.itt-pgallery__thumbs {
+	display: flex;
+	gap: 12px;
+	overflow-x: auto;
+	padding-bottom: 4px;
+	scrollbar-width: none;
+	/* Positioned so the visually-hidden labels inside the thumbnails are
+	   clipped by this scroll container rather than escaping it and adding
+	   horizontal scroll to the whole document. */
+	position: relative;
+}
+
+.itt-pgallery__thumbs::-webkit-scrollbar {
+	display: none;
+}
+
+.itt-pthumb {
+	flex: 0 0 132px;
+	padding: 0;
+	border: 3px solid transparent;
+	border-radius: var(--itt-r-media);
+	overflow: hidden;
+	background: var(--itt-placeholder);
+	cursor: pointer;
+	line-height: 0;
+	/* Unselected thumbnails sit back so the chosen one carries the row. */
+	opacity: 0.62;
+	transition: border-color 0.25s ease, transform 0.25s ease, opacity 0.25s ease;
+}
+
+.itt-pthumb__img {
+	width: 100%;
+	height: 84px;
+	object-fit: cover;
+}
+
+.itt-pthumb:hover,
+.itt-pthumb:focus-visible {
+	transform: translateY(-4px);
+	opacity: 1;
+}
+
+.itt-pthumb.is-active {
+	border-color: var(--itt-purple);
+	opacity: 1;
+	box-shadow: var(--itt-sh-cool-sm);
 }
 
 /* 09 — syllabus --------------------------------------------------------- */
@@ -1336,17 +1528,6 @@
 	border-bottom-color: var(--itt-gold);
 }
 
-.itt-bonus__ghost {
-	position: absolute;
-	top: -14px;
-	inset-inline-start: -10px;
-	font-size: 110px;
-	font-weight: 700;
-	color: rgba(255, 200, 30, 0.16);
-	line-height: 1;
-	pointer-events: none;
-}
-
 .itt-bonus__head {
 	display: flex;
 	align-items: center;
@@ -1644,9 +1825,27 @@
 	box-shadow: 0 0 0 3px rgba(78, 46, 134, 0.18);
 }
 
-.itt-form__form input[aria-invalid="true"] {
+.itt-form__form input:not([type="checkbox"])[aria-invalid="true"] {
 	border-color: #A93226;
 	background: #FDF3F2;
+}
+
+/**
+ * A checkbox has almost no surface to repaint, so a missing consent tick is
+ * marked on the whole row instead — otherwise the error summary named a field
+ * with nothing on screen pointing at it.
+ */
+.itt-field.is-invalid {
+	border-inline-start: 3px solid #A93226;
+	border-radius: 8px;
+	background: #FDF3F2;
+	padding: 10px 12px;
+	margin-inline-start: -12px;
+}
+
+.itt-consent input[aria-invalid="true"] {
+	outline: 2px solid #A93226;
+	outline-offset: 2px;
 }
 
 .itt-field__error {
@@ -1710,13 +1909,33 @@
 
 @media (max-width: 900px) {
 	.itt-hero__inner,
-	.itt-video__lead,
+	.itt-vstage,
 	.itt-form__inner,
 	.itt-process__steps,
 	.itt-skills__cards,
 	.itt-envelope__cards {
 		grid-template-columns: 1fr;
 		gap: 28px;
+	}
+
+	/**
+	 * The equation reads top to bottom once the three boxes stop fitting on
+	 * one line. Left to flex-wrap it broke into an arbitrary shape with the
+	 * "+" and "=" stranded beside a box instead of between two, which stops
+	 * looking like an equation at all.
+	 */
+	.itt-equation {
+		flex-direction: column;
+		gap: 10px;
+	}
+
+	.itt-equation__box {
+		width: 100%;
+		max-width: 420px;
+	}
+
+	.itt-equation__op {
+		line-height: 1;
 	}
 
 	.itt-hero__inner {
@@ -1749,14 +1968,8 @@
 		grid-template-columns: 1fr 1fr;
 	}
 
-	.itt-gallery__grid {
-		grid-template-columns: repeat(2, 1fr);
-		grid-auto-rows: 180px;
-	}
-
-	.itt-gallery__cell:first-child {
-		grid-column: span 2;
-		grid-row: span 1;
+	.itt-pstage__image {
+		height: 360px;
 	}
 
 	.itt-slide {
@@ -1767,13 +1980,20 @@
 		padding: 32px 24px;
 	}
 
-	.itt-quotes {
-		padding: 28px 24px;
+	/* Stage first, thumbnails under it; the media shrinks so the quote is not
+	   pushed off the screen with it. */
+	.itt-vstage__media > .itt-facade,
+	.itt-vstage__media > .itt-vstage__poster,
+	.itt-vstage__media > .itt-facade__frame {
+		height: 240px;
 	}
 
-	.itt-video__media > .itt-facade,
-	.itt-video__media > .itt-video__poster {
-		height: 240px;
+	.itt-vthumb {
+		flex-basis: 150px;
+	}
+
+	.itt-vthumb__img {
+		height: 88px;
 	}
 }
 
@@ -1788,13 +2008,16 @@
 		grid-template-columns: 1fr;
 	}
 
-	.itt-gallery__grid {
-		grid-template-columns: 1fr;
-		grid-auto-rows: 220px;
+	.itt-pstage__image {
+		height: 240px;
 	}
 
-	.itt-gallery__cell:first-child {
-		grid-column: span 1;
+	.itt-pthumb {
+		flex-basis: 104px;
+	}
+
+	.itt-pthumb__img {
+		height: 68px;
 	}
 
 	.itt-slide {
@@ -1810,18 +2033,14 @@
 		padding-inline: 22px;
 	}
 
-	.itt-bonus__ghost {
-		font-size: 84px;
-	}
-
 	.itt-section__title--start {
 		margin-bottom: 26px;
 	}
 }
 
 /* The player that replaces a facade fills the same box. */
-.itt-video__media > .itt-facade__frame {
-	height: 340px;
+.itt-vstage__media > .itt-facade__frame {
+	height: 380px;
 	object-fit: cover;
 	background: #000;
 }
@@ -1872,5 +2091,94 @@
 	.itt-voice__more {
 		min-height: 44px;
 		margin-block: -10px;
+	}
+}
+
+/* -------------------------------------------------------------------------
+ * Phone pass
+ *
+ * Everything below 600px. The rules above already stop the layout breaking;
+ * these are about it reading well on a phone rather than merely fitting —
+ * the offer above the fold, and one consistent width for every call to
+ * action instead of pills that each size themselves to their own text.
+ * ---------------------------------------------------------------------- */
+
+@media (max-width: 600px) {
+
+	/**
+	 * Copy first, picture second. Above 600px the image leads because there is
+	 * room for both on one screen; on a phone a 380px image pushed the
+	 * headline and the CTA off the first viewport entirely, so the visitor
+	 * met a photograph instead of the offer.
+	 */
+	.itt-hero__media {
+		order: 0;
+	}
+
+	.itt-hero__image {
+		max-height: 260px;
+	}
+
+	.itt-hero__inner {
+		gap: 22px;
+		padding-block: 24px 28px;
+	}
+
+	.itt-hero__title {
+		font-size: clamp(28px, 8.2vw, 36px);
+	}
+
+	/**
+	 * One width for every call to action. Left to size themselves, the pills
+	 * landed at three different widths in a single column and read as a
+	 * mistake rather than a set.
+	 */
+	/**
+	 * Full width, but not oversized with it. At the desktop padding of
+	 * 18px/38px the label wrapped to two lines inside the button on a 320px
+	 * screen and the thing stood 88px tall. The font holds at 19px because
+	 * white on the brand orange only clears AA as large text; the padding is
+	 * what gives, and that is enough to keep every label on one line.
+	 */
+	.itt-hero__actions .itt-btn,
+	.itt-jump__list .itt-chip,
+	.itt-band .itt-btn,
+	.itt-fit__cta .itt-btn {
+		width: 100%;
+		justify-content: center;
+		text-align: center;
+		padding: 14px 14px;
+		font-size: 19px;
+		min-height: 52px;
+	}
+
+	/* grid-template-columns and justify-content are both needed: the desktop
+	   rule centres the flex line, and a grid that inherits justify-content:
+	   center shrink-wraps its track to the widest label instead of filling. */
+	.itt-hero__actions,
+	.itt-jump__list {
+		display: grid;
+		grid-template-columns: 1fr;
+		justify-content: stretch;
+		gap: 12px;
+		width: 100%;
+	}
+
+	.itt-jump__list li {
+		display: grid;
+	}
+
+	.itt-jump__inner {
+		padding-block: 32px;
+		justify-items: stretch;
+	}
+
+	/* The band reads as one centred unit rather than start-aligned text with a
+	   button floating under it at an unrelated width. */
+	.itt-band,
+	.itt-band__inner,
+	.itt-band__copy {
+		text-align: center;
+		justify-items: center;
 	}
 }

@@ -512,16 +512,16 @@ final class MSL_Fields {
 					self::bi( 'text', 'pick_sub', 'שלב 1 — שורה מתחת' ),
 					self::repeater(
 						'options',
-						'המשהו שאפשר לבחור',
+						'האור שאפשר לבחור',
 						'label_he',
 						array(
 							self::text( 'label_he', 'תווית (עברית)' ),
 							self::text( 'label_en', 'תווית (English)' ),
-							self::checkbox( 'is_other', 'זו האפשרות "משהו אחר" — פותחת שדה טקסט חופשי' ),
+							self::checkbox( 'is_other', 'זו האפשרות "אור אחר" — פותחת שדה טקסט חופשי' ),
 						),
-						'אפשר לבחור עד שלוש אפשרויות. השורה המסומנת "משהו אחר" נפרשת על שתי עמודות.'
+						'אפשר לבחור עד שלוש אפשרויות. השורה המסומנת "אור אחר" נפרשת על שתי עמודות.'
 					),
-					self::bi( 'text', 'other_ph', 'שדה "משהו אחר" — טקסט מוביל' ),
+					self::bi( 'text', 'other_ph', 'שדה "אור אחר" — טקסט מוביל' ),
 					self::bi( 'text', 'pick_cta', 'שלב 1 — כפתור' ),
 					self::bi( 'text', 'ded_title', 'שלב 2 — כותרת' ),
 					self::bi( 'text', 'ded_sub', 'שלב 2 — שורה מתחת' ),

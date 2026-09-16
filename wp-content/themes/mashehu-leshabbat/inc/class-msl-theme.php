@@ -314,7 +314,7 @@ final class MSL_Theme {
 
 		$title = sprintf(
 			/* translators: %s: participant count. */
-			'he' === MSL_I18N::lang() ? '%s יהודים כבר הוסיפו משהו לשבת הקרובה.' : '%s people have already added something for this Shabbat.',
+			'he' === MSL_I18N::lang() ? '%s יהודים כבר הוסיפו אור לשבת הקרובה.' : '%s people have already added something for this Shabbat.',
 			number_format_i18n( $stats['participants'] )
 		);
 

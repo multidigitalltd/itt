@@ -1,6 +1,6 @@
 <?php
 /**
- * "משהו לשבת" theme bootstrap.
+ * "אור לשבת" theme bootstrap.
  *
  * @package Mashehu_LeShabbat
  */

@@ -1,6 +1,6 @@
 <?php
 /**
- * Template Name: משהו לשבת · עמוד הקמפיין
+ * Template Name: אור לשבת · עמוד הקמפיין
  * Template Post Type: page
  *
  * The whole application, in one document. Every screen is rendered into the DOM

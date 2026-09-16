@@ -28,7 +28,7 @@ final class MSL_Importer {
 	 */
 	private const PAGES = array(
 		'home'          => array(
-			'title'    => 'משהו לשבת',
+			'title'    => 'אור לשבת',
 			'slug'     => 'mashehu-leshabbat',
 			'template' => 'template-msl-home.php',
 			'front'    => true,
@@ -216,7 +216,7 @@ final class MSL_Importer {
 	 */
 	private static function accessibility_statement(): string {
 		$paragraphs = array(
-			'האתר "משהו לשבת" נבנה כך שיהיה נגיש לכל אדם, לרבות אנשים עם מוגבלות, בהתאם לתקן הישראלי ת"י 5568 ולהנחיות WCAG 2.2 ברמה AA.',
+			'האתר "אור לשבת" נבנה כך שיהיה נגיש לכל אדם, לרבות אנשים עם מוגבלות, בהתאם לתקן הישראלי ת"י 5568 ולהנחיות WCAG 2.2 ברמה AA.',
 			'האתר נבנה ב-HTML סמנטי, עם היררכיית כותרות רציפה, קישור דילוג לתוכן, סימון פוקוס גלוי וניווט מלא במקלדת. כל שדה טופס נושא תווית קבועה, והודעות שגיאה מקושרות לשדה ומוכרזות לקוראי מסך.',
 			'שתי הסצנות הגרפיות באתר — היצירה המשותפת וקיר הנרות — מצוירות על גבי canvas ומוסתרות מקוראי מסך. לצד כל אחת מהן מופיע תקציר טקסטואלי שמוסר בדיוק את אותו מידע: כמה נרות דולקים, כמה אחוזים מהיצירה הושלמו, ומאילו מקומות הצטרפו משתתפים.',
 			'באתר פועל ווידג׳ט נגישות צף, זמין מכל נקודה בדף: הגדלה והקטנה של הטקסט, ניגודיות גבוהה, ניגודיות כהה, הדגשת קישורים, גופן קריא, ריווח טקסט מוגדר, עצירת אנימציות ואיפוס. הבחירה נשמרת גם לביקורים הבאים.',
@@ -239,8 +239,8 @@ final class MSL_Importer {
 	 */
 	public static function menu(): void {
 		add_management_page(
-			__( 'עמודי משהו לשבת', 'mashehu-leshabbat' ),
-			__( 'עמודי משהו לשבת', 'mashehu-leshabbat' ),
+			__( 'עמודי אור לשבת', 'mashehu-leshabbat' ),
+			__( 'עמודי אור לשבת', 'mashehu-leshabbat' ),
 			'manage_options',
 			'msl-pages',
 			array( self::class, 'render' )
@@ -258,7 +258,7 @@ final class MSL_Importer {
 		$page_id = self::page_id();
 		?>
 		<div class="wrap">
-			<h1><?php esc_html_e( 'עמודי משהו לשבת', 'mashehu-leshabbat' ); ?></h1>
+			<h1><?php esc_html_e( 'עמודי אור לשבת', 'mashehu-leshabbat' ); ?></h1>
 
 			<p>
 				<?php esc_html_e( 'כל התוכן של הפלטפורמה נמצא בתוך העמוד עצמו ונערך בעורך העמוד — מתחת לעורך יש תיבה נפרדת לכל סקשן בעיצוב. המסך הזה נועד לתחזוקה בלבד.', 'mashehu-leshabbat' ); ?>

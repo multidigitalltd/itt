@@ -44,8 +44,8 @@ final class MSL_Admin {
 	 */
 	public static function menu(): void {
 		add_menu_page(
-			__( 'משהו לשבת', 'mashehu-leshabbat' ),
-			__( 'משהו לשבת', 'mashehu-leshabbat' ),
+			__( 'אור לשבת', 'mashehu-leshabbat' ),
+			__( 'אור לשבת', 'mashehu-leshabbat' ),
 			self::CAP,
 			'msl-overview',
 			array( self::class, 'render_overview' ),
@@ -141,10 +141,10 @@ final class MSL_Admin {
 		);
 		?>
 		<div class="wrap msl-admin">
-			<h1><?php esc_html_e( 'משהו לשבת — סקירה', 'mashehu-leshabbat' ); ?></h1>
+			<h1><?php esc_html_e( 'אור לשבת — סקירה', 'mashehu-leshabbat' ); ?></h1>
 
 			<?php if ( 0 === $page_id ) : ?>
-				<div class="notice notice-error"><p><?php esc_html_e( 'עמוד הקמפיין לא נמצא. אפשר ליצור אותו מחדש ב"כלים ← עמודי משהו לשבת".', 'mashehu-leshabbat' ); ?></p></div>
+				<div class="notice notice-error"><p><?php esc_html_e( 'עמוד הקמפיין לא נמצא. אפשר ליצור אותו מחדש ב"כלים ← עמודי אור לשבת".', 'mashehu-leshabbat' ); ?></p></div>
 			<?php endif; ?>
 
 			<div class="msl-admin__cards">

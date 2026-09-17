@@ -301,3 +301,160 @@ function msl_nav_links( array $nav ): void {
 	}
 }
 
+/**
+ * The animated candles in the hero.
+ *
+ * Fourteen candles in two staggered columns of seven, absolutely positioned
+ * inside the hero. Every candle is a different size and carries its own timings,
+ * and none of the durations is a multiple of another — identical or harmonic
+ * periods would drift into step within a minute and the field would start to
+ * pulse as one thing.
+ *
+ * The anatomy is written as inline styles because every measurement is derived
+ * from that candle's own width: a class per candle would be fourteen classes
+ * that each apply once. Only the @keyframes live in the stylesheet, since a
+ * keyframe cannot be expressed inline.
+ *
+ * Offsets are always positive and small, so a candle is never pushed outside the
+ * hero on a narrow screen where overflow-x is hidden and would clip it.
+ *
+ * @param int $count How many of the fourteen to place. Zero hides them all.
+ */
+function msl_hero_candles( int $count ): void {
+	$candles = array(
+		array( 'start', 34, 2,  22, 86,  4.3, 0.0, 8.3,  0.0 ),
+		array( 'start', 6,  15, 17, 62,  5.7, 0.7, 9.7,  1.1 ),
+		array( 'start', 52, 27, 25, 97,  3.7, 1.3, 7.9,  2.3 ),
+		array( 'start', 18, 40, 19, 71,  6.1, 0.4, 10.3, 0.6 ),
+		array( 'start', 44, 53, 27, 104, 4.9, 1.9, 8.7,  3.1 ),
+		array( 'start', 10, 67, 15, 54,  3.4, 1.1, 9.1,  1.7 ),
+		array( 'start', 38, 80, 21, 81,  6.6, 2.3, 7.5,  2.9 ),
+		array( 'end',   28, 7,  24, 92,  5.3, 0.9, 9.4,  0.3 ),
+		array( 'end',   58, 20, 18, 66,  3.9, 1.7, 8.1,  2.1 ),
+		array( 'end',   4,  33, 26, 101, 6.3, 0.2, 10.1, 1.3 ),
+		array( 'end',   46, 46, 16, 58,  4.1, 2.1, 7.7,  3.3 ),
+		array( 'end',   14, 60, 23, 89,  5.9, 0.6, 9.9,  0.9 ),
+		array( 'end',   62, 73, 20, 76,  3.6, 1.5, 8.9,  2.7 ),
+		array( 'end',   24, 86, 15, 50,  6.4, 1.0, 10.4, 1.9 ),
+	);
+
+	$count = max( 0, min( count( $candles ), $count ) );
+
+	if ( 0 === $count ) {
+		return;
+	}
+
+	$n = static fn( float $v ): string => rtrim( rtrim( number_format( $v, 2, '.', '' ), '0' ), '.' );
+
+	echo '<div class="msl-hero__candles" aria-hidden="true" data-msl-candles>';
+
+	for ( $i = 0; $i < $count; $i++ ) {
+		list( $side, $inset, $top, $w, $h, $sway, $sway_delay, $bob, $bob_delay ) = $candles[ $i ];
+
+		$flame_w = $w * 0.62;
+		$flame_h = $w * 1.55;
+		$halo_w  = $w * 2.1;
+		$halo_h  = $w * 2.6;
+		$core_w  = $flame_w * 0.44;
+		$core_h  = $flame_h * 0.52;
+		$glow_d  = $w * 5.4;
+		$pool_w  = $w * 0.78;
+		$pool_h  = $w * 0.3;
+		$smoke_w = $w * 0.5;
+		$smoke_h = $w * 1.1;
+
+		printf(
+			'<span class="msl-hero__candle" data-msl-candle style="position:absolute;%s:%dpx;top:%d%%;opacity:1;transform:translate(0px,0px) scale(1);transition:opacity 1.1s ease,transform 1.4s cubic-bezier(.2,.8,.2,1);cursor:pointer;">',
+			'start' === $side ? 'inset-inline-start' : 'inset-inline-end',
+			(int) $inset,
+			(int) $top
+		);
+
+		// The bob lives on its own element: the wrapper's transform is the one
+		// the script writes, and a keyframe on the same property would win.
+		printf(
+			'<span style="display:block;animation:msl-candle-bob %ss ease-in-out %ss infinite;">',
+			esc_attr( $n( $bob ) ),
+			esc_attr( $n( $bob_delay ) )
+		);
+
+		echo '<span style="display:flex;flex-direction:column;align-items:center;">';
+
+		// --- the flame block, with the lit marker behind it ------------------
+		printf( '<span style="position:relative;display:block;width:%spx;height:%spx;">', esc_attr( $n( $w ) ), esc_attr( $n( $flame_h ) ) );
+
+		printf(
+			'<span data-msl-candle-glow style="position:absolute;inset-inline-start:50%%;top:%spx;width:%spx;height:%spx;margin-inline-start:-%spx;border-radius:50%%;background:radial-gradient(circle,oklch(0.93 0.13 82 / 0.42) 0%%,oklch(0.88 0.15 72 / 0.16) 46%%,transparent 76%%);filter:blur(6px);pointer-events:none;opacity:1;transition:opacity 1s ease;animation:msl-candle-glow 3.1s ease-in-out infinite;z-index:0;"></span>',
+			esc_attr( $n( $flame_h / 2 - $glow_d / 2 ) ),
+			esc_attr( $n( $glow_d ) ),
+			esc_attr( $n( $glow_d ) ),
+			esc_attr( $n( $glow_d / 2 ) )
+		);
+
+		printf(
+			'<span data-msl-candle-flame style="position:absolute;inset-inline-start:50%%;bottom:0;width:%spx;height:%spx;margin-inline-start:-%spx;transform-origin:50%% 100%%;opacity:1;transition:opacity 1s ease;animation:msl-candle-sway %ss ease-in-out %ss infinite;z-index:1;">',
+			esc_attr( $n( $flame_w ) ),
+			esc_attr( $n( $flame_h ) ),
+			esc_attr( $n( $flame_w / 2 ) ),
+			esc_attr( $n( $sway ) ),
+			esc_attr( $n( $sway_delay ) )
+		);
+
+		// (a) the wide blurred halo.
+		printf(
+			'<span style="position:absolute;inset-inline-start:50%%;bottom:-%spx;width:%spx;height:%spx;margin-inline-start:-%spx;border-radius:50%%;background:radial-gradient(circle,oklch(0.86 0.16 66 / 0.55) 0%%,oklch(0.78 0.17 52 / 0.22) 45%%,transparent 72%%);filter:blur(3px);animation:msl-candle-halo %ss ease-in-out infinite;"></span>',
+			esc_attr( $n( $halo_h * 0.22 ) ),
+			esc_attr( $n( $halo_w ) ),
+			esc_attr( $n( $halo_h ) ),
+			esc_attr( $n( $halo_w / 2 ) ),
+			esc_attr( $n( $sway * 0.71 ) )
+		);
+
+		// (b) the flame body.
+		echo '<span style="position:absolute;inset:0;border-radius:50% 50% 44% 44% / 66% 66% 34% 34%;background:linear-gradient(to top,oklch(0.62 0.20 34) 0%,oklch(0.78 0.18 58) 34%,oklch(0.90 0.15 82) 68%,oklch(0.985 0.04 92) 100%);animation:msl-candle-flick 1.6s ease-in-out infinite;"></span>';
+
+		// (c) the pale inner core, blue where it meets the wick.
+		printf(
+			'<span style="position:absolute;inset-inline-start:50%%;bottom:6%%;width:%spx;height:%spx;margin-inline-start:-%spx;border-radius:50%% 50%% 44%% 44%% / 66%% 66%% 34%% 34%%;background:linear-gradient(to top,oklch(0.72 0.12 250 / 0.85) 0%%,oklch(0.95 0.05 96) 42%%,oklch(0.995 0.012 96) 100%%);filter:blur(0.6px);"></span>',
+			esc_attr( $n( $core_w ) ),
+			esc_attr( $n( $core_h ) ),
+			esc_attr( $n( $core_w / 2 ) )
+		);
+
+		echo '</span>';
+
+		// The smoke only exists once the flame is out.
+		printf(
+			'<span data-msl-candle-smoke style="position:absolute;inset-inline-start:50%%;bottom:2px;width:%spx;height:%spx;margin-inline-start:-%spx;border-radius:50%%;background:radial-gradient(circle,oklch(0.62 0.01 80 / 0.42) 0%%,oklch(0.7 0.008 80 / 0.14) 52%%,transparent 78%%);filter:blur(3px);opacity:0;transition:opacity 1s ease;pointer-events:none;"></span>',
+			esc_attr( $n( $smoke_w ) ),
+			esc_attr( $n( $smoke_h ) ),
+			esc_attr( $n( $smoke_w / 2 ) )
+		);
+
+		echo '</span>';
+
+		// --- wick ------------------------------------------------------------
+		echo '<span style="display:block;width:1.6px;height:6px;border-radius:1px;background:linear-gradient(to bottom,oklch(0.42 0.03 62),oklch(0.22 0.02 58));"></span>';
+
+		// --- wax body, with the lit pool at its top --------------------------
+		printf(
+			'<span style="position:relative;display:block;width:%spx;height:%spx;border-radius:%spx %spx 4px 4px;background:linear-gradient(90deg,oklch(0.80 0.045 76) 0%%,oklch(0.93 0.025 82) 22%%,oklch(0.985 0.014 88) 50%%,oklch(0.88 0.035 78) 78%%,oklch(0.76 0.05 72) 100%%);box-shadow:0 6px 14px oklch(0.45 0.06 58 / 0.18),inset 0 1px 0 oklch(1 0 0 / 0.75);">',
+			esc_attr( $n( $w ) ),
+			esc_attr( $n( $h ) ),
+			esc_attr( $n( $w * 0.46 ) ),
+			esc_attr( $n( $w * 0.46 ) )
+		);
+
+		printf(
+			'<span data-msl-candle-pool style="position:absolute;inset-inline-start:50%%;top:-%spx;width:%spx;height:%spx;margin-inline-start:-%spx;border-radius:50%%;background:radial-gradient(circle,oklch(0.96 0.10 88 / 0.95) 0%%,oklch(0.86 0.12 74 / 0.5) 58%%,transparent 84%%);opacity:1;transition:opacity 1s ease;pointer-events:none;"></span>',
+			esc_attr( $n( $pool_h / 2 ) ),
+			esc_attr( $n( $pool_w ) ),
+			esc_attr( $n( $pool_h ) ),
+			esc_attr( $n( $pool_w / 2 ) )
+		);
+
+		echo '</span></span></span></span>';
+	}
+
+	echo '</div>';
+}

@@ -1644,7 +1644,6 @@ window.MSLCanvas = (function () {
 		if (!cells || !sprites) { return; }
 
 		each('halo', function (cv) { drawHalo(cv, t); });
-		each('motes', function (cv) { drawMotes(cv, t); });
 		each('hero', function (cv) { drawArt(cv, { t: t, cover: 0.86, dy: 0.02 }); });
 		each('artmini', function (cv) { drawArt(cv, { t: t, cover: 1.15, dy: 0.02 }); });
 		each('card', function (cv) { drawArt(cv, { t: t, cover: 1.55, dy: 0.30, gy: 0.28 }); });

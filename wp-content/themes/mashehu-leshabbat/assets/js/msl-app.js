@@ -980,6 +980,113 @@
 
 
 	/* ------------------------------------------------------------------
+	 * The candles in the hero
+	 * --------------------------------------------------------------- */
+
+	/*
+	 * Fourteen candles that light, go out, and come back somewhere else.
+	 *
+	 * Everything that moves on its own — the sway, the flicker, the breathing
+	 * halo, the bob — is CSS. This owns only the state: which candles are
+	 * alight, which have gone, and where the next one comes back. A candle is
+	 * moved while it is dark, so what the eye sees is a candle that has appeared
+	 * in a new place rather than one sliding across the hero.
+	 */
+	var heroCandles = {
+		nodes: [],
+		state: [],
+		timer: 0
+	};
+
+	function paintCandle(index) {
+		var node = heroCandles.nodes[index];
+		var st = heroCandles.state[index];
+
+		if (!node || !st) { return; }
+
+		node.style.opacity = st.vis ? '1' : '0';
+		node.style.transform = 'translate(' + st.dx + 'px,' + st.dy + 'px) scale(' + (st.vis ? 1 : 0.76) + ')';
+
+		var flame = $('[data-msl-candle-flame]', node);
+		var glow = $('[data-msl-candle-glow]', node);
+		var smoke = $('[data-msl-candle-smoke]', node);
+		var pool = $('[data-msl-candle-pool]', node);
+
+		if (flame) { flame.style.opacity = st.on ? '1' : '0'; }
+		if (glow) { glow.style.opacity = st.on ? '1' : '0'; }
+		if (pool) { pool.style.opacity = st.on ? '1' : '0'; }
+		if (smoke) { smoke.style.opacity = st.on || !st.vis ? '0' : '1'; }
+	}
+
+	function relightCandle(index) {
+		var st = heroCandles.state[index];
+
+		if (!st) { return; }
+
+		/* New offsets while it is dark. Twelve pixels either way is enough to
+		   read as a different place and small enough that the two columns stay
+		   columns. */
+		st.dx = Math.round((Math.random() * 2 - 1) * 12);
+		st.dy = Math.round((Math.random() * 2 - 1) * 12);
+		st.on = true;
+		st.vis = true;
+
+		paintCandle(index);
+	}
+
+	function cycleCandles() {
+		/* Only while the hero is what the visitor is looking at. Behind a
+		   full-screen panel this is fourteen elements animating for nobody. */
+		if (state.screen !== 'home' || !heroCandles.nodes.length) { return; }
+
+		var index = Math.floor(Math.random() * heroCandles.nodes.length);
+		var st = heroCandles.state[index];
+
+		if (!st || !st.on || !st.vis) { return; }
+
+		var vanishes = Math.random() < 0.45;
+
+		st.on = false;
+		st.vis = !vanishes;
+
+		paintCandle(index);
+
+		window.setTimeout(function () { relightCandle(index); }, vanishes ? 1500 : 1050);
+	}
+
+	function bindHeroCandles() {
+		heroCandles.nodes = $$('[data-msl-candle]');
+
+		if (!heroCandles.nodes.length) { return; }
+
+		heroCandles.state = heroCandles.nodes.map(function () {
+			return { on: true, vis: true, dx: 0, dy: 0 };
+		});
+
+		heroCandles.nodes.forEach(function (node, index) {
+			node.addEventListener('click', function () {
+				var st = heroCandles.state[index];
+
+				if (!st.vis) { return; }
+
+				st.on = !st.on;
+				paintCandle(index);
+			});
+		});
+
+		if (reduceMotion) { return; }
+
+		heroCandles.timer = window.setInterval(cycleCandles, 1500);
+
+		/* The interval belongs to this page and nothing else. Clearing it on the
+		   way out is the same care a component takes when it unmounts. */
+		window.addEventListener('pagehide', function () {
+			window.clearInterval(heroCandles.timer);
+			heroCandles.timer = 0;
+		});
+	}
+
+	/* ------------------------------------------------------------------
 	 * The invitation
 	 * --------------------------------------------------------------- */
 
@@ -1624,6 +1731,7 @@
 		bindMyCandle();
 		bindWall();
 		bindShare();
+		bindHeroCandles();
 		bindMenu();
 		bindAccount();
 		bindInvite();

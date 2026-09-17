@@ -2534,7 +2534,6 @@ html.msl-a11y-still .msl-page *::after {
 		font-size: calc((clamp(34px, 5.2vw, 56px)) * var(--msl-scale, 1));
 	}
 }
-}
 @media (max-width: 900px) {
 	.msl-stage,
 	.msl-referral__grid,
@@ -2693,6 +2692,21 @@ html.msl-a11y-still .msl-page *::after {
 		font-size: calc(20px * var(--msl-scale, 1));
 	}
 }
+
+/*
+ * Standing still.
+ *
+ * Everything that loops is stopped outright; the things that animate once on
+ * appearing are shortened to a fade instead, in app.js.
+ */
+@media (prefers-reduced-motion: reduce) {
+	.msl-candle__glow,
+	.msl-candle__flame,
+	.msl-countdown__dot,
+	.msl-marquee__track {
+		animation: none !important;
+	}
+
 	.msl-modal__backdrop,
 	.msl-modal__sheet,
 	.msl-screen,
@@ -3104,12 +3118,59 @@ html.msl-a11y-scaled .msl-panel__title {
 	text-align: center;
 }
 
-/* The points of light sit behind everything in the hero and take no clicks. */
-.msl-hero__motes {
+/* ------------------------------------------------------------------
+ * The candles in the hero
+ *
+ * Only the keyframes live here. Every measurement of a candle is derived from
+ * that candle's own width and is written inline, because a class per candle
+ * would be fourteen classes that each apply exactly once.
+ * --------------------------------------------------------------- */
+
+.msl-hero__candles {
 	position: absolute;
 	inset: 0;
 	z-index: 0;
-	inline-size: 100%;
-	block-size: 100%;
 	pointer-events: none;
 }
+
+/* The field takes no clicks; an individual candle does. */
+.msl-hero__candle {
+	pointer-events: auto;
+}
+
+@keyframes msl-candle-sway {
+	0%, 100% { transform: rotate(-2.5deg) scaleY(0.96); }
+	50%      { transform: rotate(2.5deg) scaleY(1.07); }
+}
+
+@keyframes msl-candle-flick {
+	0%, 100% { opacity: 1; transform: scaleX(1) scaleY(1); }
+	28%      { opacity: 0.92; transform: scaleX(0.96) scaleY(1.04); }
+	61%      { opacity: 1; transform: scaleX(1.03) scaleY(0.98); }
+}
+
+@keyframes msl-candle-glow {
+	0%, 100% { transform: scale(1); filter: blur(6px); }
+	50%      { transform: scale(1.09); filter: blur(7px); }
+}
+
+/* The flame's own halo breathes on the same rhythm but keeps its 3px blur —
+   it is a much smaller thing than the lit marker and 6px erases it. */
+@keyframes msl-candle-halo {
+	0%, 100% { transform: scale(1); }
+	50%      { transform: scale(1.09); }
+}
+
+@keyframes msl-candle-bob {
+	0%, 100% { transform: translateY(0); }
+	50%      { transform: translateY(-11px); }
+}
+
+/* Standing still: lit, in place, and not moving. */
+@media (prefers-reduced-motion: reduce) {
+	.msl-hero__candle,
+	.msl-hero__candle * {
+		animation: none !important;
+	}
+}
+

@@ -1,6 +1,6 @@
 <?php
 /**
- * The hero: halo, points of light, eyebrow, headline, call to action, counter.
+ * The hero: halo, the candles, eyebrow, headline, call to action, counter.
  *
  * @package Mashehu_LeShabbat
  *
@@ -18,15 +18,14 @@ $msl_stats = MSL_Stats::all( (int) get_the_ID() );
 
 	<?php
 	/*
-	 * Decorative: the points of light carry nothing the headline does not, so
-	 * the canvas is hidden from assistive technology rather than described.
+	 * Decorative: the candles carry nothing the headline does not, so the field
+	 * is hidden from assistive technology rather than read out fourteen times.
 	 *
-	 * They drift in from every edge and rise, kindling as they come. One canvas
-	 * in the shared render loop, not two dozen animated elements — and it pauses
-	 * itself the moment the hero scrolls out of view.
+	 * They light, go out, and come back somewhere else. The field itself takes
+	 * no pointer events; each candle does, because pressing one toggles it.
 	 */
+	msl_hero_candles( (int) $msl['light_count'] );
 	?>
-	<canvas class="msl-hero__motes" data-msl-canvas="motes" aria-hidden="true"></canvas>
 
 	<div class="msl-hero__content">
 		<p class="msl-eyebrow">

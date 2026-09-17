@@ -150,7 +150,12 @@ final class MSL_I18N {
 	 * and have nothing to swap. Repeater rows are emitted as `section.field.N.key`
 	 * so the browser can address a single row without shipping the array twice.
 	 *
-	 * @param int $post_id Page being rendered.
+	 * Each section is read from the page that owns it rather than from the page
+	 * being rendered: the header belongs to the campaign page and the about copy
+	 * belongs to the about page, and both are on screen at once whichever of the
+	 * two the visitor is looking at.
+	 *
+	 * @param int $post_id Page being rendered. Used for cache keying only.
 	 * @return array<string, array<string, string>>
 	 */
 	public static function dictionary( int $post_id ): array {
@@ -160,7 +165,7 @@ final class MSL_I18N {
 		);
 
 		foreach ( MSL_Fields::all() as $section => $definition ) {
-			$values = MSL_Meta::get( $section, $post_id );
+			$values = MSL_Meta::get( $section );
 
 			foreach ( $definition['fields'] as $field ) {
 				if ( 'repeater' === $field['type'] ) {

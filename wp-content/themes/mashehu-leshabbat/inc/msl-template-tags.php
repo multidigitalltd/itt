@@ -467,3 +467,17 @@ function msl_hero_candles( int $count ): void {
 
 	echo '</div>';
 }
+
+/**
+ * Which of the theme's section sets a page carries.
+ *
+ * @param int $post_id Page ID.
+ * @return string Template key, or an empty string for a page outside the theme.
+ */
+function msl_page_template_key( int $post_id ): string {
+	return match ( (string) get_page_template_slug( $post_id ) ) {
+		MSL_Theme::TEMPLATE       => 'home',
+		MSL_Theme::TEMPLATE_ABOUT => 'about',
+		default                   => '',
+	};
+}

@@ -20,6 +20,18 @@ final class MSL_Theme {
 	public const TEMPLATE = 'template-msl-home.php';
 
 	/**
+	 * The template of the "about the project" page.
+	 */
+	public const TEMPLATE_ABOUT = 'template-msl-about.php';
+
+	/**
+	 * Every template that is part of the design and needs the design's assets.
+	 *
+	 * @var array<int, string>
+	 */
+	public const TEMPLATES = array( self::TEMPLATE, self::TEMPLATE_ABOUT );
+
+	/**
 	 * Font files shipped in assets/fonts/, keyed by family and weight.
 	 *
 	 * Atlas and Gloria are licensed families supplied by the client and are not
@@ -116,13 +128,37 @@ final class MSL_Theme {
 	}
 
 	/**
+	 * Whether this request renders any page belonging to the design.
+	 *
+	 * The stylesheet used to be tied to the campaign template alone, because for
+	 * a long time that was the only template there was. Adding a second one gave
+	 * it the fallback sheet instead — the about page shared the header, the
+	 * footer and every class name with the site, and arrived with none of the
+	 * CSS that draws them. It is the assets a page needs that decide this, not
+	 * which template happens to be first.
+	 *
+	 * @return bool
+	 */
+	public static function is_theme_page(): bool {
+		static $is = null;
+
+		if ( null !== $is ) {
+			return $is;
+		}
+
+		$is = is_singular() && in_array( (string) get_page_template_slug( get_queried_object_id() ), self::TEMPLATES, true );
+
+		return $is;
+	}
+
+	/**
 	 * Enqueue styles and scripts, conditionally.
 	 *
 	 * Nothing is enqueued site-wide: a page that does not use the campaign
 	 * template loads none of its CSS or JS.
 	 */
 	public static function enqueue(): void {
-		if ( ! self::is_campaign() ) {
+		if ( ! self::is_theme_page() ) {
 			// Everything outside the campaign template gets a single small
 			// stylesheet so a stray page is still readable and accessible.
 			wp_enqueue_style( 'msl-plain', MSL_URI . 'assets/css/msl-plain.css', array(), self::asset_version( 'assets/css/msl-plain.css' ) );
@@ -240,7 +276,13 @@ final class MSL_Theme {
 	 * @return array<string, mixed>
 	 */
 	private static function script_data(): array {
-		$page_id  = (int) get_the_ID();
+		/*
+		 * The campaign's numbers live on the campaign page. The header runs on
+		 * the about page too — the countdown, the counter, the join button — so
+		 * reading them off whatever page is being viewed would give that page
+		 * its own empty statistics.
+		 */
+		$page_id  = self::is_campaign() ? (int) get_the_ID() : MSL_Importer::page_id();
 		$campaign = MSL_Meta::get( 'campaign', $page_id );
 		$stats    = MSL_Stats::all( $page_id );
 		$join     = MSL_Meta::get( 'join', $page_id );
@@ -412,7 +454,7 @@ final class MSL_Theme {
 	 * a 404 that would cost a round trip on every page view.
 	 */
 	public static function preload_fonts(): void {
-		if ( ! self::is_campaign() ) {
+		if ( ! self::is_theme_page() ) {
 			return;
 		}
 
@@ -435,7 +477,15 @@ final class MSL_Theme {
 	 * @return string[]
 	 */
 	public static function body_class( array $classes ): array {
-		if ( self::is_campaign() ) {
+		/*
+		 * Every design page carries this, not only the campaign. A very large
+		 * part of the stylesheet is scoped under `.msl-page` — the element
+		 * reset, the locked-scroll rule and every rule that has to outrank it —
+		 * so a page without the class gets the markup of the site and almost
+		 * none of its styling. That is precisely what happened to the about
+		 * page: same header, same class names, no `.msl-page` to match on.
+		 */
+		if ( self::is_theme_page() ) {
 			$classes[] = 'msl-page';
 			$classes[] = 'msl-page--' . MSL_I18N::lang();
 		}
@@ -450,7 +500,7 @@ final class MSL_Theme {
 	 * @return string
 	 */
 	public static function language_attributes( string $output ): string {
-		if ( ! self::is_campaign() ) {
+		if ( ! self::is_theme_page() ) {
 			return $output;
 		}
 

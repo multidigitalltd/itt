@@ -78,7 +78,7 @@ final class MSL_Meta {
 	 * @return array<string, mixed>
 	 */
 	public static function get( string $section, ?int $post_id = null ): array {
-		$post_id ??= (int) get_the_ID();
+		$post_id ??= self::home_of( $section );
 		$cache_key = $post_id . ':' . $section;
 
 		if ( isset( self::$cache[ $cache_key ] ) ) {
@@ -96,6 +96,31 @@ final class MSL_Meta {
 		self::$cache[ $cache_key ] = $resolved;
 
 		return $resolved;
+	}
+
+	/**
+	 * Which page a section's content lives on.
+	 *
+	 * Sections belong to a template, and a template belongs to a page. The
+	 * header, the footer and the menu are stored on the campaign page, so
+	 * rendering them on the about page has to read them from there — asking the
+	 * current page gives the approved defaults instead, and the site quietly
+	 * shows a different brand name and a different menu on one of its two pages.
+	 *
+	 * @param string $section Section key.
+	 * @return int
+	 */
+	private static function home_of( string $section ): int {
+		$template = (string) ( MSL_Fields::all()[ $section ]['template'] ?? 'home' );
+		$current  = (int) get_the_ID();
+
+		if ( $current > 0 && $template === (string) msl_page_template_key( $current ) ) {
+			return $current;
+		}
+
+		$owner = MSL_Importer::page_id( $template );
+
+		return $owner > 0 ? $owner : $current;
 	}
 
 	/**

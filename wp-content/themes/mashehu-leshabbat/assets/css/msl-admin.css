@@ -155,3 +155,198 @@
 	max-width: 60rem;
 	margin-bottom: 24px;
 }
+
+/*
+ * The content panel.
+ *
+ * A section list on one side and one section at a time on the other. The
+ * sections that are not open stay in the DOM — they are part of the same form
+ * and the same save — so they are hidden, not unmounted.
+ */
+
+.msl-panel__bar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px 20px;
+	margin: 12px 0 16px;
+	padding: 10px 14px;
+	background: #fff;
+	border: 1px solid #c3c4c7;
+	border-radius: 4px;
+}
+
+.msl-panel__bar p {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	margin: 0;
+}
+
+.msl-panel__search {
+	flex: 1 1 260px;
+}
+
+.msl-panel__search input {
+	flex: 1 1 auto;
+	min-inline-size: 0;
+}
+
+.msl-panel__hits {
+	color: #646970;
+	font-size: 12px;
+	white-space: nowrap;
+}
+
+.msl-panel__langs-label {
+	color: #646970;
+	font-size: 12px;
+}
+
+.msl-panel__links {
+	margin-inline-start: auto;
+}
+
+.msl-panel__body {
+	display: flex;
+	align-items: flex-start;
+	gap: 20px;
+}
+
+.msl-panel__nav {
+	flex: 0 0 240px;
+	position: sticky;
+	/* Clears the admin bar; the panel is long and the list has to stay put. */
+	inset-block-start: 46px;
+	background: #fff;
+	border: 1px solid #c3c4c7;
+	border-radius: 4px;
+	overflow: hidden;
+}
+
+.msl-panel__nav ul {
+	margin: 0;
+	list-style: none;
+}
+
+.msl-panel__nav li {
+	margin: 0;
+}
+
+.msl-panel__tab {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	inline-size: 100%;
+	padding: 9px 14px;
+	border: 0;
+	border-block-end: 1px solid #f0f0f1;
+	background: none;
+	font-size: 13px;
+	text-align: start;
+	cursor: pointer;
+}
+
+.msl-panel__tab:hover {
+	background: #f6f7f7;
+}
+
+.msl-panel__tab.is-active {
+	background: #2271b1;
+	color: #fff;
+	font-weight: 600;
+}
+
+.msl-panel__tab-label {
+	flex: 1 1 auto;
+}
+
+.msl-panel__tab-hits {
+	flex: 0 0 auto;
+	min-inline-size: 20px;
+	padding: 1px 6px;
+	border-radius: 9px;
+	background: #d63638;
+	color: #fff;
+	font-size: 11px;
+	text-align: center;
+}
+
+.msl-panel__tab.is-empty {
+	opacity: 0.45;
+}
+
+.msl-panel__main {
+	flex: 1 1 auto;
+	min-inline-size: 0;
+	padding: 4px 20px 20px;
+	background: #fff;
+	border: 1px solid #c3c4c7;
+	border-radius: 4px;
+}
+
+.msl-panel__title {
+	margin: 14px 0 18px;
+	padding-block-end: 10px;
+	border-block-end: 1px solid #f0f0f1;
+	font-size: 16px;
+}
+
+.msl-panel__empty {
+	color: #646970;
+}
+
+/* The save bar tracks the bottom of the window: with twelve sections in one
+   form, a button at the end of the document is a button nobody reaches. */
+.msl-panel__save {
+	position: sticky;
+	inset-block-end: 0;
+	z-index: 10;
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	margin-block-start: 16px;
+	padding: 12px 16px;
+	background: #fff;
+	border: 1px solid #c3c4c7;
+	border-radius: 4px;
+	box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.msl-panel__saved {
+	color: #b32d2e;
+	font-size: 13px;
+}
+
+.msl-field.is-hidden {
+	display: none;
+}
+
+@media screen and (max-width: 782px) {
+	.msl-panel__body {
+		display: block;
+	}
+
+	.msl-panel__nav {
+		position: static;
+		margin-block-end: 14px;
+	}
+}
+
+/*
+ * Values that are not Hebrew.
+ *
+ * An English sentence, a hex colour or a clock time typed into an RTL input
+ * comes back with its punctuation at the wrong end — "#FFB25C" reads "FFB25C#"
+ * and an English line ends up with its full stop leading. The value is stored
+ * correctly either way; it is only unreadable while being edited, which is
+ * exactly when it matters.
+ */
+.msl-field--en input,
+.msl-field--en textarea,
+.msl-field--url input,
+.msl-field--ltr input,
+.msl-field--number input {
+	direction: ltr;
+	text-align: start;
+}

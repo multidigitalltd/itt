@@ -1527,6 +1527,11 @@ window.MSLCanvas = (function () {
 		state: state,
 		zooms: ZOOMS,
 		cellCount: function () { return cells ? cells.length : 0; },
+		/* Where one cell sits in the artwork, so the page can put the camera on
+		   it — the viewer's focus is expressed in the same normalised space. */
+		cellAt: function (i) {
+			return cells && cells[i] ? { nx: cells[i].nx, ny: cells[i].ny } : null;
+		},
 		wallLitCount: function (cv) {
 			var rc = cv.getBoundingClientRect();
 			return wallLit(wallGeom(rc.width, rc.height, false));

@@ -39,6 +39,9 @@ $msl_stats   = MSL_Stats::all( (int) get_the_ID() );
 		<div class="msl-screen__spacer" aria-hidden="true"></div>
 	</div>
 
+	<button type="button" class="msl-btn msl-btn--light msl-mine" data-msl-my-candle
+		<?php msl_i18n( 'screens', 'my_candle' ); ?> hidden><?php msl_the( $msl_screens, 'my_candle' ); ?></button>
+
 	<div class="msl-zoom">
 		<button type="button" class="msl-zoom__btn" data-msl-zoom="in"
 			aria-label="<?php echo esc_attr( msl_t( $msl_screens, 'zoom_in' ) ); ?>"><span aria-hidden="true">+</span></button>

@@ -35,6 +35,12 @@ final class MSL_Joins {
 	public const MINE_COOKIE = 'msl_mine';
 
 	/**
+	 * Cookie carrying this visitor's own position in the artwork, so "my candle"
+	 * needs no round trip on a device that has been here before.
+	 */
+	public const PIECE_COOKIE = 'msl_piece';
+
+	/**
 	 * Days the referral attribution survives.
 	 */
 	private const REF_DAYS = 30;
@@ -463,6 +469,38 @@ final class MSL_Joins {
 		set_transient( $key, $count, 30 );
 
 		return $count;
+	}
+
+	/**
+	 * The position in the artwork held by the owner of a referral code.
+	 *
+	 * The code is the only durable thing a participant carries away — it is in
+	 * their own cookie and in every invitation they send — so it is also what
+	 * finds their candle again on a later visit, after the browser has forgotten
+	 * everything else about the join.
+	 *
+	 * @param int    $page_id Page ID.
+	 * @param string $code    Referral code.
+	 * @return int Position, or -1 when the code owns none.
+	 */
+	public static function piece_for_code( int $page_id, string $code ): int {
+		global $wpdb;
+
+		if ( ! self::is_code( $code ) || ! MSL_DB::ready() ) {
+			return -1;
+		}
+
+		$table = MSL_DB::joins_table();
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$piece = $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT piece_index FROM {$table} WHERE page_id = %d AND referral_code = %s LIMIT 1",
+				$page_id,
+				$code
+			)
+		);
+
+		return null === $piece ? -1 : (int) $piece;
 	}
 
 	/**

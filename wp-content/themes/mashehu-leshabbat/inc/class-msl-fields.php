@@ -139,10 +139,21 @@ final class MSL_Fields {
 	 * @param string $key   Field key.
 	 * @param string $label Editor label.
 	 * @param string $help  Optional hint.
+	 * @param bool   $ltr   Whether the value is left-to-right whatever the admin language.
 	 * @return array<string, mixed>
 	 */
-	private static function text( string $key, string $label, string $help = '' ): array {
-		return self::field( 'text', $key, $label, '' !== $help ? array( 'help' => $help ) : array() );
+	private static function text( string $key, string $label, string $help = '', bool $ltr = false ): array {
+		$extra = array();
+
+		if ( '' !== $help ) {
+			$extra['help'] = $help;
+		}
+
+		if ( $ltr ) {
+			$extra['ltr'] = true;
+		}
+
+		return self::field( 'text', $key, $label, $extra );
 	}
 
 	/**
@@ -237,10 +248,11 @@ final class MSL_Fields {
 	 *
 	 * @param string $key   Field key.
 	 * @param string $label Editor label.
+	 * @param string $help  Optional hint.
 	 * @return array<string, mixed>
 	 */
-	private static function checkbox( string $key, string $label ): array {
-		return self::field( 'checkbox', $key, $label );
+	private static function checkbox( string $key, string $label, string $help = '' ): array {
+		return self::field( 'checkbox', $key, $label, '' !== $help ? array( 'help' => $help ) : array() );
 	}
 
 	/**
@@ -365,7 +377,7 @@ final class MSL_Fields {
 						),
 						'בסבב השבועי היצירה נקבעת ממספר השבוע בשנה, כך שכל הגולשים רואים את אותה יצירה בלי קשר לזמן הטעינה. בחירת צורה מסוימת מקבעת אותה עד שחוזרים לסבב.'
 					),
-					self::text( 'accent', 'צבע האור ביצירה', 'קוד HEX. ברירת מחדל #FFB25C.' ),
+					self::text( 'accent', 'צבע האור ביצירה', 'קוד HEX. ברירת מחדל #FFB25C.', true ),
 					self::select(
 						'candle_day',
 						'יום כניסת השבת',
@@ -375,7 +387,7 @@ final class MSL_Fields {
 							'4' => 'חמישי',
 						)
 					),
-					self::text( 'candle_time', 'שעת כניסת השבת', 'בפורמט HH:MM לפי אזור הזמן של האתר. ברירת מחדל 19:12.' ),
+					self::text( 'candle_time', 'שעת כניסת השבת', 'בפורמט HH:MM לפי אזור הזמן של האתר. ברירת מחדל 19:12.', true ),
 					self::number( 'countries', 'מספר מדינות', 0, 300, 'מוצג בסקשן "השבת הזאת" ובכותרת המפה.' ),
 					self::number( 'cities', 'מספר ערים', 0, 100000 ),
 					self::checkbox( 'closed', 'הקמפיין נסגר — לא ניתן להצטרף' ),
@@ -413,6 +425,9 @@ final class MSL_Fields {
 					self::bi( 'text', 'enter_art', 'כפתור הכניסה ליצירה' ),
 					self::bi( 'text', 'wall', 'שם קיר הנרות' ),
 					self::bi( 'text', 'wall_count', 'תווית מתחת לשם הקיר' ),
+					self::checkbox( 'demo_names', 'להציג שמות לדוגמה על הנרות הוותיקים', 'הנרות שנספרו למניין לפני שהאתר עלה אינם שמורים בשם. כשהאפשרות פעילה, לחיצה על נר כזה מציגה שם מהרשימות שלמטה — שם שנבחר לפי מיקום הנר, כך שאותו נר מציג תמיד את אותו שם. הצטרפויות אמיתיות תמיד גוברות. כשהאפשרות כבויה מוצג "אחד מהמדליקים".' ),
+					self::bi( 'textarea', 'demo_first_names', 'שמות לדוגמה', 6, 'שם בכל שורה.' ),
+					self::bi( 'textarea', 'demo_cities', 'ערים לדוגמה', 6, 'עיר בכל שורה.' ),
 				)
 			),
 			'marquee'  => self::section(
@@ -583,6 +598,7 @@ final class MSL_Fields {
 					self::bi( 'textarea', 'art_hint_pick', 'רמז — אחרי בחירת נר', 2 ),
 					self::bi( 'textarea', 'wall_hint', 'רמז בקיר הנרות', 2 ),
 					self::bi( 'textarea', 'wall_hint_pick', 'רמז בקיר אחרי בחירת נר', 2 ),
+					self::bi( 'text', 'my_candle', 'כפתור "הנר שלי" ביצירה' ),
 					self::bi( 'text', 'pick_anon', 'כרטיס הנר — מדליק בעילום שם' ),
 					self::bi( 'text', 'pick_anon_sub', 'כרטיס הנר — שורה שנייה לעילום שם' ),
 					self::bi( 'text', 'pick_none', 'כרטיס הנר — מדליק בלי שם שמור', 3, 'נרות שנספרו למניין לפני שהאתר עלה, ואין להם רשומה בבסיס הנתונים.' ),

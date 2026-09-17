@@ -21,8 +21,8 @@ final class MSL_Metabox {
 	/**
 	 * Nonce action and field name.
 	 */
-	private const NONCE_ACTION = 'msl_save_content';
-	private const NONCE_NAME   = 'msl_content_nonce';
+	public const NONCE_ACTION = 'msl_save_content';
+	public const NONCE_NAME   = 'msl_content_nonce';
 
 	/**
 	 * Hook the editor UI.
@@ -74,17 +74,34 @@ final class MSL_Metabox {
 			return;
 		}
 
-		foreach ( MSL_Fields::sections_for( $template ) as $section ) {
-			add_meta_box(
-				'msl-section-' . $section,
-				MSL_Fields::all()[ $section ]['label'],
-				array( self::class, 'render' ),
-				'page',
-				'normal',
-				'default',
-				array( 'section' => $section )
-			);
-		}
+		/*
+		 * The twelve sections used to be twelve meta boxes stacked on this
+		 * screen. They are the same fields and the same storage, but four
+		 * hundred of them below the publish button is not somewhere anyone can
+		 * find one string. They live in the content panel now, and this screen
+		 * keeps the one thing it is actually for — the page itself — plus a way
+		 * across.
+		 */
+		add_meta_box(
+			'msl-content-link',
+			__( 'תוכן הקמפיין', 'mashehu-leshabbat' ),
+			array( self::class, 'render_link' ),
+			'page',
+			'side',
+			'high'
+		);
+	}
+
+	/**
+	 * The pointer from the page editor to the content panel.
+	 */
+	public static function render_link(): void {
+		printf(
+			'<p>%s</p><p><a class="button button-primary" href="%s">%s</a></p>',
+			esc_html__( 'כל התוכן של העמוד — הכותרות, הקופי בעברית ובאנגלית, התמונות והרשימות — נערך בפאנל התוכן.', 'mashehu-leshabbat' ),
+			esc_url( admin_url( 'admin.php?page=msl-content' ) ),
+			esc_html__( 'פתיחת פאנל התוכן', 'mashehu-leshabbat' )
+		);
 	}
 
 	/**
@@ -103,6 +120,17 @@ final class MSL_Metabox {
 			return;
 		}
 
+		self::enqueue();
+	}
+
+	/**
+	 * The field assets: the media picker and the repeaters.
+	 *
+	 * Both the page editor and the content panel render the same fields from the
+	 * same schema, so they load the same pair of files rather than each carrying
+	 * a copy of the behaviour.
+	 */
+	public static function enqueue(): void {
 		wp_enqueue_media();
 
 		wp_enqueue_style( 'msl-admin', MSL_URI . 'assets/css/msl-admin.css', array(), MSL_Theme::asset_version( 'assets/css/msl-admin.css' ) );
@@ -115,6 +143,8 @@ final class MSL_Metabox {
 				'useImage'    => __( 'שימוש בתמונה', 'mashehu-leshabbat' ),
 				'removeRow'   => __( 'האם למחוק את השורה?', 'mashehu-leshabbat' ),
 				'newRow'      => __( 'שורה חדשה', 'mashehu-leshabbat' ),
+				'unsaved'     => __( 'יש שינויים שלא נשמרו. לצאת מהעמוד בכל זאת?', 'mashehu-leshabbat' ),
+				'noMatch'     => __( 'אין שדה שמתאים לחיפוש.', 'mashehu-leshabbat' ),
 			)
 		);
 	}
@@ -139,7 +169,17 @@ final class MSL_Metabox {
 			$nonce_printed = true;
 		}
 
-		$values = MSL_Meta::get( $section, $post->ID );
+		self::render_section_fields( $section, $post->ID );
+	}
+
+	/**
+	 * Every field of one section, for whichever screen is asking.
+	 *
+	 * @param string $section Section key.
+	 * @param int    $post_id Page the values belong to.
+	 */
+	public static function render_section_fields( string $section, int $post_id ): void {
+		$values = MSL_Meta::get( $section, $post_id );
 
 		echo '<div class="msl-fields">';
 
@@ -169,9 +209,12 @@ final class MSL_Metabox {
 		$is_english = str_ends_with( (string) $field['key'], '_en' );
 
 		printf(
-			'<p class="msl-field msl-field--%s%s">',
+			'<p class="msl-field msl-field--%s%s%s">',
 			esc_attr( (string) $field['type'] ),
-			$is_english ? ' msl-field--en' : ''
+			$is_english ? ' msl-field--en' : '',
+			// A hex colour or a clock time typed into an RTL input renders with
+			// its punctuation at the wrong end: "#FFB25C" reads back "FFB25C#".
+			empty( $field['ltr'] ) ? '' : ' msl-field--ltr'
 		);
 
 		if ( 'image' === $field['type'] ) {

@@ -104,6 +104,11 @@ final class MSL_Content {
 				'wall_en'            => 'The candle wall',
 				'wall_count_he'      => 'נרות דולקים לשבת הזאת',
 				'wall_count_en'      => 'candles lit for this Shabbat',
+				'demo_names'          => 1,
+				'demo_first_names_he' => "שרה\nדוד\nרחל\nמשה\nאסתר\nיוסף\nמרים\nאברהם\nחנה\nיעקב\nלאה\nשמואל\nרבקה\nאליהו\nנעמי\nיצחק\nתמר\nדניאל\nמיכל\nנתן\nאיילת\nעמית\nשירה\nיונתן\nנועה\nאורי\nטליה\nגלעד\nיעל\nעידו",
+				'demo_first_names_en' => "Sarah\nDavid\nRachel\nMoshe\nEsther\nYosef\nMiriam\nAvraham\nHannah\nYaakov\nLeah\nShmuel\nRivka\nEliyahu\nNaomi\nYitzhak\nTamar\nDaniel\nMichal\nNatan\nAyelet\nAmit\nShira\nYonatan\nNoa\nOri\nTalia\nGilad\nYael\nIdo",
+				'demo_cities_he'      => "ירושלים\nתל אביב\nחיפה\nבאר שבע\nנתניה\nאשדוד\nרעננה\nמודיעין\nצפת\nטבריה\nרחובות\nכפר סבא\nהרצליה\nבית שמש\nעפולה\nאילת\nניו יורק\nלונדון\nפריז\nטורונטו\nמלבורן\nבואנוס איירס\nיוהנסבורג\nמוסקבה",
+				'demo_cities_en'      => "Jerusalem\nTel Aviv\nHaifa\nBeer Sheva\nNetanya\nAshdod\nRaanana\nModiin\nTzfat\nTiberias\nRehovot\nKfar Saba\nHerzliya\nBeit Shemesh\nAfula\nEilat\nNew York\nLondon\nParis\nToronto\nMelbourne\nBuenos Aires\nJohannesburg\nMoscow",
 			),
 			'marquee'  => array(
 				'rows' => array(
@@ -342,6 +347,8 @@ final class MSL_Content {
 				'wall_hint_en'      => 'Click a candle to see who lit it.',
 				'wall_hint_pick_he' => 'כל נר כאן הוא אדם אחד שהוסיף אור לשבת.',
 				'wall_hint_pick_en' => 'Every candle here is one person who added their light for Shabbat.',
+				'my_candle_he'      => 'הנר שלי',
+				'my_candle_en'      => 'My candle',
 				'pick_anon_he'      => 'בעילום שם',
 				'pick_anon_en'      => 'Anonymous',
 				'pick_anon_sub_he'  => 'בחר/ה להוסיף אור בלי להופיע בשם.',

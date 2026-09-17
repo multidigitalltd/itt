@@ -244,6 +244,7 @@ final class MSL_Theme {
 		$campaign = MSL_Meta::get( 'campaign', $page_id );
 		$stats    = MSL_Stats::all( $page_id );
 		$join     = MSL_Meta::get( 'join', $page_id );
+		$stage    = MSL_Meta::get( 'stage', $page_id );
 
 		$options = array();
 
@@ -274,6 +275,7 @@ final class MSL_Theme {
 				'candleLighting' => self::candle_lighting( $campaign ),
 				'closed'         => 1 === (int) $campaign['closed'],
 				'maxThings'      => MSL_Joins::MAX_THINGS,
+				'demoNames'      => 1 === (int) ( $stage['demo_names'] ?? 0 ),
 			),
 			'stats'     => array(
 				'participants' => $stats['participants'],
@@ -290,6 +292,7 @@ final class MSL_Theme {
 				'lang'    => MSL_I18N::COOKIE,
 				'ref'     => MSL_Joins::REF_COOKIE,
 				'mine'    => MSL_Joins::MINE_COOKIE,
+				'piece'   => MSL_Joins::PIECE_COOKIE,
 				'refDays' => MSL_Joins::ref_days(),
 			),
 			'joinBase'  => esc_url_raw( home_url( '/join/' ) ),

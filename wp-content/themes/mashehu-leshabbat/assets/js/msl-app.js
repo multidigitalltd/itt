@@ -38,6 +38,7 @@
 		result: null,
 		openedAt: 0,
 		artPick: null,
+		myPiece: -1,
 		wallPick: null,
 		last10: config.stats.last10,
 		countries: config.stats.countries,
@@ -403,6 +404,15 @@
 				if (!data) { return; }
 				state.refCount = data.count;
 				state.nextMilestone = data.next;
+
+				/* A device that kept the code but lost the position gets it
+				   back here, which is what makes "my candle" survive a cleared
+				   cookie jar or a second browser. */
+				if (typeof data.piece === 'number' && data.piece >= 0 && state.myPiece < 0) {
+					state.myPiece = data.piece;
+					writeCookie(config.cookies.piece, String(data.piece), config.cookies.refDays);
+					renderMyCandle();
+				}
 				renderReferral();
 			})
 			.catch(function () { /* Leave the last known count on screen. */ });
@@ -540,6 +550,53 @@
 		return { from: Math.max(from, to - 499), to: to };
 	}
 
+	/* A small integer hash, so a position always resolves to the same name
+	   without an array the size of the campaign. */
+	function hashAt(n, salt) {
+		return (Math.imul(n + salt * 131, 2654435761) >>> 9) % 100000;
+	}
+
+	function lines(text) {
+		return String(text || '').split('\n').map(function (line) {
+			return line.trim();
+		}).filter(Boolean);
+	}
+
+	/* The labels a participant can pick, read off the join form rather than
+	   shipped twice: the form already has them in the current language. */
+	function thingLabels() {
+		return $$('.msl-option__text').map(function (el) {
+			return el.textContent.trim();
+		}).filter(Boolean);
+	}
+
+	/*
+	 * A stand-in for a candle with no record.
+	 *
+	 * The count this campaign arrived with was counted, not catalogued, so most
+	 * candles have no name on file. The campaign would rather show a name than
+	 * an apology, so one is derived from the position: the same candle always
+	 * shows the same person, the lists are editable in the content panel, and a
+	 * real join in the slice always wins over this. Turning the switch off in
+	 * section 03 puts the honest card back.
+	 */
+	function standIn(ordinal) {
+		if (!config.campaign.demoNames) { return null; }
+
+		var names = lines(t('stage.demo_first_names'));
+
+		if (!names.length) { return null; }
+
+		var cities = lines(t('stage.demo_cities'));
+		var things = thingLabels();
+
+		return {
+			name: names[hashAt(ordinal, 7) % names.length],
+			place: cities.length ? cities[hashAt(ordinal, 13) % cities.length] : '',
+			thing: things.length ? things[hashAt(ordinal, 29) % things.length] : ''
+		};
+	}
+
 	/* A named participant in the slice is the one worth showing; failing that,
 	   any record at all; failing that, none, and the card says so. */
 	function pickFrom(pieces) {
@@ -568,10 +625,10 @@
 		window.fetch(config.rest.pieces + '?from=' + win.from + '&to=' + win.to, { credentials: 'same-origin' })
 			.then(function (r) { return r.ok ? r.json() : null; })
 			.then(function (data) {
-				state.pieces[key] = pickFrom(data && data.pieces);
+				state.pieces[key] = pickFrom(data && data.pieces) || standIn(win.from);
 				done(state.pieces[key]);
 			})
-			.catch(function () { done(null); });
+			.catch(function () { done(standIn(win.from)); });
 	}
 
 	function hidePick(container) {
@@ -608,6 +665,72 @@
 		if (sub) { sub.textContent = detail; }
 
 		container.hidden = false;
+	}
+
+	/*
+	 * "My candle".
+	 *
+	 * The artwork draws a fixed number of candles whatever the count, so a
+	 * participant's position has to be mapped onto the cell that stands for it —
+	 * the same slice arithmetic pieceWindow() does, run the other way. Then the
+	 * camera goes to that cell, the zoom goes in far enough for one candle to be
+	 * a candle, and the card opens on it.
+	 */
+	function myCell() {
+		if (state.myPiece < 0) { return -1; }
+
+		var drawn = canvasEngine.litCount();
+		var people = Math.max(1, canvasEngine.state.count || 0);
+
+		if (drawn < 1) { return -1; }
+
+		return Math.max(0, Math.min(drawn - 1, Math.floor(state.myPiece * drawn / people)));
+	}
+
+	function renderMyCandle() {
+		var button = $('[data-msl-my-candle]');
+
+		if (button) { button.hidden = state.myPiece < 0; }
+	}
+
+	function showMyCandle() {
+		var index = myCell();
+		var cell = index < 0 ? null : canvasEngine.cellAt(index);
+
+		if (!cell) { return; }
+
+		state.artPick = index;
+		canvasEngine.setState({
+			artPick: index,
+			fx: cell.nx,
+			fy: cell.ny,
+			artZ: Math.max(2, canvasEngine.state.artZ)
+		});
+
+		/* The visitor's own record is the one that must never be a stand-in, so
+		   this asks for their exact position rather than their slice. */
+		loadPieces({ from: state.myPiece, to: state.myPiece }, function (person) {
+			showPick($('[data-msl-art-pick]'), person);
+		});
+
+		renderHints();
+	}
+
+	function bindMyCandle() {
+		var button = $('[data-msl-my-candle]');
+
+		if (!button) { return; }
+
+		button.addEventListener('click', function () {
+			goto('art');
+			showMyCandle();
+		});
+
+		state.myPiece = parseInt(readCookie(config.cookies.piece), 10);
+
+		if (isNaN(state.myPiece)) { state.myPiece = -1; }
+
+		renderMyCandle();
 	}
 
 	function bindArtView() {
@@ -956,6 +1079,15 @@
 
 		writeCookie(config.cookies.mine, result.referral_code, config.cookies.refDays);
 
+		/* The position is what "my candle" flies to. The referral code can
+		   recover it from the server later, but on this device it is known now
+		   and a cookie saves the round trip on every later visit. */
+		if (typeof result.piece_index === 'number') {
+			state.myPiece = result.piece_index;
+			writeCookie(config.cookies.piece, String(result.piece_index), config.cookies.refDays);
+			renderMyCandle();
+		}
+
 		closeJoin();
 		renderReferral();
 		renderResult();
@@ -1222,6 +1354,7 @@
 
 		bindEvents();
 		bindArtView();
+		bindMyCandle();
 		bindWall();
 		bindShare();
 		startCollage();

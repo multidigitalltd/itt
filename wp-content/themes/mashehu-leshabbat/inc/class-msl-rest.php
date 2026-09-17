@@ -210,6 +210,9 @@ final class MSL_REST {
 			array(
 				'count' => $count,
 				'next'  => $next,
+				// So that "my candle" still works on a device that kept the
+				// code cookie but lost the rest of the join.
+				'piece' => MSL_Joins::piece_for_code( $page_id, $code ),
 			)
 		);
 	}

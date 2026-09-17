@@ -43,6 +43,7 @@ require_once MSL_DIR . 'inc/class-msl-joins.php';
 require_once MSL_DIR . 'inc/class-msl-stats.php';
 require_once MSL_DIR . 'inc/class-msl-rest.php';
 require_once MSL_DIR . 'inc/class-msl-admin.php';
+require_once MSL_DIR . 'inc/class-msl-panel.php';
 require_once MSL_DIR . 'inc/msl-template-tags.php';
 require_once MSL_DIR . 'inc/class-msl-theme.php';
 
@@ -54,3 +55,4 @@ MSL_DB::init();
 MSL_Joins::init();
 MSL_REST::init();
 MSL_Admin::init();
+MSL_Panel::init();

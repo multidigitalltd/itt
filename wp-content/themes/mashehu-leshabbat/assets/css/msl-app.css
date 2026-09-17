@@ -2365,6 +2365,23 @@
 	gap: 14px;
 }
 
+/*
+ * "My candle" sits opposite the zoom column, at the same height: it is the
+ * other way of moving the camera, and putting it in the top bar would push it
+ * in among the title and the counter, where it reads as a heading rather than
+ * as a control.
+ */
+.msl-mine {
+	position: absolute;
+	inset-block-start: 100px;
+	inset-inline-start: var(--msl-gutter);
+	z-index: 2;
+}
+
+.msl-mine[hidden] {
+	display: none;
+}
+
 .msl-zoom {
 	position: absolute;
 	inset-block-start: 100px;

@@ -121,7 +121,13 @@ $msl_steps     = 3;
 					<h2 class="msl-step__title"<?php msl_i18n( 'join', 'det_title' ); ?>><?php msl_the( $msl, 'det_title' ); ?></h2>
 					<p class="msl-step__sub"<?php msl_i18n( 'join', 'det_sub' ); ?>><?php msl_the( $msl, 'det_sub' ); ?></p>
 
-					<p class="msl-optional"<?php msl_i18n( 'join', 'det_optional' ); ?>><?php msl_the( $msl, 'det_optional' ); ?></p>
+					<?php
+					// Left empty by default. The line only appears if the campaign
+					// puts one there, so an unused field is not an empty box.
+					if ( '' !== msl_t( $msl, 'det_optional' ) ) :
+						?>
+						<p class="msl-optional"<?php msl_i18n( 'join', 'det_optional' ); ?>><?php msl_the( $msl, 'det_optional' ); ?></p>
+					<?php endif; ?>
 
 					<p class="msl-field">
 						<label class="msl-field__label" for="msl-first-name"<?php msl_i18n( 'join', 'ph_name' ); ?>><?php msl_the( $msl, 'ph_name' ); ?></label>

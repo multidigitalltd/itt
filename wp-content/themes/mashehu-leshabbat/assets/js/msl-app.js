@@ -494,7 +494,7 @@
 
 		if (next) { openOverlay(next); }
 
-		if (name === 'wall') { canvasEngine.resetWall(); }
+		if (name === 'wall') { canvasEngine.resetWall(); resetWallCamera(); }
 	}
 
 	/* ------------------------------------------------------------------
@@ -513,8 +513,26 @@
 		var wallHint = $('[data-msl-wall-hint]');
 
 		if (wallHint) {
-			wallHint.textContent = state.wallPick !== null ? t('screens.wall_hint_pick') : t('screens.wall_hint');
+			wallHint.textContent = state.wallPick !== null
+				? t('screens.wall_hint_pick')
+				: (canvasEngine.state.wallZoom > 1 ? t('screens.wall_hint_pan') : t('screens.wall_hint'));
 		}
+
+		var wallLevel = $('[data-msl-wall-level]');
+
+		if (wallLevel) { wallLevel.textContent = '×' + (canvasEngine.state.wallZoom || 1); }
+
+		var wallPanel = $('[data-msl-screen-panel="wall"]');
+
+		if (wallPanel) { wallPanel.classList.toggle('is-zoomed', (canvasEngine.state.wallZoom || 1) > 1); }
+
+		$$('[data-msl-wall-zoom]').forEach(function (button) {
+			var step = wallZoomStep();
+
+			button.disabled = button.dataset.mslWallZoom === 'in'
+				? step >= WALL_ZOOMS.length - 1
+				: step <= 0;
+		});
 
 		var level = $('[data-msl-zoom-level]');
 
@@ -666,15 +684,86 @@
 		});
 	}
 
+	/*
+	 * The wall camera.
+	 *
+	 * Zoom is stepped rather than continuous so the keyboard, the buttons and
+	 * the wheel all land on the same set of views, and so the level readout is
+	 * a number a person can say out loud. Zooming keeps whatever is under the
+	 * pointer under the pointer — anchoring to the centre instead makes the
+	 * candle you were aiming at slide away as you approach it.
+	 */
+	var WALL_ZOOMS = [1, 2, 3.5, 6, 10, 16];
+
+	function wallZoomStep() {
+		var z = canvasEngine.state.wallZoom || 1;
+		var i, best = 0;
+
+		for (i = 0; i < WALL_ZOOMS.length; i++) {
+			if (Math.abs(WALL_ZOOMS[i] - z) < Math.abs(WALL_ZOOMS[best] - z)) { best = i; }
+		}
+
+		return best;
+	}
+
+	function setWallZoom(step, anchorX, anchorY) {
+		var cv = $('[data-msl-wall-surface]');
+
+		if (!cv) { return; }
+
+		var next = WALL_ZOOMS[Math.max(0, Math.min(WALL_ZOOMS.length - 1, step))];
+		var rc = cv.getBoundingClientRect();
+		var before = canvasEngine.wallGeom(rc.width, rc.height, false);
+		var sx = typeof anchorX === 'number' ? anchorX - rc.left : rc.width / 2;
+		var sy = typeof anchorY === 'number' ? anchorY - rc.top : rc.height / 2;
+		var wx = (sx - before.ox) / before.cw;
+		var wy = (sy - before.oy) / before.ch;
+		var ratio = next / before.zoom;
+		var cw = before.cw * ratio;
+		var ch = before.ch * ratio;
+
+		canvasEngine.setState({
+			wallZoom: next,
+			wallPanX: (rc.width - before.cols * cw) / 2 - sx + wx * cw,
+			wallPanY: (rc.height - before.rows * ch) / 2 - sy + wy * ch
+		});
+
+		renderHints();
+	}
+
+	function panWall(dx, dy) {
+		canvasEngine.setState({
+			wallPanX: (canvasEngine.state.wallPanX || 0) + dx,
+			wallPanY: (canvasEngine.state.wallPanY || 0) + dy
+		});
+	}
+
+	function resetWallCamera() {
+		canvasEngine.setState({
+			wallZoom: 1,
+			wallPanX: 0,
+			wallPanY: 0,
+			wallShape: config.campaign.wallShape || 'full',
+			wallPick: null
+		});
+
+		state.wallPick = null;
+		showPick($('[data-msl-wall-pick]'), null);
+	}
+
 	function bindWall() {
 		var cv = $('[data-msl-wall-surface]');
 
 		if (!cv) { return; }
 
-		cv.addEventListener('click', function (event) {
-			var index = canvasEngine.wallHitIndex(cv, event.clientX, event.clientY);
+		var drag = null;
 
-			if (state.wallPick === index) {
+		function pick(clientX, clientY) {
+			var index = canvasEngine.wallHitIndex(cv, clientX, clientY);
+
+			/* Outside the shape, or the same candle again: put the card away
+			   rather than leaving a stale name on screen. */
+			if (index === null || state.wallPick === index) {
 				state.wallPick = null;
 				canvasEngine.setState({ wallPick: null });
 				showPick($('[data-msl-wall-pick]'), null);
@@ -690,6 +779,64 @@
 			});
 
 			renderHints();
+		}
+
+		cv.addEventListener('pointerdown', function (event) {
+			drag = { x: event.clientX, y: event.clientY, moved: 0, id: event.pointerId };
+
+			if (cv.setPointerCapture) { cv.setPointerCapture(event.pointerId); }
+		});
+
+		cv.addEventListener('pointermove', function (event) {
+			if (!drag || drag.id !== event.pointerId) { return; }
+
+			var dx = event.clientX - drag.x;
+			var dy = event.clientY - drag.y;
+
+			drag.moved += Math.abs(dx) + Math.abs(dy);
+			drag.x = event.clientX;
+			drag.y = event.clientY;
+
+			if (canvasEngine.state.wallZoom > 1) { panWall(-dx, -dy); }
+		});
+
+		cv.addEventListener('pointerup', function (event) {
+			if (!drag || drag.id !== event.pointerId) { return; }
+
+			/* A few pixels of travel is a click with an unsteady hand, not a
+			   drag — picking on any movement at all makes the wall feel like
+			   it is ignoring taps. */
+			if (drag.moved < 6) { pick(event.clientX, event.clientY); }
+
+			drag = null;
+		});
+
+		cv.addEventListener('pointercancel', function () { drag = null; });
+
+		cv.addEventListener('wheel', function (event) {
+			event.preventDefault();
+			setWallZoom(wallZoomStep() + (event.deltaY < 0 ? 1 : -1), event.clientX, event.clientY);
+		}, { passive: false });
+
+		cv.addEventListener('keydown', function (event) {
+			var G = canvasEngine.wallCamera(cv);
+			var nudge = 60;
+
+			if (event.key === '+' || event.key === '=') { setWallZoom(wallZoomStep() + 1); }
+			else if (event.key === '-' || event.key === '_') { setWallZoom(wallZoomStep() - 1); }
+			else if (event.key === 'ArrowLeft' && G.zoom > 1) { panWall(-nudge, 0); }
+			else if (event.key === 'ArrowRight' && G.zoom > 1) { panWall(nudge, 0); }
+			else if (event.key === 'ArrowUp' && G.zoom > 1) { panWall(0, -nudge); }
+			else if (event.key === 'ArrowDown' && G.zoom > 1) { panWall(0, nudge); }
+			else { return; }
+
+			event.preventDefault();
+		});
+
+		$$('[data-msl-wall-zoom]').forEach(function (button) {
+			button.addEventListener('click', function () {
+				setWallZoom(wallZoomStep() + (button.dataset.mslWallZoom === 'in' ? 1 : -1));
+			});
 		});
 	}
 
@@ -1039,7 +1186,7 @@
 	function startCollage() {
 		var collage = $('[data-msl-collage]');
 
-		if (!collage || reduceMotion) { return; }
+		if (!collage || reduceMotion || collage.hasAttribute('data-msl-collage-empty')) { return; }
 
 		var tiles = $$('[data-msl-tile]', collage);
 
@@ -1176,6 +1323,7 @@
 			count: state.participants,
 			accent: config.campaign.accent,
 			artwork: config.campaign.artwork,
+			wallShape: config.campaign.wallShape || 'full',
 			mapData: config.mapData,
 			mapPoints: config.mapPoints,
 			still: reduceMotion

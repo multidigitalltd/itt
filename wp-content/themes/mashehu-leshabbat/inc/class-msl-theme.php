@@ -157,6 +157,40 @@ final class MSL_Theme {
 	}
 
 	/**
+	 * Which picture the candle wall forms this week.
+	 *
+	 * The rotation is derived from the ISO week number rather than stored and
+	 * advanced, so it needs no cron, survives a missed week, and gives every
+	 * visitor the same picture no matter when their page was cached.
+	 *
+	 * @param array<string, mixed> $campaign Resolved campaign section.
+	 * @return string
+	 */
+	public static function wall_shape( array $campaign ): string {
+		$forced = (string) ( $campaign['wall_shape_force'] ?? '' );
+
+		if ( '' !== $forced && isset( MSL_Fields::WALL_SHAPES[ $forced ] ) ) {
+			return $forced;
+		}
+
+		$keys = array();
+
+		foreach ( (array) ( $campaign['wall_shapes'] ?? array() ) as $row ) {
+			$key = is_array( $row ) ? (string) ( $row['shape'] ?? '' ) : '';
+
+			if ( '' !== $key && isset( MSL_Fields::WALL_SHAPES[ $key ] ) ) {
+				$keys[] = $key;
+			}
+		}
+
+		if ( array() === $keys ) {
+			return 'full';
+		}
+
+		return $keys[ (int) gmdate( 'W', self::candle_lighting( $campaign ) ) % count( $keys ) ];
+	}
+
+	/**
 	 * The moment this week's artwork closes, as a UTC timestamp.
 	 *
 	 * @param array<string, mixed> $campaign Resolved campaign section.
@@ -229,6 +263,7 @@ final class MSL_Theme {
 				'candleLighting' => self::candle_lighting( $campaign ),
 				'closed'         => 1 === (int) $campaign['closed'],
 				'maxThings'      => MSL_Joins::MAX_THINGS,
+				'wallShape'      => self::wall_shape( $campaign ),
 			),
 			'stats'     => array(
 				'participants' => $stats['participants'],
@@ -314,7 +349,7 @@ final class MSL_Theme {
 
 		$title = sprintf(
 			/* translators: %s: participant count. */
-			'he' === MSL_I18N::lang() ? '%s יהודים כבר הוסיפו אור לשבת הקרובה.' : '%s people have already added something for this Shabbat.',
+			'he' === MSL_I18N::lang() ? '%s יהודים כבר הוסיפו אור לשבת הקרובה.' : '%s people have already added their light for this Shabbat.',
 			number_format_i18n( $stats['participants'] )
 		);
 

@@ -1121,6 +1121,30 @@
 	display: block;
 }
 
+/*
+ * Empty portrait slots. The eight tiles alternate through four warm tints so
+ * the gutter reads as a collage of people rather than as eight identical
+ * grey boxes, which is what the design file shows in place of photography.
+ */
+.msl-collage__layer--slot {
+	background: var(--msl-slot-bg, oklch(0.84 0.045 62));
+}
+
+.msl-collage__tile:nth-child(4n+2) .msl-collage__layer--slot { --msl-slot-bg: oklch(0.90 0.032 68); }
+.msl-collage__tile:nth-child(4n+3) .msl-collage__layer--slot { --msl-slot-bg: oklch(0.78 0.055 55); }
+.msl-collage__tile:nth-child(4n+4) .msl-collage__layer--slot { --msl-slot-bg: oklch(0.94 0.022 74); }
+
+.msl-slot {
+	inline-size: 100%;
+	block-size: 100%;
+	display: block;
+}
+
+.msl-slot__head,
+.msl-slot__body {
+	fill: oklch(0.62 0.05 50 / 0.42);
+}
+
 @keyframes msl-bob {
 	0%, 100% { transform: translateY(0); }
 	50% { transform: translateY(-11px); }
@@ -2368,6 +2392,31 @@
 
 .msl-zoom__btn:hover {
 	background: var(--msl-zoom-sep);
+}
+
+/*
+ * At either end of the range the button stays in place and stops responding,
+ * rather than disappearing — a control that vanishes moves the one below it
+ * under the cursor mid-click.
+ */
+.msl-zoom__btn:disabled {
+	opacity: 0.4;
+	cursor: default;
+}
+
+.msl-zoom__btn:disabled:hover {
+	background: var(--msl-zoom-bg);
+}
+
+/* The wall reads as a surface you can take hold of only once there is
+   somewhere to drag it to. */
+[data-msl-wall-surface] {
+	cursor: pointer;
+	touch-action: none;
+}
+
+.msl-screen--wall.is-zoomed [data-msl-wall-surface] {
+	cursor: grab;
 }
 
 .msl-zoom__level {

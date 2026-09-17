@@ -248,3 +248,19 @@ function msl_countdown( array $chrome, array $campaign ): string {
 
 	return sprintf( msl_t( $chrome, 'countdown_clock' ), $parsha, $clock );
 }
+
+/**
+ * An empty portrait slot for the hero collage.
+ *
+ * Drawn rather than shipped as an image: the slot is decoration that exists
+ * only until the client's photography arrives, and a placeholder file would
+ * have to be removed again on launch.
+ */
+function msl_portrait_slot_svg(): void {
+	?>
+	<svg class="msl-slot" viewBox="0 0 100 100" aria-hidden="true" focusable="false" preserveAspectRatio="xMidYMid slice">
+		<circle class="msl-slot__head" cx="50" cy="38" r="17"></circle>
+		<path class="msl-slot__body" d="M14 100 Q14 66 50 66 Q86 66 86 100 Z"></path>
+	</svg>
+	<?php
+}

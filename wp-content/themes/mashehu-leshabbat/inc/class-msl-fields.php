@@ -24,6 +24,26 @@ defined( 'ABSPATH' ) || exit;
 final class MSL_Fields {
 
 	/**
+	 * The pictures the candle wall can form.
+	 *
+	 * The keys are the ones `msl-canvas.js` knows how to draw. They are listed
+	 * here rather than in the canvas so the editor and the renderer cannot
+	 * drift apart: a key that is offered in the dropdown is a key that draws.
+	 *
+	 * @var array<string, string>
+	 */
+	public const WALL_SHAPES = array(
+		'star'      => 'מגן דוד',
+		'candles'   => 'נרות שבת',
+		'menorah'   => 'מנורה',
+		'tablets'   => 'לוחות הברית',
+		'israel'    => 'מפת ישראל',
+		'jerusalem' => 'ירושלים',
+		'kiddush'   => 'כוס קידוש',
+		'full'      => 'קיר מלא, בלי צורה',
+	);
+
+	/**
 	 * Cached schema.
 	 *
 	 * @var array<string, array<string, mixed>>|null
@@ -358,6 +378,21 @@ final class MSL_Fields {
 						)
 					),
 					self::text( 'accent', 'צבע האור ביצירה', 'קוד HEX. ברירת מחדל #FFB25C.' ),
+					self::repeater(
+						'wall_shapes',
+						'תמונת קיר הנרות — סבב שבועי',
+						'shape',
+						array(
+							self::select( 'shape', 'הצורה', self::WALL_SHAPES ),
+						),
+						'הנרות בקיר מרכיבים תמונה. התבנית עוברת לשורה הבאה בכל שבוע, לפי מספר השבוע בשנה, וחוזרת לתחילת הרשימה בסופה. רשימה ריקה = קיר מלא ללא צורה.'
+					),
+					self::select(
+						'wall_shape_force',
+						'לקבע את תמונת הקיר לשבוע הזה',
+						array_merge( array( '' => 'אוטומטי — לפי הסבב' ), self::WALL_SHAPES ),
+						'דורס את הסבב. שימושי לשבת עם נושא משלה.'
+					),
 					self::select(
 						'candle_day',
 						'יום כניסת השבת',
@@ -574,7 +609,9 @@ final class MSL_Fields {
 					self::bi( 'textarea', 'art_hint_pan', 'רמז — אחרי הגדלה', 2 ),
 					self::bi( 'textarea', 'art_hint_pick', 'רמז — אחרי בחירת נר', 2 ),
 					self::bi( 'textarea', 'wall_hint', 'רמז בקיר הנרות', 2 ),
+					self::bi( 'textarea', 'wall_hint_pan', 'רמז בקיר אחרי הגדלה', 2 ),
 					self::bi( 'textarea', 'wall_hint_pick', 'רמז בקיר אחרי בחירת נר', 2 ),
+					self::bi( 'textarea', 'wall_canvas', 'קיר הנרות — תיאור לקוראי מסך', 2, 'נקרא במקום הקנבס, ומסביר את מקשי הניווט.' ),
 					self::bi( 'text', 'light_mine', 'כפתור "להדליק נר משלי"' ),
 					self::bi( 'text', 'zoom_in', 'תווית כפתור הגדלה' ),
 					self::bi( 'text', 'zoom_out', 'תווית כפתור הקטנה' ),

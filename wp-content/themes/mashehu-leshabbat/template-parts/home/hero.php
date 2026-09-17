@@ -40,28 +40,39 @@ $msl_images = array_values(
 <section class="msl-hero" aria-labelledby="msl-hero-title">
 	<canvas class="msl-hero__halo" data-msl-canvas="halo" aria-hidden="true"></canvas>
 
-	<?php if ( array() !== $msl_images ) : ?>
-		<?php
-		/*
-		 * Decorative: the tiles carry no information the headline does not, so
-		 * they are hidden from assistive technology rather than read out eight
-		 * times. Each tile holds two stacked layers that cross-fade, so a pool
-		 * larger than eight cycles through the positions over time.
-		 */
-		?>
-		<div class="msl-collage" aria-hidden="true" data-msl-collage>
-			<?php foreach ( $msl_tiles as $msl_i => $msl_tile ) : ?>
-				<div class="msl-collage__tile msl-collage__tile--<?php echo esc_attr( $msl_tile['side'] ); ?>"
-					data-msl-tile="<?php echo esc_attr( (string) $msl_i ); ?>"
-					style="
-						--msl-tile-top:<?php echo esc_attr( (string) $msl_tile['top'] ); ?>px;
-						--msl-tile-inset:<?php echo esc_attr( (string) $msl_tile['inset'] ); ?>px;
-						--msl-tile-w:<?php echo esc_attr( (string) $msl_tile['w'] ); ?>px;
-						--msl-tile-rotate:<?php echo esc_attr( (string) $msl_tile['rotate'] ); ?>deg;
-						--msl-tile-radius:<?php echo esc_attr( (string) $msl_tile['radius'] ); ?>px;
-						--msl-tile-bob:<?php echo esc_attr( (string) $msl_tile['bob'] ); ?>s;
-						--msl-tile-delay:<?php echo esc_attr( (string) $msl_tile['delay'] ); ?>s;">
-					<div class="msl-collage__inner">
+	<?php
+	/*
+	 * Decorative: the tiles carry no information the headline does not, so
+	 * they are hidden from assistive technology rather than read out eight
+	 * times. Each tile holds two stacked layers that cross-fade, so a pool
+	 * larger than eight cycles through the positions over time.
+	 *
+	 * With no images uploaded the tiles still render, as empty portrait slots
+	 * in the design's own tints. The hero is built around the gutter they sit
+	 * in, and leaving it bare reads as a layout that failed to load rather
+	 * than as a section waiting for its photography.
+	 */
+	$msl_empty = array() === $msl_images;
+	?>
+	<div class="msl-collage<?php echo $msl_empty ? ' msl-collage--empty' : ''; ?>" aria-hidden="true"
+		data-msl-collage<?php echo $msl_empty ? ' data-msl-collage-empty' : ''; ?>>
+		<?php foreach ( $msl_tiles as $msl_i => $msl_tile ) : ?>
+			<div class="msl-collage__tile msl-collage__tile--<?php echo esc_attr( $msl_tile['side'] ); ?>"
+				data-msl-tile="<?php echo esc_attr( (string) $msl_i ); ?>"
+				style="
+					--msl-tile-top:<?php echo esc_attr( (string) $msl_tile['top'] ); ?>px;
+					--msl-tile-inset:<?php echo esc_attr( (string) $msl_tile['inset'] ); ?>px;
+					--msl-tile-w:<?php echo esc_attr( (string) $msl_tile['w'] ); ?>px;
+					--msl-tile-rotate:<?php echo esc_attr( (string) $msl_tile['rotate'] ); ?>deg;
+					--msl-tile-radius:<?php echo esc_attr( (string) $msl_tile['radius'] ); ?>px;
+					--msl-tile-bob:<?php echo esc_attr( (string) $msl_tile['bob'] ); ?>s;
+					--msl-tile-delay:<?php echo esc_attr( (string) $msl_tile['delay'] ); ?>s;">
+				<div class="msl-collage__inner">
+					<?php if ( $msl_empty ) : ?>
+						<div class="msl-collage__layer msl-collage__layer--slot is-on">
+							<?php msl_portrait_slot_svg(); ?>
+						</div>
+					<?php else : ?>
 						<?php foreach ( array( 0, 1 ) as $msl_layer ) : ?>
 							<?php
 							$msl_row = $msl_images[ ( $msl_i * 2 + $msl_layer ) % count( $msl_images ) ];
@@ -81,11 +92,11 @@ $msl_images = array_values(
 								?>
 							</div>
 						<?php endforeach; ?>
-					</div>
+					<?php endif; ?>
 				</div>
-			<?php endforeach; ?>
-		</div>
-	<?php endif; ?>
+			</div>
+		<?php endforeach; ?>
+	</div>
 
 	<div class="msl-hero__content">
 		<p class="msl-eyebrow">

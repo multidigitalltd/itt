@@ -156,38 +156,49 @@ final class MSL_Theme {
 		wp_localize_script( 'msl-a11y', 'mslA11y', self::a11y_data() );
 	}
 
+
 	/**
-	 * Which picture the candle wall forms this week.
+	 * The artworks the weekly rotation draws from, in order.
 	 *
-	 * The rotation is derived from the ISO week number rather than stored and
-	 * advanced, so it needs no cron, survives a missed week, and gives every
-	 * visitor the same picture no matter when their page was cached.
+	 * @var array<int, string>
+	 */
+	public const ARTWORKS = array( 'candles', 'star', 'menorah', 'tablets', 'kiddush', 'jerusalem', 'israel', 'light' );
+
+	/**
+	 * Which artwork this Shabbat is made of.
+	 *
+	 * The rotation is *derived* from the week number rather than stored and
+	 * advanced by a job: there is no cron to miss, a week that nobody visits
+	 * does not shift the order, and every visitor sees the same artwork however
+	 * long the page has been sitting in a cache. Picking a shape by name in the
+	 * editor pins that shape until it is set back to the rotation.
+	 *
+	 * The week is taken from the Shabbat the artwork belongs to, not from the
+	 * moment of the request, and a Shabbat keeps its own artwork while it is in:
+	 * the next one starts when Shabbat goes out, which is what the page says it
+	 * does. Keying it off the request instead would swap the shape on screen at
+	 * candle-lighting, halfway through the Shabbat it was made for.
 	 *
 	 * @param array<string, mixed> $campaign Resolved campaign section.
 	 * @return string
 	 */
-	public static function wall_shape( array $campaign ): string {
-		$forced = (string) ( $campaign['wall_shape_force'] ?? '' );
+	public static function artwork_kind( array $campaign ): string {
+		$chosen = (string) ( $campaign['artwork'] ?? 'rotate' );
 
-		if ( '' !== $forced && isset( MSL_Fields::WALL_SHAPES[ $forced ] ) ) {
-			return $forced;
+		if ( in_array( $chosen, self::ARTWORKS, true ) ) {
+			return $chosen;
 		}
 
-		$keys = array();
+		$next = self::candle_lighting( $campaign );
+		$last = $next - WEEK_IN_SECONDS;
 
-		foreach ( (array) ( $campaign['wall_shapes'] ?? array() ) as $row ) {
-			$key = is_array( $row ) ? (string) ( $row['shape'] ?? '' ) : '';
+		// Shabbat runs a little over 25 hours from candle-lighting to nightfall
+		// at the long end of the year, which is the figure to be generous with:
+		// erring late holds the right artwork, erring early swaps it too soon.
+		$shabbat = time() < $last + 25 * HOUR_IN_SECONDS ? $last : $next;
+		$week    = (int) wp_date( 'W', $shabbat );
 
-			if ( '' !== $key && isset( MSL_Fields::WALL_SHAPES[ $key ] ) ) {
-				$keys[] = $key;
-			}
-		}
-
-		if ( array() === $keys ) {
-			return 'full';
-		}
-
-		return $keys[ (int) gmdate( 'W', self::candle_lighting( $campaign ) ) % count( $keys ) ];
+		return self::ARTWORKS[ ( $week - 1 ) % count( self::ARTWORKS ) ];
 	}
 
 	/**
@@ -258,12 +269,11 @@ final class MSL_Theme {
 			),
 			'campaign'  => array(
 				'target'         => (int) $campaign['target'],
-				'artwork'        => (string) $campaign['artwork'],
+				'artwork'        => self::artwork_kind( $campaign ),
 				'accent'         => self::accent( (string) $campaign['accent'] ),
 				'candleLighting' => self::candle_lighting( $campaign ),
 				'closed'         => 1 === (int) $campaign['closed'],
 				'maxThings'      => MSL_Joins::MAX_THINGS,
-				'wallShape'      => self::wall_shape( $campaign ),
 			),
 			'stats'     => array(
 				'participants' => $stats['participants'],

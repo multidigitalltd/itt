@@ -494,7 +494,7 @@
 
 		if (next) { openOverlay(next); }
 
-		if (name === 'wall') { canvasEngine.resetWall(); resetWallCamera(); }
+		if (name === 'wall') { canvasEngine.resetWall(); }
 	}
 
 	/* ------------------------------------------------------------------
@@ -513,26 +513,8 @@
 		var wallHint = $('[data-msl-wall-hint]');
 
 		if (wallHint) {
-			wallHint.textContent = state.wallPick !== null
-				? t('screens.wall_hint_pick')
-				: (canvasEngine.state.wallZoom > 1 ? t('screens.wall_hint_pan') : t('screens.wall_hint'));
+			wallHint.textContent = state.wallPick !== null ? t('screens.wall_hint_pick') : t('screens.wall_hint');
 		}
-
-		var wallLevel = $('[data-msl-wall-level]');
-
-		if (wallLevel) { wallLevel.textContent = '×' + (canvasEngine.state.wallZoom || 1); }
-
-		var wallPanel = $('[data-msl-screen-panel="wall"]');
-
-		if (wallPanel) { wallPanel.classList.toggle('is-zoomed', (canvasEngine.state.wallZoom || 1) > 1); }
-
-		$$('[data-msl-wall-zoom]').forEach(function (button) {
-			var step = wallZoomStep();
-
-			button.disabled = button.dataset.mslWallZoom === 'in'
-				? step >= WALL_ZOOMS.length - 1
-				: step <= 0;
-		});
 
 		var level = $('[data-msl-zoom-level]');
 
@@ -540,45 +522,90 @@
 	}
 
 	/*
-	 * Owner details come from the server, in windows rather than one request per
-	 * click. A candle whose position predates the site has no record — the
-	 * campaign's earlier participants were counted, not catalogued — so it shows
-	 * no card at all rather than an invented name.
+	 * The artwork and the wall draw a fixed number of candles at any count: one
+	 * drawn candle stands for a slice of the participants, not for one of them.
+	 * So a click resolves to the *range* of people behind that candle, which is
+	 * also the only way a named participant stays reachable once the campaign
+	 * has passed six figures and the wall is still four hundred candles wide.
 	 */
-	function loadPieces(index, done) {
-		var window_ = 100;
-		var from = Math.max(0, Math.floor(index / window_) * window_);
+	function pieceWindow(index, drawn) {
+		var people = Math.max(1, canvasEngine.state.count || 0);
+		var span = Math.max(1, drawn);
+		var from = Math.max(0, Math.floor(index * people / span));
+		var to = Math.max(from, Math.floor((index + 1) * people / span) - 1);
 
-		if (state.pieces[from]) {
-			done(state.pieces[from][index] || null);
+		/* Trim a wide slice from its older end, not its newer one: the people
+		   with a name on file are the ones who joined most recently, and
+		   clipping the top of the range would hide every one of them. */
+		return { from: Math.max(from, to - 499), to: to };
+	}
+
+	/* A named participant in the slice is the one worth showing; failing that,
+	   any record at all; failing that, none, and the card says so. */
+	function pickFrom(pieces) {
+		var keys = pieces ? Object.keys(pieces) : [];
+		var i;
+
+		for (i = 0; i < keys.length; i++) {
+			if (pieces[keys[i]] && pieces[keys[i]].name) { return pieces[keys[i]]; }
+		}
+
+		return keys.length ? pieces[keys[0]] : null;
+	}
+
+	/*
+	 * Owner details come from the server, one request per slice, cached so that
+	 * clicking back and forth between two candles is not two requests each time.
+	 */
+	function loadPieces(win, done) {
+		var key = win.from + ':' + win.to;
+
+		if (Object.prototype.hasOwnProperty.call(state.pieces, key)) {
+			done(state.pieces[key]);
 			return;
 		}
 
-		window.fetch(config.rest.pieces + '?from=' + from + '&to=' + (from + window_ - 1), { credentials: 'same-origin' })
+		window.fetch(config.rest.pieces + '?from=' + win.from + '&to=' + win.to, { credentials: 'same-origin' })
 			.then(function (r) { return r.ok ? r.json() : null; })
 			.then(function (data) {
-				state.pieces[from] = (data && data.pieces) || {};
-				done(state.pieces[from][index] || null);
+				state.pieces[key] = pickFrom(data && data.pieces);
+				done(state.pieces[key]);
 			})
 			.catch(function () { done(null); });
 	}
 
+	function hidePick(container) {
+		if (container) { container.hidden = true; }
+	}
+
+	/*
+	 * Every lit candle belongs to somebody, but not every one of them has a name
+	 * on file: the count the campaign arrived with was counted rather than
+	 * catalogued, and participants may also choose to stay unnamed. Those
+	 * candles still answer the click — a click that does nothing reads as broken,
+	 * which is exactly what an empty card looked like.
+	 */
 	function showPick(container, person) {
 		if (!container) { return; }
 
-		if (!person || (!person.name && !person.thing)) {
-			container.hidden = true;
-			return;
-		}
-
 		var name = $('[data-msl-pick-name]', container);
 		var sub = $('[data-msl-pick-sub]', container);
+		var label;
+		var detail;
 
-		if (name) { name.textContent = person.name || ''; }
-
-		if (sub) {
-			sub.textContent = [person.place, person.thing].filter(Boolean).join(' · ');
+		if (person && person.name) {
+			label = person.name;
+			detail = [person.place, person.thing].filter(Boolean).join(' · ');
+		} else if (person) {
+			label = t('screens.pick_anon');
+			detail = person.thing || t('screens.pick_anon_sub');
+		} else {
+			label = t('screens.pick_none');
+			detail = t('screens.pick_none_sub');
 		}
+
+		if (name) { name.textContent = label; }
+		if (sub) { sub.textContent = detail; }
 
 		container.hidden = false;
 	}
@@ -629,18 +656,10 @@
 
 			var index = canvasEngine.artHitIndex(cv, event.clientX, event.clientY);
 
-			if (index === null) {
+			if (index === null || state.artPick === index) {
 				state.artPick = null;
 				canvasEngine.setState({ artPick: null });
-				showPick($('[data-msl-art-pick]'), null);
-				renderHints();
-				return;
-			}
-
-			if (state.artPick === index) {
-				state.artPick = null;
-				canvasEngine.setState({ artPick: null });
-				showPick($('[data-msl-art-pick]'), null);
+				hidePick($('[data-msl-art-pick]'));
 				renderHints();
 				return;
 			}
@@ -653,8 +672,8 @@
 				artZ: canvasEngine.state.artZ === 0 ? 1 : canvasEngine.state.artZ
 			});
 
-			loadPieces(index, function (person) {
-				showPick($('[data-msl-art-pick]'), person);
+			loadPieces(pieceWindow(index, canvasEngine.litCount()), function (person) {
+				if (state.artPick === index) { showPick($('[data-msl-art-pick]'), person); }
 			});
 
 			renderHints();
@@ -675,7 +694,7 @@
 
 					if (next === 0) {
 						state.artPick = null;
-						showPick($('[data-msl-art-pick]'), null);
+						hidePick($('[data-msl-art-pick]'));
 					}
 				}
 
@@ -684,89 +703,18 @@
 		});
 	}
 
-	/*
-	 * The wall camera.
-	 *
-	 * Zoom is stepped rather than continuous so the keyboard, the buttons and
-	 * the wheel all land on the same set of views, and so the level readout is
-	 * a number a person can say out loud. Zooming keeps whatever is under the
-	 * pointer under the pointer — anchoring to the centre instead makes the
-	 * candle you were aiming at slide away as you approach it.
-	 */
-	var WALL_ZOOMS = [1, 2, 3.5, 6, 10, 16];
-
-	function wallZoomStep() {
-		var z = canvasEngine.state.wallZoom || 1;
-		var i, best = 0;
-
-		for (i = 0; i < WALL_ZOOMS.length; i++) {
-			if (Math.abs(WALL_ZOOMS[i] - z) < Math.abs(WALL_ZOOMS[best] - z)) { best = i; }
-		}
-
-		return best;
-	}
-
-	function setWallZoom(step, anchorX, anchorY) {
-		var cv = $('[data-msl-wall-surface]');
-
-		if (!cv) { return; }
-
-		var next = WALL_ZOOMS[Math.max(0, Math.min(WALL_ZOOMS.length - 1, step))];
-		var rc = cv.getBoundingClientRect();
-		var before = canvasEngine.wallGeom(rc.width, rc.height, false);
-		var sx = typeof anchorX === 'number' ? anchorX - rc.left : rc.width / 2;
-		var sy = typeof anchorY === 'number' ? anchorY - rc.top : rc.height / 2;
-		var wx = (sx - before.ox) / before.cw;
-		var wy = (sy - before.oy) / before.ch;
-		var ratio = next / before.zoom;
-		var cw = before.cw * ratio;
-		var ch = before.ch * ratio;
-
-		canvasEngine.setState({
-			wallZoom: next,
-			wallPanX: (rc.width - before.cols * cw) / 2 - sx + wx * cw,
-			wallPanY: (rc.height - before.rows * ch) / 2 - sy + wy * ch
-		});
-
-		renderHints();
-	}
-
-	function panWall(dx, dy) {
-		canvasEngine.setState({
-			wallPanX: (canvasEngine.state.wallPanX || 0) + dx,
-			wallPanY: (canvasEngine.state.wallPanY || 0) + dy
-		});
-	}
-
-	function resetWallCamera() {
-		canvasEngine.setState({
-			wallZoom: 1,
-			wallPanX: 0,
-			wallPanY: 0,
-			wallShape: config.campaign.wallShape || 'full',
-			wallPick: null
-		});
-
-		state.wallPick = null;
-		showPick($('[data-msl-wall-pick]'), null);
-	}
-
 	function bindWall() {
 		var cv = $('[data-msl-wall-surface]');
 
 		if (!cv) { return; }
 
-		var drag = null;
+		cv.addEventListener('click', function (event) {
+			var index = canvasEngine.wallHitIndex(cv, event.clientX, event.clientY);
 
-		function pick(clientX, clientY) {
-			var index = canvasEngine.wallHitIndex(cv, clientX, clientY);
-
-			/* Outside the shape, or the same candle again: put the card away
-			   rather than leaving a stale name on screen. */
 			if (index === null || state.wallPick === index) {
 				state.wallPick = null;
 				canvasEngine.setState({ wallPick: null });
-				showPick($('[data-msl-wall-pick]'), null);
+				hidePick($('[data-msl-wall-pick]'));
 				renderHints();
 				return;
 			}
@@ -774,69 +722,11 @@
 			state.wallPick = index;
 			canvasEngine.setState({ wallPick: index });
 
-			loadPieces(index, function (person) {
-				showPick($('[data-msl-wall-pick]'), person);
+			loadPieces(pieceWindow(index, canvasEngine.wallLitCount(cv)), function (person) {
+				if (state.wallPick === index) { showPick($('[data-msl-wall-pick]'), person); }
 			});
 
 			renderHints();
-		}
-
-		cv.addEventListener('pointerdown', function (event) {
-			drag = { x: event.clientX, y: event.clientY, moved: 0, id: event.pointerId };
-
-			if (cv.setPointerCapture) { cv.setPointerCapture(event.pointerId); }
-		});
-
-		cv.addEventListener('pointermove', function (event) {
-			if (!drag || drag.id !== event.pointerId) { return; }
-
-			var dx = event.clientX - drag.x;
-			var dy = event.clientY - drag.y;
-
-			drag.moved += Math.abs(dx) + Math.abs(dy);
-			drag.x = event.clientX;
-			drag.y = event.clientY;
-
-			if (canvasEngine.state.wallZoom > 1) { panWall(-dx, -dy); }
-		});
-
-		cv.addEventListener('pointerup', function (event) {
-			if (!drag || drag.id !== event.pointerId) { return; }
-
-			/* A few pixels of travel is a click with an unsteady hand, not a
-			   drag — picking on any movement at all makes the wall feel like
-			   it is ignoring taps. */
-			if (drag.moved < 6) { pick(event.clientX, event.clientY); }
-
-			drag = null;
-		});
-
-		cv.addEventListener('pointercancel', function () { drag = null; });
-
-		cv.addEventListener('wheel', function (event) {
-			event.preventDefault();
-			setWallZoom(wallZoomStep() + (event.deltaY < 0 ? 1 : -1), event.clientX, event.clientY);
-		}, { passive: false });
-
-		cv.addEventListener('keydown', function (event) {
-			var G = canvasEngine.wallCamera(cv);
-			var nudge = 60;
-
-			if (event.key === '+' || event.key === '=') { setWallZoom(wallZoomStep() + 1); }
-			else if (event.key === '-' || event.key === '_') { setWallZoom(wallZoomStep() - 1); }
-			else if (event.key === 'ArrowLeft' && G.zoom > 1) { panWall(-nudge, 0); }
-			else if (event.key === 'ArrowRight' && G.zoom > 1) { panWall(nudge, 0); }
-			else if (event.key === 'ArrowUp' && G.zoom > 1) { panWall(0, -nudge); }
-			else if (event.key === 'ArrowDown' && G.zoom > 1) { panWall(0, nudge); }
-			else { return; }
-
-			event.preventDefault();
-		});
-
-		$$('[data-msl-wall-zoom]').forEach(function (button) {
-			button.addEventListener('click', function () {
-				setWallZoom(wallZoomStep() + (button.dataset.mslWallZoom === 'in' ? 1 : -1));
-			});
 		});
 	}
 
@@ -1323,7 +1213,6 @@
 			count: state.participants,
 			accent: config.campaign.accent,
 			artwork: config.campaign.artwork,
-			wallShape: config.campaign.wallShape || 'full',
 			mapData: config.mapData,
 			mapPoints: config.mapPoints,
 			still: reduceMotion

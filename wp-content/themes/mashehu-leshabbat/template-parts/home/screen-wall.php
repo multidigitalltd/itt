@@ -16,9 +16,7 @@ $msl_stats   = MSL_Stats::all( (int) get_the_ID() );
 <div class="msl-screen msl-screen--wall" data-msl-screen-panel="wall" role="dialog" aria-modal="true"
 	aria-labelledby="msl-wall-title" hidden>
 
-	<canvas class="msl-screen__canvas" data-msl-canvas="wall" data-msl-wall-surface
-		tabindex="0" role="application"
-		aria-label="<?php echo esc_attr( msl_t( $msl_screens, 'wall_canvas' ) ); ?>"></canvas>
+	<canvas class="msl-screen__canvas" data-msl-canvas="wall" data-msl-wall-surface aria-hidden="true"></canvas>
 
 	<div class="msl-screen__top">
 		<button type="button" class="msl-btn msl-btn--light msl-back" data-msl-goto="home"
@@ -31,14 +29,6 @@ $msl_stats   = MSL_Stats::all( (int) get_the_ID() );
 		</div>
 
 		<div class="msl-screen__spacer" aria-hidden="true"></div>
-	</div>
-
-	<div class="msl-zoom">
-		<button type="button" class="msl-zoom__btn" data-msl-wall-zoom="in"
-			aria-label="<?php echo esc_attr( msl_t( $msl_screens, 'zoom_in' ) ); ?>"><span aria-hidden="true">+</span></button>
-		<button type="button" class="msl-zoom__btn" data-msl-wall-zoom="out"
-			aria-label="<?php echo esc_attr( msl_t( $msl_screens, 'zoom_out' ) ); ?>"><span aria-hidden="true">−</span></button>
-		<p class="msl-zoom__level" data-msl-wall-level aria-live="polite">×1</p>
 	</div>
 
 	<div class="msl-screen__bottom">

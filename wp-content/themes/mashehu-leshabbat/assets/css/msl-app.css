@@ -2394,31 +2394,6 @@
 	background: var(--msl-zoom-sep);
 }
 
-/*
- * At either end of the range the button stays in place and stops responding,
- * rather than disappearing — a control that vanishes moves the one below it
- * under the cursor mid-click.
- */
-.msl-zoom__btn:disabled {
-	opacity: 0.4;
-	cursor: default;
-}
-
-.msl-zoom__btn:disabled:hover {
-	background: var(--msl-zoom-bg);
-}
-
-/* The wall reads as a surface you can take hold of only once there is
-   somewhere to drag it to. */
-[data-msl-wall-surface] {
-	cursor: pointer;
-	touch-action: none;
-}
-
-.msl-screen--wall.is-zoomed [data-msl-wall-surface] {
-	cursor: grab;
-}
-
 .msl-zoom__level {
 	block-size: 34px;
 	display: flex;

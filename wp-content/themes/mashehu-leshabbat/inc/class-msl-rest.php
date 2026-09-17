@@ -184,8 +184,10 @@ final class MSL_REST {
 	 */
 	public static function pieces( WP_REST_Request $request ): WP_REST_Response {
 		$page_id = MSL_Importer::page_id();
-		$from    = (int) $request->get_param( 'from' );
-		$to      = min( $from + 500, (int) $request->get_param( 'to' ) );
+		$to      = (int) $request->get_param( 'to' );
+		// Bounded at 501 positions, trimmed from the older end so that the most
+		// recent joins in the window are the ones that survive the trim.
+		$from    = max( (int) $request->get_param( 'from' ), $to - 500 );
 
 		return new WP_REST_Response(
 			array( 'pieces' => MSL_Joins::pieces( $page_id, MSL_Meta::get( 'join', $page_id ), $from, $to ) )

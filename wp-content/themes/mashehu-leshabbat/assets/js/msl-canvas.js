@@ -31,10 +31,6 @@ window.MSLCanvas = (function () {
 		artZ: 0,
 		artPick: null,
 		wallPick: null,
-		wallShape: 'full',
-		wallZoom: 1,
-		wallPanX: 0,
-		wallPanY: 0,
 		fx: 0.5,
 		fy: 0.38,
 		still: false
@@ -54,6 +50,9 @@ window.MSLCanvas = (function () {
 	var flares = [];
 	var wallSeen = null;
 	var wallExtra = 0;
+	/* The share of the wall that is alight before this session's joins. Tuned
+	   in design: a full wall has nothing left to fill in. */
+	var WALL_DENSITY = 0.74;
 
 	var wow = null;
 	var raf = null;
@@ -135,14 +134,168 @@ window.MSLCanvas = (function () {
 	 * The particle field
 	 * --------------------------------------------------------------- */
 
+	/*
+	 * Primitives shared by every artwork. They are all strokes — arcs, segments
+	 * and thin bands — because that is what the two Shabbat candles are, and a
+	 * shape that fills an area instead reads as a different piece of software.
+	 * Nothing here is wider than a few grid cells.
+	 */
+
+	/* Distance from a point to a segment, for stroking straight runs. */
+	function segDist(x, y, x0, y0, x1, y1) {
+		var vx = x1 - x0;
+		var vy = y1 - y0;
+		var L = vx * vx + vy * vy;
+		var t = 0 === L ? 0 : Math.max(0, Math.min(1, ((x - x0) * vx + (y - y0) * vy) / L));
+
+		return Math.hypot(x - (x0 + t * vx), y - (y0 + t * vy));
+	}
+
+	function onSeg(x, y, x0, y0, x1, y1, half) {
+		return segDist(x, y, x0, y0, x1, y1) <= half;
+	}
+
+	/* Stroke a run of points. `closed` joins the last back to the first. */
+	function onPath(x, y, pts, half, closed) {
+		var n = pts.length;
+		var last = closed ? n : n - 1;
+		var i, a, b;
+
+		for (i = 0; i < last; i++) {
+			a = pts[i];
+			b = pts[(i + 1) % n];
+
+			if (segDist(x, y, a[0], a[1], b[0], b[1]) <= half) { return true; }
+		}
+
+		return false;
+	}
+
+	/* An arc band. Angles run anticlockwise from east, with y measured down the
+	   canvas, so 0 is right, PI/2 is straight up and PI is left. */
+	function onArc(x, y, cx, cy, rr, half, a0, a1) {
+		var a;
+
+		if (Math.abs(Math.hypot(x - cx, y - cy) - rr) > half) { return false; }
+
+		a = Math.atan2(cy - y, x - cx);
+
+		if (a < 0) { a += TAU; }
+
+		return a >= a0 && a <= a1;
+	}
+
+	/* The teardrop the two Shabbat candles use, so that a menorah's lamp and a
+	   candlestick's light are recognisably the same flame. */
+	function flame(x, y, cx, top, h, w) {
+		var t = (y - top) / h;
+
+		if (t <= 0 || t > 1) { return null; }
+
+		return Math.abs(x - cx) <= w * Math.sin(Math.PI * Math.pow(t, 0.72))
+			? { heat: 1 - 0.30 * t }
+			: null;
+	}
+
+	/* The sparse haze that gives a flame something to sit on. */
+	function haze(x, y, cx, cy, inner, outer, peak, r) {
+		var d = Math.hypot(x - cx, (y - cy) * 1.05);
+		var f;
+
+		if (d > inner && d < outer) {
+			f = 1 - (d - inner) / (outer - inner);
+
+			if (r() < peak * Math.pow(f, 1.6) + 0.03) { return { heat: 0.5 * f }; }
+		}
+
+		return null;
+	}
+
+	/* Is a point inside a closed path? Even-odd crossing count. */
+	function inPath(x, y, pts) {
+		var n = pts.length;
+		var inside = false;
+		var i, j;
+
+		for (i = 0, j = n - 1; i < n; j = i++) {
+			if ((pts[i][1] > y) !== (pts[j][1] > y) &&
+				x < (pts[j][0] - pts[i][0]) * (y - pts[i][1]) / (pts[j][1] - pts[i][1]) + pts[i][0]) {
+				inside = !inside;
+			}
+		}
+
+		return inside;
+	}
+
+	/*
+	 * The coastline and the eastern valley, in degrees, traced clockwise from
+	 * the northern tip. Kept as degrees and projected on first use: a list of
+	 * pre-projected numbers would be unreadable and impossible to correct.
+	 */
+	var ISRAEL_DEG = [
+		[33.28, 35.57], [33.00, 35.62], [32.70, 35.57], [32.40, 35.55],
+		[32.10, 35.56], [31.80, 35.53], [31.50, 35.47], [31.10, 35.45],
+		[30.90, 35.35], [30.40, 35.13], [30.00, 35.08], [29.55, 34.98],
+		[29.49, 34.92], [29.80, 34.86], [30.10, 34.78], [30.40, 34.65],
+		[30.70, 34.52], [30.95, 34.35], [31.22, 34.25], [31.66, 34.55],
+		[31.80, 34.63], [32.08, 34.76], [32.32, 34.84], [32.55, 34.90],
+		[32.83, 34.96], [33.09, 35.10], [33.11, 35.30]
+	];
+
+	/* Jerusalem, which is where the artwork's one flame stands. */
+	var JERUSALEM_DEG = [31.78, 35.22];
+
+	var israelPts = null;
+	var israelMarkPt = null;
+
+	function israelProject() {
+		if (israelPts) { return; }
+
+		/* Longitude is scaled by cos(latitude) so the land is not stretched
+		   sideways, then the whole outline is fitted to the square. */
+		var K = Math.cos(31.4 * RAD);
+		var flat = function (p) { return [p[1] * K, -p[0]]; };
+		var raw = ISRAEL_DEG.map(flat);
+		var xs = raw.map(function (p) { return p[0]; });
+		var ys = raw.map(function (p) { return p[1]; });
+		var x0 = Math.min.apply(null, xs);
+		var y0 = Math.min.apply(null, ys);
+		var sc = 0.80 / Math.max(Math.max.apply(null, xs) - x0, Math.max.apply(null, ys) - y0);
+		var w = (Math.max.apply(null, xs) - x0) * sc;
+		var h = (Math.max.apply(null, ys) - y0) * sc;
+		var place = function (p) {
+			return [(1 - w) / 2 + (p[0] - x0) * sc, (1 - h) / 2 + (p[1] - y0) * sc];
+		};
+
+		israelPts = raw.map(place);
+		israelMarkPt = place(flat(JERUSALEM_DEG));
+	}
+
+	function israelOutline() {
+		israelProject();
+
+		return israelPts;
+	}
+
+	function israelMark() {
+		israelProject();
+
+		return israelMarkPt;
+	}
+
+	/* The faintest scatter over the whole field. Every artwork ends on it. */
+	function dust(y, r) {
+		return y > 0.10 && y < 0.95 && r() < 0.014 ? { heat: 0.12 } : null;
+	}
+
 	/* Which of the artwork's shapes a given normalised point belongs to, and how
 	   hot it is there. Heat drives both the sprite chosen and the size, which is
 	   what makes the flames read as flames rather than as a uniform dot field. */
 	function mask(kind, x, y, r) {
-		var cs, i, cx, dx, t, w, d, f, a, step, k;
+		var cs, i, cx, dx, t, w, d, f, a, step, k, R, m;
 
 		if (kind === 'star') {
-			var R = 0.36;
+			R = 0.36;
 			var scx = 0.5;
 			var scy = 0.5;
 			var band = 0.018;
@@ -196,6 +349,177 @@ window.MSLCanvas = (function () {
 			if (d > 0.16 && d < 0.40 && r() < 0.10) { return { heat: 0.28 }; }
 
 			return null;
+		}
+
+		/*
+		 * A seven-branch menorah. Each arm is a quarter circle whose tangents
+		 * meet the stem and the lamp line square on, so the curve leaves the
+		 * stem and arrives under its lamp without a corner at either end. The
+		 * arms are spread wide on purpose: at three lamps a side, any narrower
+		 * and the seven flames blur into one bar.
+		 */
+		if (kind === 'menorah') {
+			var mTop = 0.400;
+			var arms = [0.115, 0.230, 0.345];
+			var lamps = [0.5];
+
+			for (i = 0; i < arms.length; i++) {
+				R = arms[i];
+				lamps.push(0.5 - R, 0.5 + R);
+
+				if (onArc(x, y, 0.5 - R, mTop + R, R, 0.016, 0, Math.PI / 2)) { return { heat: 0.40 }; }
+				if (onArc(x, y, 0.5 + R, mTop + R, R, 0.016, Math.PI / 2, Math.PI)) { return { heat: 0.40 }; }
+			}
+
+			for (i = 0; i < lamps.length; i++) {
+				m = flame(x, y, lamps[i], 0.285, 0.100, 0.017);
+
+				if (m) { return m; }
+
+				/* The lamp: a shallow cup holding up each flame. */
+				if (Math.abs(x - lamps[i]) <= 0.030 && y >= 0.392 && y <= 0.418) { return { heat: 0.55 }; }
+			}
+
+			if (Math.abs(x - 0.5) <= 0.022 && y > mTop && y < 0.800) { return { heat: 0.36 }; }
+			if (y >= 0.800 && y <= 0.868 && Math.abs(x - 0.5) <= 0.022 + ((y - 0.800) / 0.068) * 0.105) { return { heat: 0.24 }; }
+			if (Math.abs(y - 0.884) <= 0.014 && Math.abs(x - 0.5) <= 0.170) { return { heat: 0.20 }; }
+
+			for (i = 0; i < lamps.length; i++) {
+				m = haze(x, y, lamps[i], 0.330, 0.050, 0.145, 0.20, r);
+
+				if (m) { return m; }
+			}
+
+			return dust(y, r);
+		}
+
+		/* The two tablets. The writing is deliberately broken up: solid rules
+		   would read as a ledger, and these are meant to read as letters. */
+		if (kind === 'tablets') {
+			var tabs = [[0.190, 0.470], [0.530, 0.810]];
+
+			for (i = 0; i < tabs.length; i++) {
+				var tx0 = tabs[i][0];
+				var tx1 = tabs[i][1];
+				cx = (tx0 + tx1) / 2;
+				R = (tx1 - tx0) / 2;
+
+				if (onArc(x, y, cx, 0.365, R, 0.016, 0, Math.PI)) { return { heat: 0.42 }; }
+				if (onSeg(x, y, tx0, 0.365, tx0, 0.820, 0.016)) { return { heat: 0.38 }; }
+				if (onSeg(x, y, tx1, 0.365, tx1, 0.820, 0.016)) { return { heat: 0.38 }; }
+				if (onSeg(x, y, tx0, 0.820, tx1, 0.820, 0.016)) { return { heat: 0.32 }; }
+
+				for (k = 0; k < 5; k++) {
+					t = 0.450 + k * 0.072;
+
+					if (Math.abs(y - t) <= 0.010 && x > tx0 + 0.048 && x < tx1 - 0.048 && r() < 0.58) {
+						return { heat: 0.26 };
+					}
+				}
+			}
+
+			m = haze(x, y, 0.5, 0.320, 0.150, 0.340, 0.15, r);
+
+			if (m) { return m; }
+
+			return dust(y, r);
+		}
+
+		/* The kiddush cup: bowl, rim, the wine just under it, stem, knop, and a
+		   foot that flares to the bar it stands on. */
+		if (kind === 'kiddush') {
+			var rim = 0.300;
+			var bowl = 0.175;
+
+			if (onArc(x, y, 0.5, rim, bowl, 0.016, Math.PI, TAU)) { return { heat: 0.42 }; }
+			if (Math.abs(y - rim) <= 0.013 && Math.abs(x - 0.5) <= bowl) { return { heat: 0.52 }; }
+
+			/* Wine: a band inside the bowl, warmer than the vessel holding it. */
+			if (y > rim + 0.016 && y < rim + 0.060 && Math.abs(x - 0.5) <= bowl - 0.034) { return { heat: 0.70 }; }
+
+			if (Math.abs(x - 0.5) <= 0.019 && y > 0.462 && y < 0.778) { return { heat: 0.36 }; }
+			if (Math.abs(y - 0.610) <= 0.021 && Math.abs(x - 0.5) <= 0.046) { return { heat: 0.44 }; }
+			if (onSeg(x, y, 0.519, 0.778, 0.646, 0.834, 0.014)) { return { heat: 0.26 }; }
+			if (onSeg(x, y, 0.481, 0.778, 0.354, 0.834, 0.014)) { return { heat: 0.26 }; }
+			if (Math.abs(y - 0.842) <= 0.014 && Math.abs(x - 0.5) <= 0.152) { return { heat: 0.30 }; }
+
+			m = haze(x, y, 0.5, 0.255, 0.070, 0.235, 0.24, r);
+
+			if (m) { return m; }
+
+			return dust(y, r);
+		}
+
+		/* Jerusalem, from the west: the wall it stands behind, the dome on its
+		   drum, and the two towers that frame it. The wall is a mass rather than
+		   an outline — an outlined rectangle reads as a box, not as stone. */
+		if (kind === 'jerusalem') {
+			var wallTop = 0.720;
+
+			if (y > wallTop && y < 0.848 && x > 0.100 && x < 0.900 && r() < 0.70) { return { heat: 0.22 }; }
+
+			/* Crenellations, on top of the wall rather than cut into it: a
+			   block every 0.0667 across, with a real gap between them. */
+			if (y > 0.652 && y <= wallTop && x > 0.100 && x < 0.900) {
+				t = (x - 0.117) / 0.0667;
+
+				if (Math.abs(t - Math.round(t)) < 0.27) { return { heat: 0.34 }; }
+			}
+
+			if (Math.abs(y - wallTop) <= 0.011 && x > 0.100 && x < 0.900) { return { heat: 0.36 }; }
+
+			/* The dome, its drum, and the light standing on it. */
+			if (onArc(x, y, 0.500, 0.556, 0.152, 0.018, 0, Math.PI)) { return { heat: 0.58 }; }
+			if (onSeg(x, y, 0.348, 0.556, 0.348, wallTop, 0.016)) { return { heat: 0.40 }; }
+			if (onSeg(x, y, 0.652, 0.556, 0.652, wallTop, 0.016)) { return { heat: 0.40 }; }
+			if (Math.abs(y - 0.556) <= 0.012 && Math.abs(x - 0.5) <= 0.152) { return { heat: 0.36 }; }
+			if (Math.abs(x - 0.5) <= 0.017 && y > 0.352 && y < 0.410) { return { heat: 0.50 }; }
+
+			m = flame(x, y, 0.5, 0.250, 0.104, 0.019);
+
+			if (m) { return m; }
+
+			/* Two towers, one domed and one spired, so the skyline is not
+			   symmetrical about the dome. */
+			if (onPath(x, y, [[0.160, wallTop], [0.160, 0.462], [0.262, 0.462], [0.262, wallTop]], 0.017, false)) { return { heat: 0.38 }; }
+			if (onArc(x, y, 0.211, 0.462, 0.051, 0.017, 0, Math.PI)) { return { heat: 0.44 }; }
+			if (onPath(x, y, [[0.738, wallTop], [0.738, 0.446], [0.840, 0.446], [0.840, wallTop]], 0.017, false)) { return { heat: 0.38 }; }
+			/* A diagonal is the thinnest thing on the grid, so the spire is
+			   stroked wider than the walls to survive rasterising at N. */
+			if (onPath(x, y, [[0.724, 0.450], [0.789, 0.362], [0.854, 0.450]], 0.019, false)) { return { heat: 0.44 }; }
+
+			m = haze(x, y, 0.5, 0.330, 0.100, 0.290, 0.16, r);
+
+			if (m) { return m; }
+
+			return dust(y, r);
+		}
+
+		/* The land, as one outline from the sea to the valley, with Jerusalem
+		   alight inside it. The coordinates are kept as degrees and projected on
+		   first use: a list of pre-projected numbers could never be corrected. */
+		if (kind === 'israel') {
+			var pts = israelOutline();
+			var mk = israelMark();
+
+			if (onPath(x, y, pts, 0.016, true)) { return { heat: 0.44 }; }
+
+			m = flame(x, y, mk[0], mk[1] - 0.098, 0.086, 0.016);
+
+			if (m) { return m; }
+
+			if (Math.abs(x - mk[0]) <= 0.016 && Math.abs(y - mk[1]) <= 0.010) { return { heat: 0.55 }; }
+
+			/* A tight glow only: a wide one would draw a ring around the mark
+			   and the ring would read as part of the map. */
+			m = haze(x, y, mk[0], mk[1] - 0.050, 0.030, 0.105, 0.22, r);
+
+			if (m) { return m; }
+
+			/* A thin scatter inside the outline, so the land is not hollow. */
+			if (inPath(x, y, pts) && r() < 0.042) { return { heat: 0.16 }; }
+
+			return dust(y, r);
 		}
 
 		/* Two Shabbat candles: flame, wick, body, the flare of the stick, base. */
@@ -577,11 +901,14 @@ window.MSLCanvas = (function () {
 		var F = artFrame(rc.width, rc.height);
 		var ax = (clientX - rc.left - rc.width / 2) / F.Z + (F.ox + F.fx * F.S);
 		var ay = (clientY - rc.top - rc.height / 2) / F.Z + (F.oy + F.fy * F.S);
+		var lit = litCount(0);
 		var best = -1;
 		var bd = 1e9;
 		var i, c, px, py, d;
 
-		for (i = 0; i < cells.length; i++) {
+		/* Only cells that are alight stand for a person. The rest of the grid
+		   is the artwork waiting to be filled. */
+		for (i = 0; i < lit; i++) {
 			c = cells[i];
 			px = F.ox + c.nx * F.S + c.jx * F.cell;
 			py = F.oy + c.ny * F.S + c.jy * F.cell;
@@ -595,307 +922,21 @@ window.MSLCanvas = (function () {
 
 	/* ------------------------------------------------------------------
 	 * The candle wall
-	 * ---------------------------------------------------------------
-	 *
-	 * The wall is a picture made of candles. Each week the campaign picks a
-	 * shape — a star, a menorah, the map of Israel — and the lit candles fill
-	 * that shape instead of a plain rectangle.
-	 *
-	 * Two things have to be true at the same time and they pull against each
-	 * other: the whole picture has to read at a glance, and one candle has to
-	 * be reachable so you can see who lit it. So the wall keeps a single grid
-	 * for identity, stable at every zoom, and changes only how that grid is
-	 * *drawn*: far out it is a cached image of the shape, close in it is real
-	 * candles culled to the viewport. Nothing else would hold 130,000 of them
-	 * at sixty frames a second.
-	 */
+	 * --------------------------------------------------------------- */
 
-	var WALL_COLS = 132;          /* identity grid — never changes with zoom */
-	var WALL_ROWS = 88;
-	var WALL_MIN_ZOOM = 1;
-	var WALL_MAX_ZOOM = 16;
-	var WALL_DETAIL_PX = 11;      /* cell size at which real candles start   */
-
-	/*
-	 * Shapes are predicates over normalised space rather than path data: a few
-	 * lines of arithmetic each, exact at any raster size, and nothing to ship
-	 * or to keep in sync with a design file. u and v both run 0..1, v down.
-	 */
-	function inTriangle(u, v, ax, ay, bx, by, cx, cy) {
-		var d1 = (u - bx) * (ay - by) - (ax - bx) * (v - by);
-		var d2 = (u - cx) * (by - cy) - (bx - cx) * (v - cy);
-		var d3 = (u - ax) * (cy - ay) - (cx - ax) * (v - ay);
-		var neg = (d1 < 0) || (d2 < 0) || (d3 < 0);
-		var pos = (d1 > 0) || (d2 > 0) || (d3 > 0);
-
-		return !(neg && pos);
-	}
-
-	function inBox(u, v, x0, y0, x1, y1) {
-		return u >= x0 && u <= x1 && v >= y0 && v <= y1;
-	}
-
-	function inEllipse(u, v, cx, cy, rx, ry) {
-		var dx = (u - cx) / rx;
-		var dy = (v - cy) / ry;
-
-		return dx * dx + dy * dy <= 1;
-	}
-
-	/* A stroked arc: distance to the centre within a band, inside a quadrant. */
-	function onArc(u, v, cx, cy, r, band, keepU, keepV) {
-		var d = Math.sqrt((u - cx) * (u - cx) + (v - cy) * (v - cy));
-
-		if (Math.abs(d - r) > band) { return false; }
-		if (keepU < 0 && u > cx) { return false; }
-		if (keepU > 0 && u < cx) { return false; }
-		if (keepV < 0 && v > cy) { return false; }
-
-		return true;
-	}
-
-	function inPolygon(u, v, pts) {
-		var inside = false;
-		var i, j;
-
-		for (i = 0, j = pts.length - 2; i < pts.length; j = i, i += 2) {
-			var xi = pts[i];
-			var yi = pts[i + 1];
-			var xj = pts[j];
-			var yj = pts[j + 1];
-
-			if ((yi > v) !== (yj > v) && u < (xj - xi) * (v - yi) / (yj - yi) + xi) {
-				inside = !inside;
-			}
-		}
-
-		return inside;
-	}
-
-	/* The simplified coastline and borders of Israel, traced coarsely: at the
-	   grid sizes the wall draws, anything finer is lost anyway. */
-	var ISRAEL = [
-		0.47, 0.02, 0.60, 0.05, 0.62, 0.12, 0.57, 0.18, 0.60, 0.24, 0.66, 0.30,
-		0.64, 0.38, 0.58, 0.44, 0.55, 0.52, 0.58, 0.60, 0.54, 0.70, 0.50, 0.82,
-		0.46, 0.96, 0.40, 0.98, 0.34, 0.86, 0.33, 0.70, 0.36, 0.58, 0.33, 0.50,
-		0.30, 0.40, 0.33, 0.30, 0.36, 0.20, 0.40, 0.10
-	];
-
-	var WALL_SHAPES = {
-		/* A full rectangle: the wall as it was before the picture existed. */
-		full: function () { return true; },
-
-		star: function (u, v) {
-			var R = 0.44;
-			var cx = 0.5;
-			var cy = 0.5;
-			var up = inTriangle(
-				u, v,
-				cx, cy - R,
-				cx - R * 0.866, cy + R * 0.5,
-				cx + R * 0.866, cy + R * 0.5
-			);
-			var down = inTriangle(
-				u, v,
-				cx, cy + R,
-				cx - R * 0.866, cy - R * 0.5,
-				cx + R * 0.866, cy - R * 0.5
-			);
-
-			return up || down;
-		},
-
-		candles: function (u, v) {
-			var i;
-
-			for (i = -1; i <= 1; i += 2) {
-				var cx = 0.5 + i * 0.16;
-
-				if (inBox(u, v, cx - 0.045, 0.30, cx + 0.045, 0.74)) { return true; }
-				if (inBox(u, v, cx - 0.075, 0.74, cx + 0.075, 0.80)) { return true; }
-				if (inBox(u, v, cx - 0.032, 0.80, cx + 0.032, 0.88)) { return true; }
-				if (inBox(u, v, cx - 0.105, 0.88, cx + 0.105, 0.94)) { return true; }
-				if (inEllipse(u, v, cx, 0.22, 0.042, 0.078)) { return true; }
-			}
-
-			return false;
-		},
-
-		menorah: function (u, v) {
-			var top = 0.34;
-			var radii = [0.12, 0.21, 0.30];
-			var i, k, r, side;
-
-			/* Stem, foot and base. */
-			if (inBox(u, v, 0.482, top, 0.518, 0.80)) { return true; }
-			if (inTriangle(u, v, 0.5, 0.74, 0.34, 0.90, 0.66, 0.90)) { return true; }
-			if (inBox(u, v, 0.30, 0.90, 0.70, 0.95)) { return true; }
-
-			for (k = 0; k < radii.length; k++) {
-				r = radii[k];
-
-				for (i = 0; i < 2; i++) {
-					side = i === 0 ? -1 : 1;
-
-					/* A quarter arc that leaves the stem and rises to the lamp
-					   line, so every lamp ends at the same height. */
-					if (onArc(u, v, 0.5 + side * r, top + r, r, 0.017, side, -1)) { return true; }
-					if (inEllipse(u, v, 0.5 + side * r, top - 0.02, 0.030, 0.026)) { return true; }
-				}
-			}
-
-			return inEllipse(u, v, 0.5, top - 0.02, 0.030, 0.026);
-		},
-
-		tablets: function (u, v) {
-			var i;
-
-			for (i = -1; i <= 1; i += 2) {
-				var x0 = i < 0 ? 0.17 : 0.51;
-				var x1 = i < 0 ? 0.49 : 0.83;
-				var mid = (x0 + x1) / 2;
-
-				if (inBox(u, v, x0, 0.30, x1, 0.88)) { return true; }
-				if (inEllipse(u, v, mid, 0.30, (x1 - x0) / 2, 0.14)) { return true; }
-			}
-
-			return false;
-		},
-
-		israel: function (u, v) {
-			return inPolygon(u, v, ISRAEL);
-		},
-
-		jerusalem: function (u, v) {
-			var i;
-
-			/* The wall, with crenellations along the top. */
-			if (inBox(u, v, 0.08, 0.62, 0.92, 0.92)) { return true; }
-
-			for (i = 0; i < 11; i++) {
-				var bx = 0.09 + i * 0.077;
-
-				if (inBox(u, v, bx, 0.575, bx + 0.045, 0.62)) { return true; }
-			}
-
-			/* The dome, on its drum, and a tower to its left. */
-			if (inEllipse(u, v, 0.56, 0.44, 0.145, 0.135) && v <= 0.44) { return true; }
-			if (inBox(u, v, 0.415, 0.44, 0.705, 0.62)) { return true; }
-			if (inBox(u, v, 0.548, 0.28, 0.572, 0.33)) { return true; }
-			if (inEllipse(u, v, 0.56, 0.335, 0.030, 0.026)) { return true; }
-			if (inBox(u, v, 0.20, 0.36, 0.30, 0.62)) { return true; }
-			if (inTriangle(u, v, 0.25, 0.28, 0.185, 0.365, 0.315, 0.365)) { return true; }
-
-			return false;
-		},
-
-		kiddush: function (u, v) {
-			if (inBox(u, v, 0.33, 0.24, 0.67, 0.30)) { return true; }
-			if (inTriangle(u, v, 0.34, 0.30, 0.66, 0.30, 0.5, 0.66)) { return true; }
-			if (inBox(u, v, 0.475, 0.62, 0.525, 0.80)) { return true; }
-			if (inEllipse(u, v, 0.5, 0.71, 0.055, 0.042)) { return true; }
-			if (inEllipse(u, v, 0.5, 0.855, 0.175, 0.055)) { return true; }
-
-			return false;
-		}
-	};
-
-	/*
-	 * The mask is the list of cells inside this week's shape, in reading order.
-	 * Position n in that list is candle n — which is also piece_index n on the
-	 * server, so a candle's identity survives a zoom, a resize and a reload.
-	 */
-	var wallMaskCache = null;
-
-	function wallMask(shapeKey) {
-		if (wallMaskCache && wallMaskCache.key === shapeKey) { return wallMaskCache; }
-
-		var shape = WALL_SHAPES[shapeKey] || WALL_SHAPES.full;
-		var cells = [];
-		var row, col, u, v;
-
-		for (row = 0; row < WALL_ROWS; row++) {
-			for (col = 0; col < WALL_COLS; col++) {
-				u = (col + 0.5) / WALL_COLS;
-				v = (row + 0.5) / WALL_ROWS;
-
-				if (shape(u, v)) { cells.push(row * WALL_COLS + col); }
-			}
-		}
-
-		wallMaskCache = { key: shapeKey, cells: cells, total: cells.length };
-
-		return wallMaskCache;
-	}
-
-	/*
-	 * The camera. Zoom 1 fits the whole grid in the viewport; beyond that the
-	 * pan is clamped so the picture can never be dragged off the screen.
-	 */
 	function wallGeom(w, h, mini) {
-		var zoom = mini ? 1 : Math.max(WALL_MIN_ZOOM, Math.min(WALL_MAX_ZOOM, state.wallZoom || 1));
-		var fitCell = Math.min(w / WALL_COLS, h / (WALL_ROWS * 1.52));
-		var cw = fitCell * zoom;
+		var cols = mini ? 7 : 20;
+		var cw = w / cols;
 		var ch = cw * 1.52;
-		var spanW = WALL_COLS * cw;
-		var spanH = WALL_ROWS * ch;
-		var slackX = Math.max(0, spanW - w) / 2;
-		var slackY = Math.max(0, spanH - h) / 2;
-		var panX = Math.max(-slackX, Math.min(slackX, mini ? 0 : (state.wallPanX || 0)));
-		var panY = Math.max(-slackY, Math.min(slackY, mini ? 0 : (state.wallPanY || 0)));
+		var rows = Math.ceil(h / ch) + 1;
 
-		return {
-			zoom: zoom,
-			cw: cw,
-			ch: ch,
-			cols: WALL_COLS,
-			rows: WALL_ROWS,
-			ox: (w - spanW) / 2 - panX,
-			oy: (h - spanH) / 2 - panY,
-			slackX: slackX,
-			slackY: slackY,
-			detail: cw >= WALL_DETAIL_PX
-		};
+		return { cols: cols, cw: cw, ch: ch, rows: rows, total: rows * cols };
 	}
 
-	/*
-	 * Zoomed out, every candle would be a fraction of a pixel and the loop
-	 * would cost more than the frame allows. So the shape is baked once into
-	 * an offscreen canvas at cell resolution and blitted, and only redrawn
-	 * when the shape or the lit count actually moves.
-	 */
-	var wallBake = null;
-
-	function wallBaked(mask, lit, A) {
-		var key = mask.key + ':' + lit;
-
-		if (wallBake && wallBake.key === key) { return wallBake.canvas; }
-
-		var cv = wallBake && wallBake.canvas ? wallBake.canvas : document.createElement('canvas');
-		var g = cv.getContext('2d');
-		var i, cell, col, row;
-
-		cv.width = WALL_COLS;
-		cv.height = WALL_ROWS;
-		g.clearRect(0, 0, WALL_COLS, WALL_ROWS);
-
-		for (i = 0; i < mask.total; i++) {
-			cell = mask.cells[i];
-			col = cell % WALL_COLS;
-			row = Math.floor(cell / WALL_COLS);
-
-			if (i < lit) {
-				g.fillStyle = 'rgba(' + A[0] + ',' + Math.min(255, A[1] + 30) + ',' + Math.min(255, A[2] + 60) + ',0.92)';
-			} else {
-				g.fillStyle = 'rgba(255,236,218,0.10)';
-			}
-
-			g.fillRect(col, row, 1, 1);
-		}
-
-		wallBake = { key: key, canvas: cv };
-
-		return cv;
+	/* How many of the wall's positions are actually candles. Drawing and hit
+	   testing have to agree on this or a click lands on an empty slot. */
+	function wallLit(G) {
+		return Math.min(G.total, Math.round(G.total * WALL_DENSITY) + wallExtra);
 	}
 
 	function drawWall(cv, t, mini) {
@@ -907,8 +948,7 @@ window.MSLCanvas = (function () {
 		var h = f.h;
 		var G = wallGeom(w, h, mini);
 		var A = accentRGB();
-		var mask = wallMask(mini ? 'full' : (state.wallShape || 'full'));
-		var i, k, n, idx, baseLit, lit;
+		var lit, i, k, n, idx, baseLit;
 
 		g.clearRect(0, 0, w, h);
 
@@ -919,40 +959,32 @@ window.MSLCanvas = (function () {
 		g.fillRect(0, 0, w, h);
 
 		if (mini) {
-			lit = mask.total;
+			lit = G.total;
 		} else {
-			/* The delta since the last frame is what lights up, capped at three
-			   per frame so a burst of joins reads as a sequence of candles
-			   rather than as a flash. */
+			/* The wall shows a full screen at any count, so it is drawn at a
+			   fixed density and the *delta* since the last frame is what lights
+			   up — capped at three per frame so a burst of joins reads as a
+			   sequence of candles rather than as a flash. */
 			if (wallSeen === null) { wallSeen = state.count; wallExtra = 0; }
 
-			baseLit = Math.round(mask.total * 0.74);
+			baseLit = Math.round(G.total * WALL_DENSITY);
 
 			if (state.count > wallSeen) {
 				n = Math.min(3, state.count - wallSeen);
 
 				for (k = 0; k < n; k++) {
 					idx = baseLit + wallExtra;
-					if (idx < mask.total) { flares.push({ idx: idx, t0: t }); wallExtra++; }
+					if (idx < G.total) { flares.push({ idx: idx, t0: t }); wallExtra++; }
 				}
 
 				wallSeen = state.count;
 			}
 
-			if (baseLit + wallExtra >= mask.total) { wallExtra = 0; }
+			if (baseLit + wallExtra >= G.total) { wallExtra = 0; }
 
-			lit = Math.min(mask.total, baseLit + wallExtra);
+			lit = wallLit(G);
 			flares = flares.filter(function (fl) { return t - fl.t0 < 1400; });
 		}
-
-		var cellXY = function (i) {
-			var cell = mask.cells[i];
-
-			return {
-				col: cell % WALL_COLS,
-				row: Math.floor(cell / WALL_COLS)
-			};
-		};
 
 		var flick = function (i) {
 			if (state.still) { return 0.9; }
@@ -967,54 +999,22 @@ window.MSLCanvas = (function () {
 		};
 
 		var geom = function (i) {
-			var c = cellXY(i);
+			var row = Math.floor(i / G.cols);
+			var col = i % G.cols;
 
 			return {
-				cx: G.ox + c.col * G.cw + G.cw / 2 + (hsh(i, 2) - 0.5) * G.cw * 0.12,
-				by: G.oy + c.row * G.ch + G.ch * 0.84,
+				cx: col * G.cw + G.cw / 2 + (hsh(i, 2) - 0.5) * G.cw * 0.12,
+				by: row * G.ch + G.ch * 0.84,
 				bh: G.ch * 0.40 * (0.84 + hsh(i, 1) * 0.32)
 			};
 		};
-
-		if (!G.detail) {
-			/* Far out: the baked picture, softened so it reads as light rather
-			   than as pixels, with a glow pass over the lit area. */
-			var baked = wallBaked(mask, lit, A);
-
-			g.imageSmoothingEnabled = true;
-			g.globalAlpha = 0.95;
-			g.drawImage(baked, G.ox, G.oy, WALL_COLS * G.cw, WALL_ROWS * G.ch);
-
-			g.globalCompositeOperation = 'lighter';
-			g.globalAlpha = 0.5;
-			g.drawImage(baked, G.ox - G.cw, G.oy - G.ch, WALL_COLS * G.cw + G.cw * 2, WALL_ROWS * G.ch + G.ch * 2);
-			g.globalAlpha = 1;
-			g.globalCompositeOperation = 'source-over';
-
-			return;
-		}
-
-		/* Close in: real candles, but only the ones on screen. */
-		var visible = [];
-
-		for (i = 0; i < mask.total; i++) {
-			var c = cellXY(i);
-			var x = G.ox + c.col * G.cw;
-			var y = G.oy + c.row * G.ch;
-
-			if (x > -G.cw && x < w + G.cw && y > -G.ch * 2 && y < h + G.ch) { visible.push(i); }
-		}
 
 		/* Two passes: all the glows first in additive mode, then all the wax.
 		   Interleaving them would make each candle's glow wash out its
 		   neighbour's body. */
 		g.globalCompositeOperation = 'lighter';
 
-		for (k = 0; k < visible.length; k++) {
-			i = visible[k];
-
-			if (i >= lit) { continue; }
-
+		for (i = 0; i < lit; i++) {
 			var gm = geom(i);
 			var fy = gm.by - gm.bh - G.ch * 0.11;
 			var fl = flick(i);
@@ -1031,9 +1031,7 @@ window.MSLCanvas = (function () {
 		g.globalAlpha = 1;
 		g.globalCompositeOperation = 'source-over';
 
-		for (k = 0; k < visible.length; k++) {
-			i = visible[k];
-
+		for (i = 0; i < G.total; i++) {
 			var m = geom(i);
 			var isLit = i < lit;
 			var bw = G.cw * 0.21;
@@ -1081,8 +1079,6 @@ window.MSLCanvas = (function () {
 
 		if (!mini) {
 			flares.forEach(function (fl) {
-				if (fl.idx >= mask.total) { return; }
-
 				var p = (t - fl.t0) / 1400;
 				var gm = geom(fl.idx);
 				var fy = gm.by - gm.bh - G.ch * 0.11;
@@ -1103,40 +1099,22 @@ window.MSLCanvas = (function () {
 				g.globalCompositeOperation = 'source-over';
 			});
 		}
-
 	}
 
-	/*
-	 * Screen point to candle. Returns null when the point is outside the
-	 * shape, so a click on empty darkness clears the selection instead of
-	 * picking whichever candle happens to be nearest.
-	 */
 	function wallHitIndex(cv, clientX, clientY) {
 		var rc = cv.getBoundingClientRect();
 		var G = wallGeom(rc.width, rc.height, false);
-		var mask = wallMask(state.wallShape || 'full');
-		var col = Math.floor((clientX - rc.left - G.ox) / G.cw);
-		var row = Math.floor((clientY - rc.top - G.oy) / G.ch);
+		var col = Math.floor((clientX - rc.left) / G.cw);
+		var row = Math.floor((clientY - rc.top) / G.ch);
 
-		if (col < 0 || col >= WALL_COLS || row < 0 || row >= WALL_ROWS) { return null; }
+		if (col < 0 || col >= G.cols || row < 0) { return null; }
 
-		var cell = row * WALL_COLS + col;
-		var i;
+		var idx = row * G.cols + col;
 
-		for (i = 0; i < mask.total; i++) {
-			if (mask.cells[i] === cell) { return i; }
-		}
-
-		return null;
-	}
-
-	/* How far the camera can travel, so the controls can disable themselves
-	   at the ends instead of pretending there is more to see. */
-	function wallCamera(cv) {
-		var rc = cv ? cv.getBoundingClientRect() : { width: 1, height: 1 };
-		var G = wallGeom(rc.width, rc.height, false);
-
-		return { zoom: G.zoom, min: WALL_MIN_ZOOM, max: WALL_MAX_ZOOM, slackX: G.slackX, slackY: G.slackY, detail: G.detail };
+		/* The bottom of the wall is deliberately unlit. Nobody stands behind
+		   those positions, so a click there clears the card rather than
+		   picking whichever candle happens to be nearest. */
+		return idx < wallLit(G) ? idx : null;
 	}
 
 	/* ------------------------------------------------------------------
@@ -1527,7 +1505,6 @@ window.MSLCanvas = (function () {
 		state.count = options.count || 0;
 		state.accent = options.accent || state.accent;
 		state.artwork = options.artwork || state.artwork;
-		state.wallShape = options.wallShape || state.wallShape;
 		state.still = !!options.still;
 		mapPoints = options.mapPoints || [];
 
@@ -1550,11 +1527,14 @@ window.MSLCanvas = (function () {
 		state: state,
 		zooms: ZOOMS,
 		cellCount: function () { return cells ? cells.length : 0; },
+		wallLitCount: function (cv) {
+			var rc = cv.getBoundingClientRect();
+			return wallLit(wallGeom(rc.width, rc.height, false));
+		},
 		litCount: function () { return litCount(0); },
 		artHitIndex: artHitIndex,
 		wallHitIndex: wallHitIndex,
 		wallGeom: wallGeom,
-		wallCamera: wallCamera,
 		startWow: startWow,
 		stopWow: stopWow,
 		resetWall: function () { wallSeen = null; wallExtra = 0; flares = []; },

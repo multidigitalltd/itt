@@ -586,6 +586,27 @@ final class MSL_Fields {
 					self::bi( 'text', 'sending', 'הודעת שליחה' ),
 				)
 			),
+			'auth'     => self::section(
+				'12 · התחברות וחשבונות',
+				'home',
+				array(
+					self::checkbox( 'login_enabled', 'להפעיל התחברות עם גוגל', 'הכפתור מוצג רק כששני המפתחות למטה מלאים. בלי התחברות האתר עובד בדיוק כמו קודם.' ),
+					self::text( 'google_client_id', 'Google Client ID', 'מתוך Google Cloud › APIs & Services › Credentials › OAuth 2.0 Client ID (סוג Web application).', true ),
+					self::text( 'google_client_secret', 'Google Client Secret', 'אפשר להגדיר במקום זה קבועים MSL_GOOGLE_CLIENT_ID ו-MSL_GOOGLE_CLIENT_SECRET בקובץ wp-config.php — זה עדיף, כי אז גיבוי של בסיס הנתונים לא נושא איתו את המפתחות.', true ),
+					self::bi( 'text', 'sign_in', 'כפתור ההתחברות' ),
+					self::bi( 'text', 'sign_out', 'קישור ההתנתקות' ),
+					self::bi( 'text', 'signed_in_as', 'תווית "מחובר/ת בתור"' ),
+					self::bi( 'text', 'link_locked', 'טקסט במקום הקישור האישי כשלא מחוברים' ),
+					self::bi( 'text', 'link_locked_cta', 'כפתור ההתחברות שליד הטקסט הזה' ),
+					self::bi( 'textarea', 'err_state', 'הודעה כשההתחברות נכשלה', 2 ),
+					self::bi( 'text', 'invite_title', 'פופאפ הגיוס — כותרת' ),
+					self::bi( 'textarea', 'invite_body', 'פופאפ הגיוס — טקסט', 3 ),
+					self::bi( 'text', 'invite_cta', 'פופאפ הגיוס — כפתור ראשי' ),
+					self::bi( 'text', 'invite_dismiss', 'פופאפ הגיוס — כפתור משני' ),
+					self::number( 'invite_delay', 'שניות עד שהפופאפ עולה', 0, 120, 'אפס = מיד עם טעינת העמוד.' ),
+					self::number( 'invite_days', 'ימים עד שהפופאפ יחזור למי שסגר אותו', 0, 365, 'אפס = יעלה בכל טעינה. זה מעצבן; שבעה ימים זה סביר.' ),
+				)
+			),
 			'screens'  => self::section(
 				'11 · מסכי היצירה, הקיר והשיתוף',
 				'home',

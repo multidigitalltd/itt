@@ -15,8 +15,17 @@ declare( strict_types = 1 );
 
 defined( 'ABSPATH' ) || exit;
 
-$msl_link  = home_url( '/' );
-$msl_shown = (string) preg_replace( '#^https?://#', '', untrailingslashit( $msl_link ) );
+/*
+ * A signed-in person has a code of their own, and it is theirs for good — so it
+ * is rendered here rather than left for the script to fill in. Everyone else
+ * gets the campaign's own address, which the script swaps for their code the
+ * moment they have one.
+ */
+$msl_auth   = MSL_Meta::get( 'auth' );
+$msl_locked = MSL_Auth::enabled() && null === MSL_Auth::current();
+$msl_own    = MSL_Auth::personal_link();
+$msl_link   = '' !== $msl_own ? $msl_own : home_url( '/' );
+$msl_shown  = (string) preg_replace( '#^https?://#', '', untrailingslashit( $msl_link ) );
 
 $msl_milestones = array();
 
@@ -40,6 +49,12 @@ $msl_next = $msl_milestones[0] ?? 0;
 		<div class="msl-linkcard">
 			<p class="msl-linkcard__label" id="msl-link-label"<?php msl_i18n( 'referral', 'your_link' ); ?>><?php msl_the( $msl, 'your_link' ); ?></p>
 
+			<?php if ( $msl_locked ) : ?>
+				<p class="msl-linkcard__locked"<?php msl_i18n( 'auth', 'link_locked' ); ?>><?php msl_the( $msl_auth, 'link_locked' ); ?></p>
+
+				<a class="msl-btn msl-btn--amber msl-linkcard__signin" href="<?php echo esc_url( MSL_Auth::sign_in_url() ); ?>"
+					<?php msl_i18n( 'auth', 'link_locked_cta' ); ?>><?php msl_the( $msl_auth, 'link_locked_cta' ); ?></a>
+			<?php else : ?>
 			<p class="msl-linkcard__value" data-msl-link
 				data-msl-url="<?php echo esc_url( $msl_link ); ?>"
 				aria-describedby="msl-link-label"><?php echo esc_html( $msl_shown ); ?></p>
@@ -60,6 +75,7 @@ $msl_next = $msl_milestones[0] ?? 0;
 						<?php msl_i18n( 'referral', 'share_more' ); ?>><?php msl_the( $msl, 'share_more' ); ?></button>
 				</div>
 			</div>
+			<?php endif; ?>
 		</div>
 
 		<div class="msl-refcount">

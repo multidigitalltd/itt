@@ -245,6 +245,7 @@ final class MSL_Theme {
 		$stats    = MSL_Stats::all( $page_id );
 		$join     = MSL_Meta::get( 'join', $page_id );
 		$stage    = MSL_Meta::get( 'stage', $page_id );
+		$auth     = MSL_Meta::get( 'auth', $page_id );
 
 		$options = array();
 
@@ -294,6 +295,13 @@ final class MSL_Theme {
 				'mine'    => MSL_Joins::MINE_COOKIE,
 				'piece'   => MSL_Joins::PIECE_COOKIE,
 				'refDays' => MSL_Joins::ref_days(),
+			),
+			'auth'      => array(
+				'enabled'  => MSL_Auth::enabled(),
+				'signedIn' => null !== MSL_Auth::current(),
+				'link'     => esc_url_raw( MSL_Auth::personal_link() ),
+				'delay'    => max( 0, (int) ( $auth['invite_delay'] ?? 0 ) ),
+				'days'     => max( 0, (int) ( $auth['invite_days'] ?? 0 ) ),
 			),
 			'joinBase'  => esc_url_raw( home_url( '/join/' ) ),
 			'mapData'   => esc_url_raw( MSL_URI . 'assets/data/world-land.json?v=' . rawurlencode( self::asset_version( 'assets/data/world-land.json' ) ) ),

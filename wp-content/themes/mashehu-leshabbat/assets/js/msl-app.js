@@ -358,6 +358,11 @@
 	 * --------------------------------------------------------------- */
 
 	function shareUrl() {
+		/* A signed-in person's link is theirs for good and the server already
+		   rendered it; a code minted by this session's join comes next; failing
+		   both, the campaign's own address, which is still worth sharing. */
+		if (config.auth && config.auth.link) { return config.auth.link; }
+
 		return state.refCode ? config.joinBase + state.refCode + '/' : window.location.origin + '/';
 	}
 
@@ -733,51 +738,121 @@
 		renderMyCandle();
 	}
 
-	function bindArtView() {
-		var cv = $('[data-msl-art-surface]');
+	/*
+	 * Pointer gestures on a canvas.
+	 *
+	 * One pointer drags, two pinch, and a press that barely moved is a tap. It
+	 * is written once because the artwork and the wall want exactly the same
+	 * behaviour and a phone has no zoom buttons worth hitting: a person's first
+	 * instinct on a picture is to pinch it.
+	 *
+	 * Deltas are incremental rather than measured from where the gesture began,
+	 * so a second finger arriving or leaving mid-gesture does not make the view
+	 * jump.
+	 */
+	function bindGestures(cv, on) {
+		var points = {};
+		var last = null;
+		var moved = 0;
+		var pinching = false;
 
-		if (!cv) { return; }
+		var list = function () {
+			return Object.keys(points).map(function (id) { return points[id]; });
+		};
 
-		var drag = null;
+		var centre = function (ps) {
+			return {
+				x: (ps[0].x + ps[1].x) / 2,
+				y: (ps[0].y + ps[1].y) / 2,
+				d: Math.hypot(ps[0].x - ps[1].x, ps[0].y - ps[1].y)
+			};
+		};
+
+		var reset = function () {
+			var ps = list();
+
+			last = ps.length === 2 ? centre(ps) : (ps.length === 1 ? { x: ps[0].x, y: ps[0].y, d: 0 } : null);
+			pinching = ps.length === 2;
+		};
 
 		cv.addEventListener('pointerdown', function (event) {
-			drag = {
-				x: event.clientX,
-				y: event.clientY,
-				fx: canvasEngine.state.fx,
-				fy: canvasEngine.state.fy,
-				moved: 0
-			};
+			points[event.pointerId] = { x: event.clientX, y: event.clientY };
+
+			if (Object.keys(points).length === 1) { moved = 0; }
+
+			reset();
 
 			try { cv.setPointerCapture(event.pointerId); } catch (e) { /* not fatal */ }
 		});
 
 		cv.addEventListener('pointermove', function (event) {
-			if (!drag) { return; }
+			if (!points[event.pointerId]) { return; }
 
-			var rect = cv.getBoundingClientRect();
-			var S = Math.min(rect.width, rect.height) * 0.94;
-			var Z = canvasEngine.zooms[canvasEngine.state.artZ];
-			var dx = event.clientX - drag.x;
-			var dy = event.clientY - drag.y;
+			points[event.pointerId] = { x: event.clientX, y: event.clientY };
 
-			drag.moved = Math.max(drag.moved, Math.hypot(dx, dy));
+			var ps = list();
 
-			canvasEngine.setState({
-				fx: Math.max(0.04, Math.min(0.96, drag.fx - dx / (S * Z))),
-				fy: Math.max(0.04, Math.min(0.96, drag.fy - dy / (S * Z)))
-			});
+			if (!last) { return; }
+
+			if (ps.length >= 2) {
+				var now = centre(ps);
+
+				if (last.d > 0 && now.d > 0 && on.zoom) { on.zoom(now.d / last.d, now.x, now.y); }
+
+				if (on.pan) { on.pan(now.x - last.x, now.y - last.y); }
+
+				moved = 999;
+				last = now;
+
+				// Two fingers on a canvas is a pinch, never a page scroll.
+				event.preventDefault();
+
+				return;
+			}
+
+			var dx = ps[0].x - last.x;
+			var dy = ps[0].y - last.y;
+
+			moved += Math.hypot(dx, dy);
+
+			if (on.pan) { on.pan(dx, dy); }
+
+			last = { x: ps[0].x, y: ps[0].y, d: 0 };
+
+			if (moved > 6) { event.preventDefault(); }
 		});
 
-		var release = function (event) {
-			var d = drag;
-			drag = null;
+		var end = function (event) {
+			var wasPinching = pinching;
+			var had = Object.keys(points).length;
 
-			/* Six pixels of slop: a click that wandered slightly is still a
-			   click, and a drag that ends on a candle must not select it. */
-			if (!d || d.moved >= 6) { return; }
+			delete points[event.pointerId];
+			reset();
 
-			var index = canvasEngine.artHitIndex(cv, event.clientX, event.clientY);
+			if (had > 1 || wasPinching) { return; }
+
+			/* Six pixels of slop: a press that wandered slightly is still a tap,
+			   and a drag that ends on a candle must not select it. */
+			if (moved < 6 && on.tap) { on.tap(event.clientX, event.clientY); }
+		};
+
+		cv.addEventListener('pointerup', end);
+		cv.addEventListener('pointercancel', function (event) {
+			delete points[event.pointerId];
+			reset();
+		});
+
+		/* The browser's own panning would fight every one of these. */
+		cv.style.touchAction = 'none';
+	}
+
+	function bindArtView() {
+		var cv = $('[data-msl-art-surface]');
+
+		if (!cv) { return; }
+
+		var selectAt = function (clientX, clientY) {
+			var index = canvasEngine.artHitIndex(cv, clientX, clientY);
 
 			if (index === null || state.artPick === index) {
 				state.artPick = null;
@@ -790,8 +865,6 @@
 			state.artPick = index;
 			canvasEngine.setState({
 				artPick: index,
-				fx: canvasEngine.state.fx,
-				fy: canvasEngine.state.fy,
 				artZ: canvasEngine.state.artZ === 0 ? 1 : canvasEngine.state.artZ
 			});
 
@@ -802,8 +875,29 @@
 			renderHints();
 		};
 
-		cv.addEventListener('pointerup', release);
-		cv.addEventListener('pointercancel', function () { drag = null; });
+		bindGestures(cv, {
+			pan: function (dx, dy) {
+				var rect = cv.getBoundingClientRect();
+				var S = Math.min(rect.width, rect.height) * 0.94;
+				var Z = canvasEngine.state.artZoom || 1;
+
+				canvasEngine.setState({
+					fx: Math.max(0.04, Math.min(0.96, canvasEngine.state.fx - dx / (S * Z))),
+					fy: Math.max(0.04, Math.min(0.96, canvasEngine.state.fy - dy / (S * Z)))
+				});
+			},
+			zoom: function (factor) {
+				var steps = canvasEngine.zooms;
+				var next = (canvasEngine.state.artZoom || 1) * factor;
+
+				canvasEngine.setState({
+					artZoom: Math.max(steps[0], Math.min(steps[steps.length - 1], next))
+				});
+
+				renderHints();
+			},
+			tap: selectAt
+		});
 
 		$$('[data-msl-zoom]').forEach(function (button) {
 			button.addEventListener('click', function () {
@@ -831,8 +925,8 @@
 
 		if (!cv) { return; }
 
-		cv.addEventListener('click', function (event) {
-			var index = canvasEngine.wallHitIndex(cv, event.clientX, event.clientY);
+		var selectAt = function (clientX, clientY) {
+			var index = canvasEngine.wallHitIndex(cv, clientX, clientY);
 
 			if (index === null || state.wallPick === index) {
 				state.wallPick = null;
@@ -850,7 +944,165 @@
 			});
 
 			renderHints();
+		};
+
+		/* The wall pans only once there is somewhere to pan to, so at rest a
+		   finger dragged across it still scrolls the screen behind it. */
+		bindGestures(cv, {
+			pan: function (dx, dy) {
+				if ((canvasEngine.state.wallZoom || 1) > 1) { canvasEngine.panWall(cv, dx, dy); }
+			},
+			zoom: function (factor, cx, cy) {
+				canvasEngine.wallZoomAt(cv, (canvasEngine.state.wallZoom || 1) * factor, cx, cy);
+				renderHints();
+			},
+			tap: selectAt
 		});
+
+		$$('[data-msl-wall-zoom]').forEach(function (button) {
+			button.addEventListener('click', function () {
+				var rect = cv.getBoundingClientRect();
+				var now = canvasEngine.state.wallZoom || 1;
+				var next = button.dataset.mslWallZoom === 'in' ? now * 1.8 : now / 1.8;
+
+				canvasEngine.wallZoomAt(cv, next, rect.left + rect.width / 2, rect.top + rect.height / 2);
+
+				if (next <= 1) {
+					state.wallPick = null;
+					canvasEngine.setState({ wallPick: null, wallZoom: 1, wallPanX: 0, wallPanY: 0 });
+					hidePick($('[data-msl-wall-pick]'));
+				}
+
+				renderHints();
+			});
+		});
+	}
+
+
+	/* ------------------------------------------------------------------
+	 * The invitation
+	 * --------------------------------------------------------------- */
+
+	/*
+	 * The campaign's ask: carry this to the people you know. It opens once, a
+	 * little after the page has settled, and closing it is remembered — a popup
+	 * that returns on every load is a popup people learn to dismiss without
+	 * reading, which costs the campaign the one thing it was for.
+	 *
+	 * It never opens on top of something else the visitor is already doing.
+	 */
+	var inviteModal = $('[data-msl-modal="invite"]');
+	var inviteReturn = null;
+
+	function inviteSeenKey() {
+		return 'msl_invite_seen';
+	}
+
+	function inviteDismissed() {
+		var until = 0;
+
+		try { until = parseInt(window.localStorage.getItem(inviteSeenKey()) || '0', 10); } catch (e) { until = 0; }
+
+		return !isNaN(until) && until > Date.now();
+	}
+
+	function rememberInviteDismissed() {
+		var days = (config.auth && config.auth.days) || 0;
+
+		if (days < 1) { return; }
+
+		try {
+			window.localStorage.setItem(inviteSeenKey(), String(Date.now() + days * 86400000));
+		} catch (e) { /* A browser that refuses storage just sees it again. */ }
+	}
+
+	function openInvite() {
+		if (!inviteModal || !inviteModal.hidden) { return; }
+
+		inviteReturn = document.activeElement;
+		inviteModal.hidden = false;
+		document.body.classList.add('msl-locked');
+		renderReferral();
+
+		var focusable = $('.msl-btn, .msl-invite__close', inviteModal);
+
+		if (focusable) { focusable.focus(); }
+	}
+
+	function closeInvite() {
+		if (!inviteModal || inviteModal.hidden) { return; }
+
+		inviteModal.hidden = true;
+		document.body.classList.remove('msl-locked');
+		rememberInviteDismissed();
+
+		if (inviteReturn && inviteReturn.focus) { inviteReturn.focus(); }
+
+		inviteReturn = null;
+	}
+
+	/* The account menu. A plain disclosure: it closes on Escape, on a click
+	   anywhere else, and when the control itself is pressed again. */
+	function bindAccount() {
+		var wrap = $('[data-msl-account]');
+
+		if (!wrap) { return; }
+
+		var toggle = $('[data-msl-account-toggle]', wrap);
+		var menu = $('.msl-account__menu', wrap);
+
+		if (!toggle || !menu) { return; }
+
+		var setOpen = function (open) {
+			menu.hidden = !open;
+			toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+		};
+
+		toggle.addEventListener('click', function (event) {
+			event.stopPropagation();
+			setOpen(menu.hidden);
+		});
+
+		document.addEventListener('click', function (event) {
+			if (!wrap.contains(event.target)) { setOpen(false); }
+		});
+
+		document.addEventListener('keydown', function (event) {
+			if (event.key === 'Escape') { setOpen(false); }
+		});
+	}
+
+	function bindInvite() {
+		if (!inviteModal) { return; }
+
+		$$('[data-msl-close-invite]').forEach(function (node) {
+			node.addEventListener('click', closeInvite);
+		});
+
+		$$('[data-msl-open-invite]').forEach(function (node) {
+			node.addEventListener('click', function () { openInvite(); });
+		});
+
+		document.addEventListener('keydown', function (event) {
+			if (event.key === 'Escape' && !inviteModal.hidden) { closeInvite(); }
+		});
+
+		if (inviteDismissed()) { return; }
+
+		var delay = (config.auth && config.auth.delay) || 0;
+
+		window.setTimeout(function () {
+			/* Not over the join form, not over a full-screen panel, and not
+			   while the visitor is reading something further down the page
+			   that they went looking for. */
+			if (state.screen !== 'home') { return; }
+
+			var join = $('[data-msl-modal="join"]');
+
+			if (join && !join.hidden) { return; }
+
+			openInvite();
+		}, Math.max(0, delay) * 1000);
 	}
 
 	/* ------------------------------------------------------------------
@@ -1357,6 +1609,8 @@
 		bindMyCandle();
 		bindWall();
 		bindShare();
+		bindAccount();
+		bindInvite();
 		startCollage();
 
 		syncOptions();

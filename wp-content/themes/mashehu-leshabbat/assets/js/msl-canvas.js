@@ -29,10 +29,19 @@ window.MSLCanvas = (function () {
 		accent: '#FFB25C',
 		artwork: 'candles',
 		artZ: 0,
+		/* The discrete steps are what the buttons and the readout speak; a pinch
+		   speaks a continuous factor. Both write here, and the drawing only ever
+		   reads this one. */
+		artZoom: 1,
 		artPick: null,
 		wallPick: null,
 		fx: 0.5,
 		fy: 0.38,
+		/* The wall's camera, in wall pixels at zoom 1: the world coordinate that
+		   sits at the top corner of the canvas. */
+		wallZoom: 1,
+		wallPanX: 0,
+		wallPanY: 0,
 		still: false
 	};
 
@@ -53,6 +62,8 @@ window.MSLCanvas = (function () {
 	/* The share of the wall that is alight before this session's joins. Tuned
 	   in design: a full wall has nothing left to fill in. */
 	var WALL_DENSITY = 0.74;
+	/* Far enough in for one candle to fill a thumb, and no further. */
+	var WALL_MAX_ZOOM = 7;
 
 	var wow = null;
 	var raf = null;
@@ -762,7 +773,7 @@ window.MSLCanvas = (function () {
 			ox: (w - S) / 2,
 			oy: (h - S) / 2,
 			cell: S / N,
-			Z: ZOOMS[state.artZ || 0],
+			Z: state.artZoom || ZOOMS[state.artZ || 0],
 			fx: state.fx,
 			fy: state.fy
 		};
@@ -939,6 +950,31 @@ window.MSLCanvas = (function () {
 		return Math.min(G.total, Math.round(G.total * WALL_DENSITY) + wallExtra);
 	}
 
+	/*
+	 * The wall's camera.
+	 *
+	 * Zooming does not change the grid — the same candle keeps the same index at
+	 * every magnification, which is what lets a candle stay the same person
+	 * while you move around. It is a transform over a fixed world: the geometry
+	 * is computed once from the unzoomed canvas, and the view is a window onto
+	 * it. Screen = (world - pan) * zoom.
+	 */
+	function wallCamera(w, h, G) {
+		var z = Math.max(1, state.wallZoom || 1);
+		var H = G.rows * G.ch;
+
+		return {
+			z: z,
+			/* Panning is clamped to the wall itself, so it can never be dragged
+			   off into empty space. */
+			x: Math.max(0, Math.min(w - w / z, state.wallPanX || 0)),
+			y: Math.max(0, Math.min(Math.max(0, H - h / z), state.wallPanY || 0)),
+			w: w,
+			h: h,
+			world: H
+		};
+	}
+
 	function drawWall(cv, t, mini) {
 		if (!cv || !sprites) { return; }
 
@@ -957,6 +993,16 @@ window.MSLCanvas = (function () {
 		bg.addColorStop(1, 'rgba(52,28,18,0.55)');
 		g.fillStyle = bg;
 		g.fillRect(0, 0, w, h);
+
+		/* The wash above is screen furniture and stays put; everything below is
+		   the wall, and moves with the camera. */
+		var cam = mini ? null : wallCamera(w, h, G);
+
+		if (cam) {
+			g.save();
+			g.scale(cam.z, cam.z);
+			g.translate(-cam.x, -cam.y);
+		}
 
 		if (mini) {
 			lit = G.total;
@@ -1099,13 +1145,18 @@ window.MSLCanvas = (function () {
 				g.globalCompositeOperation = 'source-over';
 			});
 		}
+
+		if (cam) { g.restore(); }
 	}
 
 	function wallHitIndex(cv, clientX, clientY) {
 		var rc = cv.getBoundingClientRect();
 		var G = wallGeom(rc.width, rc.height, false);
-		var col = Math.floor((clientX - rc.left) / G.cw);
-		var row = Math.floor((clientY - rc.top) / G.ch);
+		var cam = wallCamera(rc.width, rc.height, G);
+
+		// Back out of the camera before asking which cell was pressed.
+		var col = Math.floor(((clientX - rc.left) / cam.z + cam.x) / G.cw);
+		var row = Math.floor(((clientY - rc.top) / cam.z + cam.y) / G.ch);
 
 		if (col < 0 || col >= G.cols || row < 0) { return null; }
 
@@ -1115,6 +1166,36 @@ window.MSLCanvas = (function () {
 		   those positions, so a click there clears the card rather than
 		   picking whichever candle happens to be nearest. */
 		return idx < wallLit(G) ? idx : null;
+	}
+
+	/* Zoom the wall about a point on the screen, so the candle under the
+	   fingers stays under the fingers. */
+	function wallZoomAt(cv, zoom, clientX, clientY) {
+		var rc = cv.getBoundingClientRect();
+		var G = wallGeom(rc.width, rc.height, false);
+		var cam = wallCamera(rc.width, rc.height, G);
+		var next = Math.max(1, Math.min(WALL_MAX_ZOOM, zoom));
+		var sx = clientX - rc.left;
+		var sy = clientY - rc.top;
+		var wx = sx / cam.z + cam.x;
+		var wy = sy / cam.z + cam.y;
+
+		setState({
+			wallZoom: next,
+			wallPanX: wx - sx / next,
+			wallPanY: wy - sy / next
+		});
+	}
+
+	function panWall(cv, dx, dy) {
+		var rc = cv.getBoundingClientRect();
+		var G = wallGeom(rc.width, rc.height, false);
+		var cam = wallCamera(rc.width, rc.height, G);
+
+		setState({
+			wallPanX: cam.x - dx / cam.z,
+			wallPanY: cam.y - dy / cam.z
+		});
 	}
 
 	/* ------------------------------------------------------------------
@@ -1486,11 +1567,37 @@ window.MSLCanvas = (function () {
 	 * Public surface
 	 * --------------------------------------------------------------- */
 
+	/* Which labelled step a continuous factor is closest to. */
+	function nearestZoomStep(z) {
+		var best = 0;
+		var bd = Infinity;
+		var i, d;
+
+		for (i = 0; i < ZOOMS.length; i++) {
+			d = Math.abs(ZOOMS[i] - z);
+
+			if (d < bd) { bd = d; best = i; }
+		}
+
+		return best;
+	}
+
 	function setState(patch) {
 		var rebuildArt = ('artwork' in patch && patch.artwork !== state.artwork);
 		var rebuildSprites = ('accent' in patch && patch.accent !== state.accent);
 
 		Object.keys(patch).forEach(function (key) { state[key] = patch[key]; });
+
+		/* Pressing a zoom button sets the step; a pinch sets the factor. Each
+		   one has to leave the other telling the truth, or the readout and the
+		   drawing drift apart. */
+		if ('artZ' in patch && !('artZoom' in patch)) {
+			state.artZoom = ZOOMS[Math.max(0, Math.min(ZOOMS.length - 1, state.artZ))];
+		}
+
+		if ('artZoom' in patch && !('artZ' in patch)) {
+			state.artZ = nearestZoomStep(state.artZoom);
+		}
 
 		if (rebuildArt) { buildArt(); }
 
@@ -1540,6 +1647,9 @@ window.MSLCanvas = (function () {
 		artHitIndex: artHitIndex,
 		wallHitIndex: wallHitIndex,
 		wallGeom: wallGeom,
+		wallZoomAt: wallZoomAt,
+		panWall: panWall,
+		wallMaxZoom: WALL_MAX_ZOOM,
 		startWow: startWow,
 		stopWow: stopWow,
 		resetWall: function () { wallSeen = null; wallExtra = 0; flares = []; },

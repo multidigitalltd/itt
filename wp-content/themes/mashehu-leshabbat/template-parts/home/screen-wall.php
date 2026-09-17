@@ -31,6 +31,13 @@ $msl_stats   = MSL_Stats::all( (int) get_the_ID() );
 		<div class="msl-screen__spacer" aria-hidden="true"></div>
 	</div>
 
+	<div class="msl-zoom">
+		<button type="button" class="msl-zoom__btn" data-msl-wall-zoom="in"
+			aria-label="<?php echo esc_attr( msl_t( $msl_screens, 'zoom_in' ) ); ?>"><span aria-hidden="true">+</span></button>
+		<button type="button" class="msl-zoom__btn" data-msl-wall-zoom="out"
+			aria-label="<?php echo esc_attr( msl_t( $msl_screens, 'zoom_out' ) ); ?>"><span aria-hidden="true">−</span></button>
+	</div>
+
 	<div class="msl-screen__bottom">
 		<div class="msl-pick msl-pick--stack" data-msl-wall-pick hidden>
 			<span class="msl-pick__name" data-msl-pick-name></span>

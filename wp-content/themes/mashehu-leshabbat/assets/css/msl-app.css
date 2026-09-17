@@ -3253,3 +3253,225 @@ html.msl-a11y-scaled .msl-hero__title {
 html.msl-a11y-scaled .msl-panel__title {
 	max-inline-size: none;
 }
+
+/*
+ * Locking the page behind an overlay.
+ *
+ * The class was already being set and removed by the script; it had no rule
+ * behind it, so the page under the join sheet scrolled the whole time.
+ */
+.msl-locked {
+	overflow: hidden;
+}
+
+/* ------------------------------------------------------------------
+ * The account control in the header
+ * --------------------------------------------------------------- */
+
+.msl-account {
+	position: relative;
+}
+
+.msl-account__btn {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 4px 10px 4px 4px;
+	border: 1px solid var(--msl-hairline);
+	border-radius: 999px;
+	background: none;
+	color: inherit;
+	font: inherit;
+	cursor: pointer;
+}
+
+.msl-account__btn:hover {
+	background: var(--msl-gold-soft);
+}
+
+.msl-account__avatar {
+	inline-size: 28px;
+	block-size: 28px;
+	border-radius: 50%;
+	object-fit: cover;
+	flex: 0 0 auto;
+}
+
+.msl-account__avatar--blank {
+	background: var(--msl-gold-soft);
+}
+
+.msl-account__name {
+	font-size: calc(14px * var(--msl-scale, 1));
+	font-weight: 600;
+	max-inline-size: 10ch;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.msl-account__menu {
+	position: absolute;
+	inset-block-start: calc(100% + 8px);
+	inset-inline-end: 0;
+	z-index: 70;
+	min-inline-size: 220px;
+	padding: 8px;
+	border-radius: 18px;
+	background: var(--msl-sheet);
+	box-shadow: var(--msl-shadow-sheet);
+}
+
+.msl-account__menu[hidden] {
+	display: none;
+}
+
+.msl-account__as {
+	margin: 0 0 6px;
+	padding: 6px 10px;
+	font-size: calc(13px * var(--msl-scale, 1));
+	color: var(--msl-muted-2);
+}
+
+.msl-account__as strong {
+	display: block;
+	color: inherit;
+}
+
+.msl-account__item {
+	display: block;
+	inline-size: 100%;
+	padding: 9px 10px;
+	border: 0;
+	border-radius: 12px;
+	background: none;
+	color: inherit;
+	font: inherit;
+	font-size: calc(14px * var(--msl-scale, 1));
+	text-align: start;
+	text-decoration: none;
+	cursor: pointer;
+}
+
+.msl-account__item:hover {
+	background: var(--msl-gold-soft);
+}
+
+/* The header is already tight on a phone; the name is the first thing that
+   can go, because the avatar alone still says who is signed in. */
+@media (max-width: 720px) {
+	.msl-account__name {
+		display: none;
+	}
+}
+
+/* ------------------------------------------------------------------
+ * The invitation popup
+ * --------------------------------------------------------------- */
+
+.msl-invite {
+	position: fixed;
+	inset: 0;
+	z-index: 80;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 24px;
+}
+
+.msl-invite[hidden] {
+	display: none;
+}
+
+.msl-invite__backdrop {
+	position: absolute;
+	inset: 0;
+	background: rgb(66 40 24 / 0.46);
+	background: color-mix(in oklab, var(--msl-backdrop) 46%, transparent);
+	-webkit-backdrop-filter: blur(10px);
+	backdrop-filter: blur(10px);
+	animation: msl-fade .26s ease both;
+	border: 0;
+}
+
+.msl-invite__card {
+	position: relative;
+	inline-size: 100%;
+	max-inline-size: 460px;
+	max-block-size: 92vh;
+	overflow-y: auto;
+	padding: 34px 30px 24px;
+	border-radius: 34px;
+	background: var(--msl-sheet);
+	box-shadow: var(--msl-shadow-sheet);
+	text-align: center;
+	animation: msl-rise .36s var(--msl-ease) both;
+}
+
+.msl-invite__close {
+	position: absolute;
+	inset-block-start: 14px;
+	inset-inline-end: 16px;
+	inline-size: 34px;
+	block-size: 34px;
+	border: 0;
+	border-radius: 50%;
+	background: none;
+	color: var(--msl-muted-2);
+	font-size: 22px;
+	line-height: 1;
+	cursor: pointer;
+}
+
+.msl-invite__close:hover {
+	background: var(--msl-gold-soft);
+}
+
+.msl-invite__flame {
+	display: block;
+	inline-size: 44px;
+	margin: 0 auto 14px;
+}
+
+.msl-invite__title {
+	margin: 0 0 10px;
+	font-family: var(--msl-font-display);
+	font-size: calc(26px * var(--msl-scale, 1));
+	line-height: 1.2;
+}
+
+.msl-invite__body {
+	margin: 0 0 20px;
+	color: var(--msl-muted-2);
+	font-size: calc(16px * var(--msl-scale, 1));
+	line-height: 1.55;
+}
+
+.msl-invite__link {
+	margin: 0 0 16px;
+	padding: 12px 16px;
+	border-radius: 14px;
+	background: var(--msl-gold-soft);
+	font-weight: 700;
+	/* A URL is not Hebrew, and in an RTL paragraph its slashes end up in the
+	   wrong places. */
+	direction: ltr;
+	word-break: break-all;
+}
+
+.msl-invite__actions {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	margin-block-end: 8px;
+}
+
+.msl-invite__dismiss {
+	inline-size: 100%;
+}
+
+.msl-linkcard__locked {
+	margin: 0 0 14px;
+	color: var(--msl-muted-2);
+	line-height: 1.5;
+}

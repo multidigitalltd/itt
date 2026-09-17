@@ -24,7 +24,7 @@ final class MSL_DB {
 	/**
 	 * Bumped whenever the schema below changes.
 	 */
-	private const SCHEMA_VERSION = '2';
+	private const SCHEMA_VERSION = '3';
 
 	/**
 	 * Option holding the installed schema version.
@@ -73,6 +73,24 @@ final class MSL_DB {
 	}
 
 	/**
+	 * The people table: one row per signed-in participant.
+	 *
+	 * Deliberately not wp_users. A campaign that hopes for hundreds of thousands
+	 * of participants would put every one of them on the site's login screen and
+	 * in its user list, and a participant is not an author, an editor or anyone
+	 * who should be able to reach wp-admin at all. This table holds what signing
+	 * in is actually for here — a stable identity and a personal link — and
+	 * nothing else.
+	 *
+	 * @return string
+	 */
+	public static function people_table(): string {
+		global $wpdb;
+
+		return $wpdb->prefix . 'msl_people';
+	}
+
+	/**
 	 * Whether the tables exist and are current.
 	 *
 	 * @return bool
@@ -102,6 +120,7 @@ final class MSL_DB {
 		$joins   = self::joins_table();
 		$things  = self::things_table();
 		$deds    = self::dedications_table();
+		$people  = self::people_table();
 
 		// Note the deliberate omissions: no full name, no address, no free-text
 		// beyond the dedication, and no raw phone/email/IP — only salted hashes,
@@ -153,6 +172,24 @@ final class MSL_DB {
 				custom_label VARCHAR(140) NOT NULL DEFAULT '',
 				PRIMARY KEY  (join_id, thing_index),
 				KEY thing_index (thing_index)
+			) {$charset};",
+			"CREATE TABLE {$people} (
+				id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+				uuid CHAR(36) NOT NULL,
+				provider VARCHAR(16) NOT NULL DEFAULT 'google',
+				provider_id VARCHAR(191) NOT NULL,
+				display_name VARCHAR(120) NOT NULL DEFAULT '',
+				email_hash CHAR(64) NOT NULL DEFAULT '',
+				avatar_url VARCHAR(255) NOT NULL DEFAULT '',
+				referral_code CHAR(12) NOT NULL,
+				lang CHAR(2) NOT NULL DEFAULT 'he',
+				created_at DATETIME NOT NULL,
+				last_login_at DATETIME NOT NULL,
+				PRIMARY KEY  (id),
+				UNIQUE KEY uuid (uuid),
+				UNIQUE KEY provider_identity (provider, provider_id),
+				UNIQUE KEY referral_code (referral_code),
+				KEY email_hash (email_hash)
 			) {$charset};",
 			"CREATE TABLE {$deds} (
 				id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,

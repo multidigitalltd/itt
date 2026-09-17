@@ -705,7 +705,7 @@ final class MSL_Joins {
 	 *
 	 * @return string
 	 */
-	private static function generate_code(): string {
+	public static function generate_code(): string {
 		global $wpdb;
 
 		$table = MSL_DB::joins_table();

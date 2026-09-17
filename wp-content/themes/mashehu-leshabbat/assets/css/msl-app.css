@@ -3475,3 +3475,183 @@ html.msl-a11y-scaled .msl-panel__title {
 	color: var(--msl-muted-2);
 	line-height: 1.5;
 }
+
+/* ------------------------------------------------------------------
+ * The site menu
+ * --------------------------------------------------------------- */
+
+.msl-menu {
+	position: relative;
+	margin-inline-start: 18px;
+}
+
+.msl-menu__toggle {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 7px 12px;
+	border: 1px solid var(--msl-hairline);
+	border-radius: 999px;
+	background: none;
+	color: inherit;
+	font: inherit;
+	font-size: calc(14px * var(--msl-scale, 1));
+	font-weight: 600;
+	cursor: pointer;
+}
+
+.msl-menu__toggle:hover,
+.msl-menu.is-open .msl-menu__toggle {
+	background: var(--msl-gold-soft);
+}
+
+/* Three rules drawn with one element, so the button carries no extra markup. */
+.msl-menu__bars {
+	position: relative;
+	inline-size: 16px;
+	block-size: 2px;
+	border-radius: 2px;
+	background: currentcolor;
+}
+
+.msl-menu__bars::before,
+.msl-menu__bars::after {
+	content: "";
+	position: absolute;
+	inset-inline: 0;
+	block-size: 2px;
+	border-radius: 2px;
+	background: currentcolor;
+}
+
+.msl-menu__bars::before { inset-block-start: -5px; }
+.msl-menu__bars::after { inset-block-start: 5px; }
+
+.msl-menu__list {
+	position: absolute;
+	inset-block-start: calc(100% + 8px);
+	inset-inline-start: 0;
+	z-index: 70;
+	min-inline-size: 210px;
+	margin: 0;
+	padding: 8px;
+	list-style: none;
+	border-radius: 18px;
+	background: var(--msl-sheet);
+	box-shadow: var(--msl-shadow-sheet);
+}
+
+.msl-menu__list[hidden] {
+	display: none;
+}
+
+.msl-menu__link {
+	display: block;
+	padding: 9px 12px;
+	border-radius: 12px;
+	color: inherit;
+	font-size: calc(15px * var(--msl-scale, 1));
+	text-decoration: none;
+}
+
+.msl-menu__link:hover {
+	background: var(--msl-gold-soft);
+}
+
+@media (max-width: 720px) {
+	.msl-menu {
+		margin-inline-start: 10px;
+	}
+
+	.msl-menu__word {
+		display: none;
+	}
+}
+
+/* ------------------------------------------------------------------
+ * The "about the project" page
+ * --------------------------------------------------------------- */
+
+.msl-main--page {
+	padding-block: 40px 80px;
+}
+
+.msl-about {
+	inline-size: min(100% - (2 * var(--msl-gutter)), 720px);
+	margin-inline: auto;
+}
+
+.msl-about__head {
+	text-align: center;
+	margin-block-end: 36px;
+}
+
+.msl-about__eyebrow {
+	margin: 0 0 10px;
+	color: var(--msl-muted-2);
+	font-size: calc(14px * var(--msl-scale, 1));
+	font-weight: 700;
+	letter-spacing: 0.06em;
+}
+
+.msl-about__title {
+	margin: 0 0 18px;
+	font-family: var(--msl-font-display);
+	font-size: clamp(30px, 6vw, 46px);
+	line-height: 1.12;
+}
+
+.msl-about__lead {
+	margin: 0;
+	font-size: calc(19px * var(--msl-scale, 1));
+	line-height: 1.6;
+	color: var(--msl-muted-2);
+}
+
+/* The verse is the one thing on the page that is not our own words, and it is
+   set to look like it. */
+.msl-verse {
+	margin: 0 0 40px;
+	padding: 26px 28px;
+	border-radius: 26px;
+	background: var(--msl-gold-soft);
+	text-align: center;
+}
+
+.msl-verse__text {
+	margin: 0 0 10px;
+	font-family: var(--msl-font-display);
+	font-size: calc(21px * var(--msl-scale, 1));
+	line-height: 1.7;
+}
+
+.msl-verse__source {
+	color: var(--msl-muted-2);
+	font-size: calc(14px * var(--msl-scale, 1));
+}
+
+.msl-about__block {
+	margin-block-end: 34px;
+}
+
+.msl-about__heading {
+	margin: 0 0 12px;
+	font-family: var(--msl-font-display);
+	font-size: calc(25px * var(--msl-scale, 1));
+	line-height: 1.25;
+}
+
+.msl-about__body p {
+	margin: 0 0 14px;
+	font-size: calc(17px * var(--msl-scale, 1));
+	line-height: 1.75;
+}
+
+.msl-about__body p:last-child {
+	margin-block-end: 0;
+}
+
+.msl-about__foot {
+	margin-block-start: 44px;
+	text-align: center;
+}

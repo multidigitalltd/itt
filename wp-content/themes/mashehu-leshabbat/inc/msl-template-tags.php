@@ -264,3 +264,54 @@ function msl_portrait_slot_svg(): void {
 	</svg>
 	<?php
 }
+
+/**
+ * Render a multi-line content value as paragraphs.
+ *
+ * The editor fields are plain textareas on purpose — no editor, no markup to
+ * sanitise, no way for a pasted paragraph to arrive carrying a style attribute.
+ * A blank line is the only structure they carry, and this is what turns it into
+ * structure on the page.
+ *
+ * @param string $text Raw field value.
+ */
+function msl_paragraphs( string $text ): void {
+	$blocks = preg_split( "/\n\s*\n/", trim( $text ) );
+
+	foreach ( (array) $blocks as $block ) {
+		$block = trim( (string) $block );
+
+		if ( '' === $block ) {
+			continue;
+		}
+
+		printf( '<p>%s</p>', nl2br( esc_html( $block ) ) );
+	}
+}
+
+/**
+ * The site menu, or nothing at all when no links are configured.
+ *
+ * @param array<string, mixed> $nav Resolved nav content.
+ */
+function msl_nav_links( array $nav ): void {
+	foreach ( (array) ( $nav['links'] ?? array() ) as $index => $row ) {
+		if ( ! is_array( $row ) ) {
+			continue;
+		}
+
+		$label = msl_t( $row, 'label' );
+		$url   = (string) ( $row['url'] ?? '' );
+
+		if ( '' === $label || '' === $url ) {
+			continue;
+		}
+
+		printf(
+			'<li class="msl-menu__item"><a class="msl-menu__link" href="%s"%s>%s</a></li>',
+			esc_url( str_starts_with( $url, '#' ) ? home_url( '/' ) . $url : $url ),
+			msl_i18n_attr( 'nav', 'links.' . $index . '.label' ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+			esc_html( $label )
+		);
+	}
+}

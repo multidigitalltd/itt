@@ -14,6 +14,11 @@ defined( 'ABSPATH' ) || exit;
 $msl_campaign = MSL_Meta::get( 'campaign' );
 $msl_auth     = MSL_Meta::get( 'auth' );
 $msl_person   = MSL_Auth::current();
+$msl_nav      = MSL_Meta::get( 'nav', MSL_Importer::page_id() );
+$msl_has_nav  = array() !== array_filter(
+	(array) ( $msl_nav['links'] ?? array() ),
+	static fn( $row ): bool => is_array( $row ) && '' !== (string) ( $row['url'] ?? '' )
+);
 ?>
 <header class="msl-header">
 	<div class="msl-header__inner">
@@ -21,6 +26,20 @@ $msl_person   = MSL_Auth::current();
 			<?php msl_logo( $msl ); ?>
 			<span class="msl-brand__word"<?php msl_i18n( 'chrome', 'brand' ); ?>><?php msl_the( $msl, 'brand' ); ?></span>
 		</a>
+
+		<?php if ( $msl_has_nav ) : ?>
+			<nav class="msl-menu" data-msl-menu aria-label="<?php echo esc_attr( msl_t( $msl_nav, 'menu_open' ) ); ?>">
+				<button type="button" class="msl-menu__toggle" data-msl-menu-toggle
+					aria-expanded="false" aria-controls="msl-menu-list">
+					<span class="msl-menu__bars" aria-hidden="true"></span>
+					<span class="msl-menu__word"<?php msl_i18n( 'nav', 'menu_open' ); ?>><?php msl_the( $msl_nav, 'menu_open' ); ?></span>
+				</button>
+
+				<ul class="msl-menu__list" id="msl-menu-list" hidden>
+					<?php msl_nav_links( $msl_nav ); ?>
+				</ul>
+			</nav>
+		<?php endif; ?>
 
 		<div class="msl-header__actions">
 			<button type="button" class="msl-langtoggle" data-msl-lang-toggle

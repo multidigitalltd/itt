@@ -40,7 +40,7 @@ $msl_blocks = array(
 	),
 );
 ?>
-<section class="msl-stats" aria-labelledby="msl-stats-title">
+<section id="msl-stats" class="msl-stats" aria-labelledby="msl-stats-title">
 	<h2 class="msl-heading" id="msl-stats-title"<?php msl_i18n( 'stats', 'title' ); ?>><?php msl_the( $msl, 'title' ); ?></h2>
 	<p class="msl-subheading"<?php msl_i18n( 'stats', 'sub' ); ?>><?php msl_the( $msl, 'sub' ); ?></p>
 

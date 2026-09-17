@@ -330,6 +330,67 @@ final class MSL_Content {
 				'sending_he'         => 'שולח…',
 				'sending_en'         => 'Sending…',
 			),
+			'nav'               => array(
+				'links'          => array(
+					array( 'label_he' => 'היצירה', 'label_en' => 'The artwork', 'url' => '#msl-stage' ),
+					array( 'label_he' => 'השבת הזאת', 'label_en' => 'This Shabbat', 'url' => '#msl-stats' ),
+					array( 'label_he' => 'המפה', 'label_en' => 'The map', 'url' => '#msl-map' ),
+					array( 'label_he' => 'הקישור שלי', 'label_en' => 'My link', 'url' => '#msl-referral' ),
+					array( 'label_he' => 'על המיזם', 'label_en' => 'About', 'url' => '/about/' ),
+				),
+				'menu_open_he'   => 'תפריט',
+				'menu_open_en'   => 'Menu',
+				'menu_close_he'  => 'סגירת התפריט',
+				'menu_close_en'  => 'Close menu',
+			),
+			'about'             => array(
+				'eyebrow_he'      => 'על המיזם',
+				'eyebrow_en'      => 'About the project',
+				'title_he'        => 'שבת אחת, עם אחד',
+				'title_en'        => 'One Shabbat, one people',
+				'lead_he'         => 'המיזם הזה קם כדי לאחד את עם ישראל סביב השבת. לא סביב דעה, לא סביב זרם ולא סביב מה שמפריד — סביב היום האחד שהוא של כולנו, ושכל אחד ואחת יכולים להביא אליו משהו משלהם.',
+				'lead_en'         => 'This project was founded to bring the people of Israel together around Shabbat. Not around an opinion, not around a movement, and not around anything that divides — around the one day that belongs to all of us, and that each of us can bring something of our own to.',
+				'verse_he'        => 'וְשָׁמְרוּ בְנֵי־יִשְׂרָאֵל אֶת־הַשַּׁבָּת, לַעֲשׂוֹת אֶת־הַשַּׁבָּת לְדֹרֹתָם בְּרִית עוֹלָם',
+				'verse_en'        => 'And the children of Israel shall keep the Shabbat, to make the Shabbat throughout their generations an everlasting covenant',
+				'verse_source_he' => 'שמות ל״א, ט״ז',
+				'verse_source_en' => 'Exodus 31:16',
+				'blocks'          => array(
+					array(
+						'title_he' => 'השבת היא מקור הברכה',
+						'title_en' => 'Shabbat is the source of blessing',
+						'body_he'  => 'חז״ל לימדו שכל הברכה שבימות החול נובעת מן השבת — שממנה מתברכים ששת הימים שאחריה. לכן זה לא עוד יום בשבוע ולא סתם מנוחה: זו הנקודה שממנה הכול מתחיל.
+
+וזו גם הסיבה שהמיזם הזה נבנה סביבה דווקא. מה שמחזיק עם שלם לאורך אלפי שנים אינו הדבר שמחלק אותו, אלא הדבר שממנו כולו ניזון.',
+						'body_en'  => 'Our sages taught that all the blessing of the working week flows from Shabbat — that the six days which follow are blessed from it. So it is not just another day in the week, and not merely rest: it is the point from which everything begins.
+
+That is also why this project was built around it. What holds a whole people together across thousands of years is not what divides it, but what all of it is nourished by.',
+					),
+					array(
+						'title_he' => 'ובזכות השבת תבוא הגאולה',
+						'title_en' => 'And through Shabbat the redemption will come',
+						'body_he'  => 'אמרו חכמים: אלמלי משמרין ישראל שתי שבתות כהלכתן — מיד נגאלין. לא מעשה גדול אחד, לא זכות של יחידים: שבת אחת, ביחד.
+
+מכאן הרעיון הפשוט של האתר. כל אדם מוסיף דבר אחד שהוא עושה לכבוד השבת — נר, קידוש, שיחה עם מישהו, ברכה, שעה של שקט — והדבר הזה נהיה נר אחד ביצירה של השבת הזאת. אף אחד לא נמדד מול אף אחד. כל אור נחשב באותה מידה.',
+						'body_en'  => 'Our sages said: if Israel were to keep two Shabbatot properly, they would be redeemed at once. Not one great deed, and not the merit of a few: one Shabbat, together.
+
+That is where the simple idea of this site comes from. Each person adds one thing they do in honour of Shabbat — a candle, kiddush, a conversation with someone, a blessing, an hour of quiet — and that thing becomes one candle in this Shabbat’s artwork. Nobody is measured against anybody. Every light counts the same.',
+					),
+					array(
+						'title_he' => 'כל עם ישראל, מכל הסוגים',
+						'title_en' => 'All of Israel, of every kind',
+						'body_he'  => 'דתיים וחילונים, מסורתיים וחרדים, בארץ ובעולם, מי ששומר שבת כל חייו ומי שמדליק נר בפעם הראשונה — כולם נכנסים לאותה יצירה, ואי אפשר להבדיל ביניהם בתוכה. זה לא ויתור על ההבדלים; זה פשוט לא המקום שבהם.
+
+אנחנו מאמינים שכך זה עובד באמת: לא בוויכוח על מי צודק, אלא באור אחד שמצטרף לאור אחר, עד שיש כאן הרבה יותר ממה שכל אחד מאיתנו יכול היה להדליק לבד.',
+						'body_en'  => 'Religious and secular, traditional and haredi, in Israel and around the world, someone who has kept Shabbat all their life and someone lighting a candle for the first time — all of them enter the same artwork, and inside it they cannot be told apart. This is not giving up the differences; it is simply not the place for them.
+
+We believe this is how it actually works: not by arguing over who is right, but by one light joining another, until there is far more here than any of us could have lit alone.',
+					),
+				),
+				'cta_he'          => 'להוסיף את האור שלי',
+				'cta_en'          => 'Add my light',
+				'back_he'         => 'חזרה לעמוד הבית',
+				'back_en'         => 'Back to the home page',
+			),
 			'auth'              => array(
 				'login_enabled'        => 0,
 				'google_client_id'     => '',

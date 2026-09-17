@@ -84,7 +84,7 @@ final class MSL_Panel {
 	private static function page_id(): int {
 		$requested = isset( $_GET['msl_page'] ) ? absint( $_GET['msl_page'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 
-		if ( $requested > 0 && in_array( $requested, self::campaign_pages(), true ) ) {
+		if ( $requested > 0 && isset( self::theme_pages()[ $requested ] ) ) {
 			return $requested;
 		}
 
@@ -92,38 +92,64 @@ final class MSL_Panel {
 	}
 
 	/**
-	 * Every page using the campaign template.
+	 * The theme's page templates, by the section template key they carry.
 	 *
-	 * Normally exactly one. A site that has built a second campaign page needs
-	 * to be able to say which one it is editing rather than silently editing
-	 * the first.
-	 *
-	 * @return int[]
+	 * @var array<string, string>
 	 */
-	private static function campaign_pages(): array {
+	private const TEMPLATES = array(
+		'template-msl-home.php'  => 'home',
+		'template-msl-about.php' => 'about',
+	);
+
+	/**
+	 * Every page the panel can edit, as page id => section template key.
+	 *
+	 * Normally one page per template. A site that has built a second campaign
+	 * page needs to be able to say which one it is editing rather than silently
+	 * editing the first.
+	 *
+	 * @return array<int, string>
+	 */
+	private static function theme_pages(): array {
 		static $memo = null;
 
 		if ( null !== $memo ) {
 			return $memo;
 		}
 
-		$memo = array_map(
-			'absint',
-			get_posts(
-				array(
-					'post_type'              => 'page',
-					'post_status'            => array( 'publish', 'draft', 'private' ),
-					'numberposts'            => 20,
-					'fields'                 => 'ids',
-					'meta_key'               => '_wp_page_template', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
-					'meta_value'             => 'template-msl-home.php', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
-					'no_found_rows'          => true,
-					'update_post_term_cache' => false,
-				)
+		$memo = array();
+
+		foreach ( get_posts(
+			array(
+				'post_type'              => 'page',
+				'post_status'            => array( 'publish', 'draft', 'private' ),
+				'numberposts'            => 40,
+				'fields'                 => 'ids',
+				'meta_key'               => '_wp_page_template', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+				'meta_compare'           => 'IN',
+				'meta_value'             => array_keys( self::TEMPLATES ), // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
+				'no_found_rows'          => true,
+				'update_post_term_cache' => false,
 			)
-		);
+		) as $id ) {
+			$slug = (string) get_page_template_slug( (int) $id );
+
+			if ( isset( self::TEMPLATES[ $slug ] ) ) {
+				$memo[ (int) $id ] = self::TEMPLATES[ $slug ];
+			}
+		}
 
 		return $memo;
+	}
+
+	/**
+	 * Which set of sections a page carries.
+	 *
+	 * @param int $page_id Page id.
+	 * @return string
+	 */
+	private static function template_key( int $page_id ): string {
+		return self::theme_pages()[ $page_id ] ?? 'home';
 	}
 
 	/**
@@ -139,7 +165,7 @@ final class MSL_Panel {
 	private static function input_count( int $post_id ): int {
 		$count = 0;
 
-		foreach ( MSL_Fields::sections_for( 'home' ) as $section ) {
+		foreach ( MSL_Fields::sections_for( self::template_key( $post_id ) ) as $section ) {
 			$values = MSL_Meta::get( $section, $post_id );
 
 			foreach ( MSL_Fields::fields( $section ) as $field ) {
@@ -171,7 +197,7 @@ final class MSL_Panel {
 		}
 
 		$page_id  = self::page_id();
-		$sections = MSL_Fields::sections_for( 'home' );
+		$sections = MSL_Fields::sections_for( self::template_key( $page_id ) );
 
 		echo '<div class="wrap msl-panel">';
 		printf( '<h1 class="wp-heading-inline">%s</h1>', esc_html__( 'תוכן העמוד', 'mashehu-leshabbat' ) );
@@ -313,7 +339,7 @@ final class MSL_Panel {
 
 		echo '</p>';
 
-		$pages = self::campaign_pages();
+		$pages = array_keys( self::theme_pages() );
 
 		if ( count( $pages ) > 1 ) {
 			echo '<p class="msl-panel__pages">';
@@ -389,7 +415,7 @@ final class MSL_Panel {
 
 		$page_id = isset( $_POST['msl_page'] ) ? absint( $_POST['msl_page'] ) : 0;
 
-		if ( 0 === $page_id || ! in_array( $page_id, self::campaign_pages(), true ) ) {
+		if ( 0 === $page_id || ! isset( self::theme_pages()[ $page_id ] ) ) {
 			wp_die( esc_html__( 'העמוד המבוקש אינו עמוד קמפיין.', 'mashehu-leshabbat' ), '', array( 'response' => 400 ) );
 		}
 
@@ -402,7 +428,7 @@ final class MSL_Panel {
 			? wp_unslash( $_POST['msl'] ) // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 			: array();
 
-		foreach ( MSL_Fields::sections_for( 'home' ) as $section ) {
+		foreach ( MSL_Fields::sections_for( self::template_key( $page_id ) ) as $section ) {
 			$values = $submitted[ $section ] ?? null;
 
 			if ( ! is_array( $values ) ) {
@@ -437,6 +463,6 @@ final class MSL_Panel {
 		// phpcs:ignore WordPress.Security.NonceVerification.Missing
 		$section = isset( $_POST['msl_open'] ) ? sanitize_key( wp_unslash( (string) $_POST['msl_open'] ) ) : '';
 
-		return in_array( $section, MSL_Fields::sections_for( 'home' ), true ) ? 'msl-section-' . $section : '';
+		return '' !== $section && array_key_exists( $section, MSL_Fields::all() ) ? 'msl-section-' . $section : '';
 	}
 }

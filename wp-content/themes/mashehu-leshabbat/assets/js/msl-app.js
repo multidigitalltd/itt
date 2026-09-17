@@ -1072,6 +1072,43 @@
 		});
 	}
 
+	/* The site menu. On a phone it is the only way to reach the rest of the
+	   page, so it closes on a choice as well as on Escape and on a click away —
+	   an anchor that scrolls behind an open menu is a menu nobody closed. */
+	function bindMenu() {
+		var wrap = $('[data-msl-menu]');
+
+		if (!wrap) { return; }
+
+		var toggle = $('[data-msl-menu-toggle]', wrap);
+		var list = $('.msl-menu__list', wrap);
+
+		if (!toggle || !list) { return; }
+
+		var setOpen = function (open) {
+			list.hidden = !open;
+			toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+			wrap.classList.toggle('is-open', open);
+		};
+
+		toggle.addEventListener('click', function (event) {
+			event.stopPropagation();
+			setOpen(list.hidden);
+		});
+
+		$$('.msl-menu__link', wrap).forEach(function (link) {
+			link.addEventListener('click', function () { setOpen(false); });
+		});
+
+		document.addEventListener('click', function (event) {
+			if (!wrap.contains(event.target)) { setOpen(false); }
+		});
+
+		document.addEventListener('keydown', function (event) {
+			if (event.key === 'Escape') { setOpen(false); }
+		});
+	}
+
 	function bindInvite() {
 		if (!inviteModal) { return; }
 
@@ -1609,6 +1646,7 @@
 		bindMyCandle();
 		bindWall();
 		bindShare();
+		bindMenu();
 		bindAccount();
 		bindInvite();
 		startCollage();

@@ -59,7 +59,11 @@ final class MSL_Metabox {
 	 * @return string
 	 */
 	private static function template_key( WP_Post $post ): string {
-		return 'template-msl-home.php' === (string) get_page_template_slug( $post ) ? 'home' : '';
+		return match ( (string) get_page_template_slug( $post ) ) {
+			'template-msl-home.php'  => 'home',
+			'template-msl-about.php' => 'about',
+			default                  => '',
+		};
 	}
 
 	/**

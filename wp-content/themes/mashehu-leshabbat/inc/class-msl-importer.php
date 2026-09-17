@@ -33,6 +33,12 @@ final class MSL_Importer {
 			'template' => 'template-msl-home.php',
 			'front'    => true,
 		),
+		'about'         => array(
+			'title'    => 'על המיזם',
+			'slug'     => 'about',
+			'template' => 'template-msl-about.php',
+			'front'    => false,
+		),
 		'accessibility' => array(
 			'title'    => 'הצהרת נגישות',
 			'slug'     => 'hatsharat-negishut',

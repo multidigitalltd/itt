@@ -586,6 +586,50 @@ final class MSL_Fields {
 					self::bi( 'text', 'sending', 'הודעת שליחה' ),
 				)
 			),
+			'nav'      => self::section(
+				'13 · תפריט האתר',
+				'home',
+				array(
+					self::repeater(
+						'links',
+						'פריטי התפריט',
+						'label_he',
+						array(
+							self::text( 'label_he', 'תווית (עברית)' ),
+							self::text( 'label_en', 'תווית (English)' ),
+							self::url( 'url', 'קישור', 'כתובת מלאה, או עוגן כמו ‎#msl-referral כדי לגלול בתוך עמוד הבית.' ),
+						),
+						'רשימה ריקה = אין תפריט בכלל, וכפתור התפריט לא מוצג.'
+					),
+					self::bi( 'text', 'menu_open', 'תווית כפתור פתיחת התפריט' ),
+					self::bi( 'text', 'menu_close', 'תווית כפתור סגירת התפריט' ),
+				)
+			),
+			'about'    => self::section(
+				'עמוד "על המיזם"',
+				'about',
+				array(
+					self::bi( 'text', 'eyebrow', 'שורת פתיחה קטנה' ),
+					self::bi( 'text', 'title', 'כותרת ראשית' ),
+					self::bi( 'textarea', 'lead', 'פסקת פתיחה', 4 ),
+					self::bi( 'text', 'verse', 'פסוק או ציטוט' ),
+					self::bi( 'text', 'verse_source', 'מקור הציטוט' ),
+					self::repeater(
+						'blocks',
+						'פרקי העמוד',
+						'title_he',
+						array(
+							self::text( 'title_he', 'כותרת (עברית)' ),
+							self::text( 'title_en', 'כותרת (English)' ),
+							self::textarea( 'body_he', 'טקסט (עברית)', 5 ),
+							self::textarea( 'body_en', 'טקסט (English)', 5 ),
+						),
+						'שורה ריקה בטקסט פותחת פסקה חדשה.'
+					),
+					self::bi( 'text', 'cta', 'כפתור החזרה לקמפיין' ),
+					self::bi( 'text', 'back', 'קישור חזרה בכותרת' ),
+				)
+			),
 			'auth'     => self::section(
 				'12 · התחברות וחשבונות',
 				'home',

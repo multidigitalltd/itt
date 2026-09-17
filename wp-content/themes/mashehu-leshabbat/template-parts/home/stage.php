@@ -20,7 +20,7 @@ $msl_summary = sprintf(
 	$msl_stats['pct']
 );
 ?>
-<section id="msl-stage" class="msl-stage" aria-labelledby="msl-stage-title">
+<section id="msl-stage" class="msl-stage" aria-labelledby="msl-stage-title" data-msl-rise-group>
 	<h2 class="msl-visually-hidden" id="msl-stage-title"<?php msl_i18n( 'stage', 'art_title' ); ?>><?php msl_the( $msl, 'art_title' ); ?></h2>
 
 	<div class="msl-panel msl-panel--art">

@@ -121,10 +121,12 @@ $msl_steps     = 3;
 					<h2 class="msl-step__title"<?php msl_i18n( 'join', 'det_title' ); ?>><?php msl_the( $msl, 'det_title' ); ?></h2>
 					<p class="msl-step__sub"<?php msl_i18n( 'join', 'det_sub' ); ?>><?php msl_the( $msl, 'det_sub' ); ?></p>
 
+					<p class="msl-optional"<?php msl_i18n( 'join', 'det_optional' ); ?>><?php msl_the( $msl, 'det_optional' ); ?></p>
+
 					<p class="msl-field">
 						<label class="msl-field__label" for="msl-first-name"<?php msl_i18n( 'join', 'ph_name' ); ?>><?php msl_the( $msl, 'ph_name' ); ?></label>
 						<input type="text" class="msl-input" id="msl-first-name" name="first_name"
-							maxlength="80" autocomplete="given-name" required
+							maxlength="80" autocomplete="given-name"
 							aria-describedby="msl-error-first-name">
 						<span class="msl-field__error" id="msl-error-first-name" role="alert"></span>
 					</p>
@@ -133,7 +135,7 @@ $msl_steps     = 3;
 						<p class="msl-field">
 							<label class="msl-field__label" for="msl-city"<?php msl_i18n( 'join', 'ph_city' ); ?>><?php msl_the( $msl, 'ph_city' ); ?></label>
 							<input type="text" class="msl-input" id="msl-city" name="city"
-								maxlength="120" autocomplete="address-level2" required
+								maxlength="120" autocomplete="address-level2"
 								aria-describedby="msl-error-city">
 							<span class="msl-field__error" id="msl-error-city" role="alert"></span>
 						</p>
@@ -193,7 +195,7 @@ $msl_steps     = 3;
 			</div>
 
 			<div class="msl-join__foot">
-				<button type="button" class="msl-btn msl-btn--block msl-btn--ink" data-msl-next="2" disabled
+				<button type="button" class="msl-btn msl-btn--block msl-btn--ink" data-msl-next="2"
 					<?php msl_i18n( 'join', 'pick_cta' ); ?>><?php msl_the( $msl, 'pick_cta' ); ?></button>
 
 				<div class="msl-join__foot-group" hidden data-msl-foot="2">

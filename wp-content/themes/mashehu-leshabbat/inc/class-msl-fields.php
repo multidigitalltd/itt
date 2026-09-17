@@ -554,6 +554,7 @@ final class MSL_Fields {
 					self::bi( 'text', 'skip', 'כפתור הדילוג' ),
 					self::bi( 'text', 'det_title', 'שלב 3 — כותרת' ),
 					self::bi( 'text', 'det_sub', 'שלב 3 — שורה מתחת' ),
+					self::bi( 'text', 'det_optional', 'שלב 3 — שורת "אפשר לדלג"' ),
 					self::bi( 'text', 'ph_name', 'תווית שדה השם' ),
 					self::bi( 'text', 'ph_city', 'תווית שדה העיר' ),
 					self::bi( 'text', 'ph_country', 'תווית שדה המדינה' ),
@@ -565,8 +566,6 @@ final class MSL_Fields {
 					self::bi( 'textarea', 'privacy_note', 'הערת הפרטיות', 2 ),
 					self::bi( 'text', 'submit_cta', 'שלב 3 — כפתור השליחה' ),
 					self::bi( 'text', 'step_label', 'תווית מד ההתקדמות', 3, '%1$d = השלב הנוכחי, %2$d = סך השלבים.' ),
-					self::bi( 'text', 'err_name', 'שגיאה — שם חסר' ),
-					self::bi( 'text', 'err_city', 'שגיאה — עיר חסרה' ),
 					self::bi( 'text', 'err_email', 'שגיאה — אימייל לא תקין' ),
 					self::bi( 'text', 'err_phone', 'שגיאה — טלפון לא תקין' ),
 					self::bi( 'text', 'err_generic', 'שגיאה — שליחה נכשלה' ),
@@ -587,7 +586,7 @@ final class MSL_Fields {
 						array(
 							self::text( 'label_he', 'תווית (עברית)' ),
 							self::text( 'label_en', 'תווית (English)' ),
-							self::url( 'url', 'קישור', 'כתובת מלאה, או עוגן כמו ‎#msl-referral כדי לגלול בתוך עמוד הבית.' ),
+							self::url( 'url', 'קישור', 'כתובת מלאה, עוגן כמו ‎#msl-referral כדי לגלול בתוך עמוד הבית, או ‎#invite כדי לפתוח את חלון הקישור האישי.' ),
 						),
 						'רשימה ריקה = אין תפריט בכלל, וכפתור התפריט לא מוצג.'
 					),
@@ -637,7 +636,7 @@ final class MSL_Fields {
 					self::bi( 'textarea', 'invite_body', 'פופאפ הגיוס — טקסט', 3 ),
 					self::bi( 'text', 'invite_cta', 'פופאפ הגיוס — כפתור ראשי' ),
 					self::bi( 'text', 'invite_dismiss', 'פופאפ הגיוס — כפתור משני' ),
-					self::number( 'invite_delay', 'שניות עד שהפופאפ עולה', 0, 120, 'אפס = מיד עם טעינת העמוד.' ),
+					self::number( 'invite_delay', 'שניות עד שהפופאפ עולה', 0, 120, 'אפס = מיד עם טעינת העמוד. חמש שניות נותנות לגולש לראות את העמוד קודם.' ),
 					self::number( 'invite_days', 'ימים עד שהפופאפ יחזור למי שסגר אותו', 0, 365, 'אפס = יעלה בכל טעינה. זה מעצבן; שבעה ימים זה סביר.' ),
 				)
 			),

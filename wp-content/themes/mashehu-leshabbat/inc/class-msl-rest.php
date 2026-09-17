@@ -33,7 +33,13 @@ final class MSL_REST {
 	 * A real person picks something, reads the dedication step and types a name
 	 * and a city. Under this, it was not a person.
 	 */
-	private const MIN_FILL_SECONDS = 2.5;
+	/*
+	 * A human takes a moment; a script does not. Now that no field is required
+	 * the honest fast path is genuinely fast — three taps and done — so this is
+	 * the floor a real person can still clear, not a guess at how long filling
+	 * a form ought to take.
+	 */
+	private const MIN_FILL_SECONDS = 1.2;
 
 	/**
 	 * Register the routes.
@@ -332,10 +338,6 @@ final class MSL_REST {
 
 		$things = array_slice( $things, 0, MSL_Joins::MAX_THINGS );
 
-		if ( array() === $things ) {
-			return new WP_Error( 'msl_invalid', 'generic' );
-		}
-
 		$custom_label = '';
 
 		foreach ( $things as $index ) {
@@ -348,13 +350,18 @@ final class MSL_REST {
 		$city       = mb_substr( sanitize_text_field( (string) $request->get_param( 'city' ) ), 0, 120 );
 		$country    = mb_substr( sanitize_text_field( (string) $request->get_param( 'country' ) ), 0, 120 );
 
-		if ( '' === trim( $first_name ) ) {
-			return new WP_Error( 'msl_invalid', 'name' );
-		}
-
-		if ( '' === trim( $city ) ) {
-			return new WP_Error( 'msl_invalid', 'city' );
-		}
+		/*
+		 * Nothing above is required. The campaign counts people, and a field
+		 * somebody did not want to answer is a person who never joined — so a
+		 * blank form is a valid join, and it joins anonymously.
+		 *
+		 * The shape checks below still stand: they only ever run on something
+		 * the visitor actually typed, and they catch a typo rather than refuse
+		 * an answer.
+		 */
+		$first_name = trim( $first_name );
+		$city       = trim( $city );
+		$country    = trim( $country );
 
 		$email = sanitize_email( (string) $request->get_param( 'email' ) );
 		$phone = sanitize_text_field( (string) $request->get_param( 'phone' ) );
@@ -385,7 +392,10 @@ final class MSL_REST {
 			'country'         => $country,
 			'email'           => $email,
 			'phone'           => $phone,
-			'is_anonymous'    => (int) (bool) $request->get_param( 'is_anonymous' ),
+			// Asked for, or simply not given: a join with no name on it is an
+			// anonymous join, and the feed and the artwork both already know
+			// what to do with one.
+			'is_anonymous'    => (int) ( (bool) $request->get_param( 'is_anonymous' ) || '' === $first_name ),
 			'lang'            => in_array( $lang, MSL_I18N::LANGS, true ) ? $lang : 'he',
 			'referred_by'     => sanitize_key( (string) $request->get_param( 'referred_by' ) ),
 			'dedication'      => $dedication_kind,
@@ -405,7 +415,7 @@ final class MSL_REST {
 	 * @return WP_REST_Response
 	 */
 	private static function error( string $key, array $join, int $status ): WP_REST_Response {
-		$field = 'err_' . ( in_array( $key, array( 'name', 'city', 'email', 'phone', 'duplicate', 'rate', 'closed' ), true ) ? $key : 'generic' );
+		$field = 'err_' . ( in_array( $key, array( 'email', 'phone', 'duplicate', 'rate', 'closed' ), true ) ? $key : 'generic' );
 
 		return self::uncached(
 			new WP_REST_Response(

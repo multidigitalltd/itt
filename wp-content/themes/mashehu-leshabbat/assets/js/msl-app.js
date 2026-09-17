@@ -980,6 +980,65 @@
 
 
 	/* ------------------------------------------------------------------
+	 * Coming into view
+	 * --------------------------------------------------------------- */
+
+	/*
+	 * Sections settle in as they are reached.
+	 *
+	 * The `msl-js` class is added here rather than printed by the server, so the
+	 * hidden state cannot exist unless this code is running to undo it. A page
+	 * whose CSS hides its content and whose script failed to load is a blank
+	 * page, and that is not a trade worth making for an animation.
+	 *
+	 * Each element is unobserved once it has arrived: this runs while the whole
+	 * page scrolls, and an observer that keeps firing for things already shown
+	 * is work with nothing to show for it.
+	 */
+	function startEntrances() {
+		var targets = $$('[data-msl-rise], [data-msl-rise-group]');
+
+		if (!targets.length) { return; }
+
+		if (reduceMotion || !('IntersectionObserver' in window)) {
+			targets.forEach(function (el) { el.classList.add('is-in'); });
+			document.documentElement.classList.add('msl-js');
+
+			return;
+		}
+
+		document.documentElement.classList.add('msl-js');
+
+		var seen = new window.IntersectionObserver(function (entries) {
+			entries.forEach(function (entry) {
+				if (!entry.isIntersecting) { return; }
+
+				entry.target.classList.add('is-in');
+				seen.unobserve(entry.target);
+			});
+		}, {
+			/* A little before the edge, so a section is already settled by the
+			   time it is properly on screen rather than animating under the
+			   reader's eye. */
+			rootMargin: '0px 0px -12% 0px',
+			threshold: 0.08
+		});
+
+		targets.forEach(function (el) { seen.observe(el); });
+
+		/* Whatever is already on screen at load arrives immediately: the first
+		   thing a visitor sees should not have to be scrolled into place. */
+		window.requestAnimationFrame(function () {
+			targets.forEach(function (el) {
+				if (el.getBoundingClientRect().top < window.innerHeight * 0.92) {
+					el.classList.add('is-in');
+					seen.unobserve(el);
+				}
+			});
+		});
+	}
+
+	/* ------------------------------------------------------------------
 	 * The candles in the hero
 	 * --------------------------------------------------------------- */
 
@@ -1204,7 +1263,18 @@
 		});
 
 		$$('.msl-menu__link', wrap).forEach(function (link) {
-			link.addEventListener('click', function () { setOpen(false); });
+			link.addEventListener('click', function (event) {
+				setOpen(false);
+
+				/* A menu entry pointing at #invite opens the share window rather
+				   than navigating. It is also the way back to it for anyone who
+				   closed it once — the automatic opening stays closed for days
+				   on purpose, and asking for it should always work. */
+				if (/#invite$/.test(link.getAttribute('href') || '')) {
+					event.preventDefault();
+					openInvite();
+				}
+			});
 		});
 
 		document.addEventListener('click', function (event) {
@@ -1278,9 +1348,17 @@
 
 		if (otherField) { otherField.hidden = !other; }
 
+		/*
+		 * Choosing nothing is allowed too.
+		 *
+		 * This button used to stay disabled until something was picked, which
+		 * made the first step a gate rather than an invitation — and a gate at
+		 * the top of a form is where most people leave. Somebody who wants to
+		 * add a light without naming what it is still adds a light.
+		 */
 		var next = $('[data-msl-next="2"]');
 
-		if (next) { next.disabled = picked.length === 0; }
+		if (next) { next.disabled = false; }
 	}
 
 	function setStep(step) {
@@ -1357,23 +1435,21 @@
 		}
 	}
 
+	/*
+	 * Nothing here is required.
+	 *
+	 * The campaign wants candles, and a field somebody does not want to answer
+	 * is a candle that never gets lit. A blank form still joins — it simply
+	 * joins without a name, which the artwork has always known how to show.
+	 * What is still checked is the *shape* of what someone did type: an address
+	 * with no @ in it is a typo, not a choice, and telling them now is kinder
+	 * than a reminder that never arrives.
+	 */
 	function validate() {
 		clearErrors();
 
-		var name = $('#msl-first-name');
-		var city = $('#msl-city');
 		var email = $('#msl-email');
 		var phone = $('#msl-phone');
-
-		if (!name.value.trim()) {
-			showFieldError('msl-first-name', t('join.err_name'));
-			return false;
-		}
-
-		if (!city.value.trim()) {
-			showFieldError('msl-city', t('join.err_city'));
-			return false;
-		}
 
 		if (email.value.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.value.trim())) {
 			showFieldError('msl-email', t('join.err_email'));
@@ -1731,6 +1807,7 @@
 		bindMyCandle();
 		bindWall();
 		bindShare();
+		startEntrances();
 		bindHeroCandles();
 		bindMenu();
 		bindAccount();

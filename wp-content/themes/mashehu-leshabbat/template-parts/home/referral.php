@@ -39,7 +39,7 @@ sort( $msl_milestones );
 
 $msl_next = $msl_milestones[0] ?? 0;
 ?>
-<section id="msl-referral" class="msl-referral" aria-labelledby="msl-referral-title">
+<section id="msl-referral" class="msl-referral" aria-labelledby="msl-referral-title" data-msl-rise>
 	<div class="msl-referral__head">
 		<h2 class="msl-heading" id="msl-referral-title"<?php msl_i18n( 'referral', 'title' ); ?>><?php msl_the( $msl, 'title' ); ?></h2>
 		<p class="msl-subheading"<?php msl_i18n( 'referral', 'sub' ); ?>><?php msl_the( $msl, 'sub' ); ?></p>

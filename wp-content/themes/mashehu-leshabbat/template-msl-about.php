@@ -24,14 +24,14 @@ msl_section( 'chrome' );
 ?>
 <main id="msl-main" class="msl-main msl-main--page">
 	<article class="msl-about">
-		<header class="msl-about__head">
+		<header class="msl-about__head" data-msl-rise>
 			<p class="msl-about__eyebrow"<?php msl_i18n( 'about', 'eyebrow' ); ?>><?php msl_the( $msl_about, 'eyebrow' ); ?></p>
 			<h1 class="msl-about__title"<?php msl_i18n( 'about', 'title' ); ?>><?php msl_the( $msl_about, 'title' ); ?></h1>
 			<p class="msl-about__lead"<?php msl_i18n( 'about', 'lead' ); ?>><?php msl_the( $msl_about, 'lead' ); ?></p>
 		</header>
 
 		<?php if ( '' !== msl_t( $msl_about, 'verse' ) ) : ?>
-			<figure class="msl-verse">
+			<figure class="msl-verse" data-msl-rise>
 				<blockquote class="msl-verse__text"<?php msl_i18n( 'about', 'verse' ); ?>><?php msl_the( $msl_about, 'verse' ); ?></blockquote>
 				<figcaption class="msl-verse__source"<?php msl_i18n( 'about', 'verse_source' ); ?>><?php msl_the( $msl_about, 'verse_source' ); ?></figcaption>
 			</figure>
@@ -50,7 +50,7 @@ msl_section( 'chrome' );
 				continue;
 			}
 			?>
-			<section class="msl-about__block">
+			<section class="msl-about__block" data-msl-rise>
 				<?php if ( '' !== $msl_heading ) : ?>
 					<h2 class="msl-about__heading"<?php msl_i18n( 'about', 'blocks.' . $msl_index . '.title' ); ?>><?php echo esc_html( $msl_heading ); ?></h2>
 				<?php endif; ?>
@@ -59,7 +59,7 @@ msl_section( 'chrome' );
 			</section>
 		<?php endforeach; ?>
 
-		<footer class="msl-about__foot">
+		<footer class="msl-about__foot" data-msl-rise>
 			<a class="msl-btn msl-btn--amber msl-btn--wide" href="<?php echo esc_url( 0 !== $msl_home ? (string) get_permalink( $msl_home ) : home_url( '/' ) ); ?>"
 				<?php msl_i18n( 'about', 'cta' ); ?>><?php msl_the( $msl_about, 'cta' ); ?></a>
 		</footer>

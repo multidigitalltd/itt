@@ -383,6 +383,24 @@ final class MSL_Joins {
 			}
 		}
 
+		/*
+		 * The address check needs something to identify a person by.
+		 *
+		 * Now that nothing on the form is required, a blank join has an empty
+		 * name and an empty city — and matching on those would read every
+		 * anonymous join from one address as the same person. A household, an
+		 * office, a school, a whole mobile carrier behind one NAT: the first
+		 * candle lights and every one after it is turned away. That is the
+		 * opposite of what this campaign is counting.
+		 *
+		 * So the check runs only when there is an identity to compare. What
+		 * still stands against abuse is the rate limit, the honeypot and the
+		 * minimum fill time — none of which need a name.
+		 */
+		if ( '' === $first_name && '' === $city ) {
+			return '';
+		}
+
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$hit = (int) $wpdb->get_var(
 			$wpdb->prepare(

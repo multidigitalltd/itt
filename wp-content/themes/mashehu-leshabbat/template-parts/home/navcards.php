@@ -14,7 +14,7 @@ defined( 'ABSPATH' ) || exit;
 $msl_stats = MSL_Stats::all( (int) get_the_ID() );
 $msl_stage = MSL_Meta::get( 'stage' );
 ?>
-<nav class="msl-navcards" aria-label="<?php esc_attr_e( 'מעבר ליצירה ולקיר הנרות', 'mashehu-leshabbat' ); ?>">
+<nav class="msl-navcards" data-msl-rise-group aria-label="<?php esc_attr_e( 'מעבר ליצירה ולקיר הנרות', 'mashehu-leshabbat' ); ?>">
 	<button type="button" class="msl-navcard" data-msl-goto="art">
 		<span class="msl-navcard__thumb">
 			<canvas data-msl-canvas="artmini" aria-hidden="true"></canvas>

@@ -16,7 +16,7 @@ defined( 'ABSPATH' ) || exit;
 
 $msl_countries = (int) MSL_Meta::get( 'campaign' )['countries'];
 ?>
-<section id="msl-map" class="msl-map" aria-labelledby="msl-map-title">
+<section id="msl-map" class="msl-map" aria-labelledby="msl-map-title" data-msl-rise>
 	<div class="msl-map__head">
 		<h2 class="msl-heading" id="msl-map-title"<?php msl_i18n( 'map', 'title' ); ?>><?php msl_the( $msl, 'title' ); ?></h2>
 		<p class="msl-subheading" data-msl-map-sub

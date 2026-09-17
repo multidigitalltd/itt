@@ -3571,3 +3571,80 @@ html.msl-a11y-scaled .msl-panel__title {
 		inset-block-end: 88px;
 	}
 }
+
+/*
+ * "You can skip all of it."
+ *
+ * Nothing on this step is required, and a form that does not say so is a form
+ * people fill in out of habit — or abandon. Set as a quiet aside rather than a
+ * warning: it is permission, not an instruction.
+ */
+.msl-page .msl-optional {
+	margin-block: -14px 20px;
+	padding: 10px 14px;
+	border-radius: 14px;
+	background: var(--msl-gold-soft);
+	color: var(--msl-ink);
+	font-size: calc(14px * var(--msl-scale, 1));
+	line-height: 1.5;
+}
+
+/* ==========================================================================
+   20  Coming into view
+   ========================================================================== */
+
+/*
+ * Sections settle in as they are reached.
+ *
+ * Deliberately small: eighteen pixels and a fade. A page about candles being
+ * lit one at a time should feel like things arriving, not like things being
+ * thrown at the screen — and anything larger fights the scroll on a phone,
+ * where the whole section is already in view by the time it starts.
+ *
+ * The hidden state only ever exists once the script has confirmed it can undo
+ * it. Without JavaScript, nothing here applies and the page is simply visible.
+ */
+.msl-js [data-msl-rise] {
+	opacity: 0;
+	transform: translateY(18px);
+	transition:
+		opacity 0.7s var(--msl-ease, cubic-bezier(.2, .8, .2, 1)),
+		transform 0.7s var(--msl-ease, cubic-bezier(.2, .8, .2, 1));
+	will-change: opacity, transform;
+}
+
+.msl-js [data-msl-rise].is-in {
+	opacity: 1;
+	transform: none;
+}
+
+/* Children of a group arrive in order rather than all at once. The stagger is
+   capped: past the sixth the eye reads it as a delay, not as a sequence. */
+.msl-js [data-msl-rise-group] > * {
+	opacity: 0;
+	transform: translateY(14px);
+	transition:
+		opacity 0.6s var(--msl-ease, cubic-bezier(.2, .8, .2, 1)),
+		transform 0.6s var(--msl-ease, cubic-bezier(.2, .8, .2, 1));
+}
+
+.msl-js [data-msl-rise-group].is-in > * {
+	opacity: 1;
+	transform: none;
+}
+
+.msl-js [data-msl-rise-group].is-in > :nth-child(1) { transition-delay: 0ms; }
+.msl-js [data-msl-rise-group].is-in > :nth-child(2) { transition-delay: 70ms; }
+.msl-js [data-msl-rise-group].is-in > :nth-child(3) { transition-delay: 140ms; }
+.msl-js [data-msl-rise-group].is-in > :nth-child(4) { transition-delay: 210ms; }
+.msl-js [data-msl-rise-group].is-in > :nth-child(5) { transition-delay: 280ms; }
+.msl-js [data-msl-rise-group].is-in > :nth-child(n+6) { transition-delay: 340ms; }
+
+@media (prefers-reduced-motion: reduce) {
+	.msl-js [data-msl-rise],
+	.msl-js [data-msl-rise-group] > * {
+		opacity: 1;
+		transform: none;
+		transition: none;
+	}
+}

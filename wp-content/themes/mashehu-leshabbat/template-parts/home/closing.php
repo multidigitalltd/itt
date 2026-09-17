@@ -17,7 +17,7 @@ $msl_hero     = MSL_Meta::get( 'hero' );
 $msl_stats    = MSL_Stats::all( (int) get_the_ID() );
 $msl_closed   = 1 === (int) $msl_campaign['closed'];
 ?>
-<section class="msl-closing" aria-labelledby="msl-closing-title">
+<section class="msl-closing" aria-labelledby="msl-closing-title" data-msl-rise>
 	<div class="msl-closing__inner">
 		<h2 class="msl-closing__title" id="msl-closing-title"<?php msl_i18n( 'closing', 'title' ); ?>><?php msl_the( $msl, 'title' ); ?></h2>
 

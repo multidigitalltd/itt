@@ -2768,15 +2768,6 @@ html.msl-a11y-scaled .msl-hero__title {
 html.msl-a11y-scaled .msl-panel__title {
 	max-inline-size: none;
 }
-/*
- * Locking the page behind an overlay.
- *
- * The class was already being set and removed by the script; it had no rule
- * behind it, so the page under the join sheet scrolled the whole time.
- */
-.msl-locked {
-	overflow: hidden;
-}
 /* ------------------------------------------------------------------
  * The account control in the header
  * --------------------------------------------------------------- */
@@ -3045,77 +3036,243 @@ html.msl-a11y-scaled .msl-panel__title {
 }
 /* ------------------------------------------------------------------
  * The "about the project" page
+ *
+ * A reading page, but not a bare one: it belongs to the same site as the
+ * campaign and has to look like it. The warmth at the top, the quote set as a
+ * card rather than a highlighted line, and the flame that marks each heading
+ * are what carry the connection — not a second copy of the hero.
  * --------------------------------------------------------------- */
 
 .msl-main--page {
-	padding-block: 40px 80px;
+	position: relative;
+	padding-block: 0 88px;
 }
+
+/* One soft wash behind the opening, the same warmth the hero's halo gives —
+   here as a single gradient, because a reading page should not run a canvas. */
+.msl-about__head {
+	position: relative;
+	margin-block-end: 44px;
+	padding-block: 64px 8px;
+	text-align: center;
+}
+
+.msl-about__head::before {
+	content: "";
+	position: absolute;
+	inset-block-start: -40px;
+	inset-inline-start: 50%;
+	inline-size: min(760px, 120vw);
+	block-size: 420px;
+	margin-inline-start: min(-380px, -60vw);
+	background: radial-gradient(
+		ellipse at 50% 42%,
+		oklch(0.90 0.09 78 / 0.34) 0%,
+		oklch(0.93 0.06 82 / 0.16) 38%,
+		transparent 68%
+	);
+	pointer-events: none;
+	z-index: -1;
+}
+
 .msl-about {
+	position: relative;
 	inline-size: min(100% - (2 * var(--msl-gutter)), 720px);
 	margin-inline: auto;
 }
-.msl-about__head {
-	text-align: center;
-	margin-block-end: 36px;
-}
+
 .msl-about__eyebrow {
-	margin: 0 0 10px;
-	color: var(--msl-muted-2);
-	font-size: calc(14px * var(--msl-scale, 1));
-	font-weight: 700;
-	letter-spacing: 0.06em;
-}
-.msl-about__title {
-	margin: 0 0 18px;
-	font-family: var(--msl-font-display);
-	font-size: clamp(30px, 6vw, 46px);
-	line-height: 1.12;
-}
-.msl-about__lead {
-	margin: 0;
-	font-size: calc(19px * var(--msl-scale, 1));
-	line-height: 1.6;
-	color: var(--msl-muted-2);
-}
-/* The verse is the one thing on the page that is not our own words, and it is
-   set to look like it. */
-.msl-verse {
-	margin: 0 0 40px;
-	padding: 26px 28px;
-	border-radius: 26px;
+	display: inline-flex;
+	align-items: center;
+	gap: 10px;
+	margin: 0 0 14px;
+	padding: 6px 16px;
+	border-radius: 999px;
 	background: var(--msl-gold-soft);
+	color: var(--msl-ink);
+	font-size: calc(13px * var(--msl-scale, 1));
+	font-weight: 700;
+	letter-spacing: 0.08em;
+}
+
+.msl-about__eyebrow::before {
+	content: "";
+	inline-size: 7px;
+	block-size: 7px;
+	border-radius: 50%;
+	background: var(--msl-flame, var(--msl-amber));
+	box-shadow: 0 0 0 4px oklch(0.90 0.13 78 / 0.28);
+}
+
+.msl-about__title {
+	margin: 0 0 20px;
+	font-family: var(--msl-font-display);
+	font-size: clamp(32px, 7vw, 52px);
+	line-height: 1.1;
+	letter-spacing: -0.01em;
+}
+
+.msl-about__lead {
+	margin: 0 auto;
+	max-inline-size: 60ch;
+	color: var(--msl-muted-2);
+	font-size: calc(19px * var(--msl-scale, 1));
+	line-height: 1.62;
+}
+
+/*
+ * The verse.
+ *
+ * It is the one thing on the page that is not our own words, and it is set as
+ * its own object rather than as a highlighted line: a card, a flame above it,
+ * and the source underneath in the quiet voice the rest of the site uses for
+ * captions.
+ */
+.msl-verse {
+	position: relative;
+	margin: 0 0 52px;
+	padding: 46px 32px 28px;
+	border-radius: 28px;
+	background: var(--msl-sheet);
+	box-shadow: 0 18px 44px oklch(0.45 0.06 58 / 0.10);
 	text-align: center;
 }
+
+.msl-verse::before {
+	content: "";
+	position: absolute;
+	inset-block-start: -13px;
+	inset-inline-start: 50%;
+	inline-size: 26px;
+	block-size: 26px;
+	margin-inline-start: -13px;
+	border-radius: 50%;
+	background: radial-gradient(
+		circle,
+		oklch(0.985 0.04 92) 0%,
+		oklch(0.90 0.15 82) 42%,
+		oklch(0.78 0.17 52 / 0.5) 68%,
+		transparent 78%
+	);
+	box-shadow: 0 0 22px oklch(0.88 0.15 76 / 0.55);
+}
+
 .msl-verse__text {
-	margin: 0 0 10px;
+	margin: 0 0 14px;
 	font-family: var(--msl-font-display);
 	font-size: calc(21px * var(--msl-scale, 1));
-	line-height: 1.7;
+	line-height: 1.85;
 }
+
 .msl-verse__source {
-	color: var(--msl-muted-2);
+	color: var(--msl-muted-3);
 	font-size: calc(14px * var(--msl-scale, 1));
+	letter-spacing: 0.04em;
 }
+
 .msl-about__block {
-	margin-block-end: 34px;
+	margin-block-end: 38px;
+	padding-block-end: 38px;
+	border-block-end: 1px solid var(--msl-hairline, oklch(0.88 0.02 70));
 }
+
+.msl-about__block:last-of-type {
+	border-block-end: 0;
+}
+
+/* Each heading is lit. It is the same mark the eyebrow carries, and it is what
+   makes a run of three sections read as part of this site rather than as a
+   chapter list. */
 .msl-about__heading {
-	margin: 0 0 12px;
-	font-family: var(--msl-font-display);
-	font-size: calc(25px * var(--msl-scale, 1));
-	line-height: 1.25;
-}
-.msl-about__body p {
+	position: relative;
 	margin: 0 0 14px;
-	font-size: calc(17px * var(--msl-scale, 1));
-	line-height: 1.75;
+	padding-inline-start: 26px;
+	font-family: var(--msl-font-display);
+	font-size: calc(26px * var(--msl-scale, 1));
+	line-height: 1.24;
 }
+
+.msl-about__heading::before {
+	content: "";
+	position: absolute;
+	inset-inline-start: 0;
+	inset-block-start: 0.46em;
+	inline-size: 11px;
+	block-size: 11px;
+	border-radius: 50%;
+	background: radial-gradient(circle, oklch(0.985 0.04 92) 0%, oklch(0.90 0.15 80) 50%, oklch(0.76 0.17 50 / 0.6) 78%, transparent 88%);
+	box-shadow: 0 0 14px oklch(0.88 0.15 76 / 0.6);
+}
+
+.msl-about__body p {
+	margin: 0 0 15px;
+	font-size: calc(17px * var(--msl-scale, 1));
+	line-height: 1.78;
+}
+
 .msl-about__body p:last-child {
 	margin-block-end: 0;
 }
+
+/* The way back to the campaign, given the weight of an invitation. */
 .msl-about__foot {
-	margin-block-start: 44px;
+	margin-block-start: 8px;
+	padding: 36px 28px;
+	border-radius: 28px;
+	background: linear-gradient(
+		180deg,
+		oklch(0.95 0.045 82 / 0.6) 0%,
+		oklch(0.97 0.02 84 / 0.35) 100%
+	);
 	text-align: center;
+}
+
+@media (max-width: 620px) {
+	.msl-main--page {
+		padding-block-end: 64px;
+	}
+
+	.msl-about__head {
+		padding-block-start: 40px;
+		margin-block-end: 34px;
+	}
+
+	.msl-about__lead {
+		font-size: calc(17px * var(--msl-scale, 1));
+	}
+
+	.msl-page .msl-verse {
+		margin-block-end: 40px;
+		padding: 40px 22px 24px;
+		border-radius: 24px;
+	}
+
+	.msl-verse__text {
+		font-size: calc(18px * var(--msl-scale, 1));
+		line-height: 1.8;
+	}
+
+	.msl-about__block {
+		margin-block-end: 30px;
+		padding-block-end: 30px;
+	}
+
+	.msl-page .msl-about__heading {
+		font-size: calc(22px * var(--msl-scale, 1));
+		padding-inline-start: 22px;
+	}
+
+	.msl-about__body p {
+		font-size: calc(16px * var(--msl-scale, 1));
+	}
+
+	.msl-about__foot {
+		padding: 28px 18px;
+	}
+
+	.msl-page .msl-about__eyebrow {
+		padding: 5px 14px;
+	}
 }
 
 /* ------------------------------------------------------------------
@@ -3174,3 +3331,243 @@ html.msl-a11y-scaled .msl-panel__title {
 	}
 }
 
+
+/* ==========================================================================
+   19  Narrow screens: the polish pass
+   ========================================================================== */
+
+/*
+ * The candles are the hero's atmosphere, and on a phone atmosphere is exactly
+ * what crowds out the sentence people came to read. The field thins from the
+ * inside out — the columns nearest the headline go first — and what is left is
+ * held back so the words win. Nothing is resized: a candle that is legible as a
+ * candle at 22px stays one.
+ */
+@media (max-width: 900px) {
+	.msl-hero__candle[data-msl-depth="inner"] {
+		display: none;
+	}
+
+	.msl-hero__candles {
+		opacity: 0.85;
+	}
+}
+
+@media (max-width: 620px) {
+	.msl-hero__candle[data-msl-depth="mid"] {
+		display: none;
+	}
+
+	.msl-hero__candles {
+		opacity: 0.7;
+	}
+}
+
+/*
+ * Touch targets.
+ *
+ * A finger is not a cursor. These three were each under the 44px that a thumb
+ * can reliably hit, and the menu button was the worst of them at sixteen pixels
+ * tall — the only way to reach the rest of the site on a phone.
+ */
+.msl-menu__toggle {
+	min-block-size: 44px;
+	min-inline-size: 44px;
+	justify-content: center;
+}
+
+.msl-brand {
+	min-block-size: 44px;
+	align-items: center;
+}
+
+.msl-footer__credit a {
+	display: inline-block;
+	padding-block: 12px;
+}
+
+/* The accessibility widget floats over whatever is at the bottom of the page.
+   On a phone that is a panel with a button in it. */
+@media (max-width: 620px) {
+	.msl-shell > :last-child {
+		padding-block-end: 16px;
+	}
+}
+
+/*
+ * Outranking the element reset.
+ *
+ * `.msl-page p`, `.msl-page h2`, `.msl-page ul` and friends zero every margin
+ * and padding, and they do it at a specificity a bare class cannot reach — so
+ * a rule like `.msl-countdown { padding: 8px 15px }` was being thrown away
+ * without a word. The countdown pill, the counter chip, the personal-link box,
+ * the menu and the headings on the about page were all sitting with their text
+ * against their own edges. Repeating the page class is what buys the rule back.
+ */
+.msl-page .msl-countdown {
+	padding: 8px 15px;
+}
+
+.msl-page .msl-counterchip {
+	padding: 10px 20px;
+}
+
+.msl-page .msl-marquee__half {
+	padding-inline-start: 34px;
+}
+
+.msl-page .msl-linkcard__value {
+	padding: 16px 18px;
+}
+
+.msl-page .msl-menu__list {
+	padding: 8px;
+}
+
+.msl-page .msl-about__eyebrow {
+	padding: 6px 16px;
+}
+
+.msl-page .msl-verse {
+	padding: 46px 32px 28px;
+}
+
+.msl-page .msl-about__heading {
+	padding-inline-start: 26px;
+}
+
+.msl-page .msl-account__as {
+	padding: 6px 10px;
+}
+
+/*
+ * The same reset, the other half.
+ *
+ * `margin: 0` on every p, h1-h3, ul, ol and figure was eating the vertical
+ * rhythm of the join form, the share card, the result screen and the about
+ * page — twenty-one rules that were written, read as correct, and never
+ * applied. Measured, not assumed: each of these computes to zero without the
+ * page class in front of it.
+ */
+.msl-page .msl-visually-hidden {
+	margin: -1px;
+}
+
+.msl-page .msl-progress__note {
+	margin-block-start: 16px;
+}
+
+.msl-page .msl-linkcard__value {
+	margin-block-start: 8px;
+}
+
+.msl-page .msl-refcount__label {
+	margin-block-start: 4px;
+}
+
+.msl-page .msl-refcount__next {
+	margin-block-start: 10px;
+}
+
+.msl-page .msl-step__title {
+	margin-block-end: 6px;
+}
+
+.msl-page .msl-step__sub {
+	margin-block-end: 22px;
+}
+
+.msl-page .msl-field {
+	margin-block-start: 16px;
+}
+
+.msl-page .msl-note {
+	margin-block-start: 12px;
+}
+
+.msl-page .msl-remind__sub {
+	margin-block-start: 5px;
+}
+
+.msl-page .msl-formerror {
+	margin-block-start: 16px;
+}
+
+.msl-page .msl-result__link-label {
+	margin-block-end: 8px;
+}
+
+.msl-page .msl-result__refcount {
+	margin-block-start: 14px;
+}
+
+.msl-page .msl-result__next {
+	margin-block-start: 9px;
+}
+
+.msl-page .msl-invite__title {
+	margin: 0 0 10px;
+}
+
+.msl-page .msl-invite__body {
+	margin: 0 0 20px;
+}
+
+.msl-page .msl-about__eyebrow {
+	margin: 0 0 14px;
+}
+
+.msl-page .msl-about__title {
+	margin: 0 0 20px;
+}
+
+.msl-page .msl-about__lead {
+	margin: 0 auto;
+}
+
+.msl-page .msl-verse {
+	margin: 0 0 52px;
+}
+
+.msl-page .msl-about__heading {
+	margin: 0 0 14px;
+}
+
+/* ------------------------------------------------------------------
+ * Narrow screens, continued
+ * --------------------------------------------------------------- */
+
+/*
+ * The options.
+ *
+ * In the design they are a two-column grid, and stacking the dot above the
+ * label is what makes a square card read. On a phone the grid is one column, so
+ * that same card becomes a full-width block 85px tall holding one short line —
+ * nine of them is a lot of scrolling for a list you are meant to skim. One
+ * column gets one row: dot and label on the same line.
+ */
+@media (max-width: 620px) {
+	.msl-option__label {
+		flex-direction: row;
+		align-items: center;
+		gap: 12px;
+		padding: 15px 16px;
+	}
+
+	.msl-option__dot {
+		flex: 0 0 auto;
+	}
+}
+
+/*
+ * The accessibility widget floats over the bottom corner, and the sheets put
+ * their one action in exactly that corner. On a phone the two met, and the
+ * widget was sitting on the button. While something is open the widget steps
+ * up out of the way — moved rather than hidden, because hiding the
+ * accessibility control when a dialog opens is the opposite of the point.
+ */
+@media (max-width: 620px) {
+	.msl-page.is-locked .msl-a11y {
+		inset-block-end: 88px;
+	}
+}

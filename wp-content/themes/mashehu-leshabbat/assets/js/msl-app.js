@@ -1128,7 +1128,7 @@
 
 		inviteReturn = document.activeElement;
 		inviteModal.hidden = false;
-		document.body.classList.add('msl-locked');
+		document.body.classList.add('is-locked');
 		renderReferral();
 
 		var focusable = $('.msl-btn, .msl-invite__close', inviteModal);
@@ -1140,7 +1140,7 @@
 		if (!inviteModal || inviteModal.hidden) { return; }
 
 		inviteModal.hidden = true;
-		document.body.classList.remove('msl-locked');
+		document.body.classList.remove('is-locked');
 		rememberInviteDismissed();
 
 		if (inviteReturn && inviteReturn.focus) { inviteReturn.focus(); }

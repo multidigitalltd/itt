@@ -363,8 +363,17 @@ function msl_hero_candles( int $count ): void {
 		$smoke_w = $w * 0.5;
 		$smoke_h = $w * 1.1;
 
+		/*
+		 * How far in from the edge this candle sits. A narrow screen has no room
+		 * for the inner columns — they land on the headline — so the depth is
+		 * written out here and the stylesheet drops them by band. Reading it back
+		 * off the inline style is not something CSS can do.
+		 */
+		$depth = $inset <= 20 ? 'outer' : ( $inset <= 40 ? 'mid' : 'inner' );
+
 		printf(
-			'<span class="msl-hero__candle" data-msl-candle style="position:absolute;%s:%dpx;top:%d%%;opacity:1;transform:translate(0px,0px) scale(1);transition:opacity 1.1s ease,transform 1.4s cubic-bezier(.2,.8,.2,1);cursor:pointer;">',
+			'<span class="msl-hero__candle" data-msl-candle data-msl-depth="%s" style="position:absolute;%s:%dpx;top:%d%%;opacity:1;transform:translate(0px,0px) scale(1);transition:opacity 1.1s ease,transform 1.4s cubic-bezier(.2,.8,.2,1);cursor:pointer;">',
+			esc_attr( $depth ),
 			'start' === $side ? 'inset-inline-start' : 'inset-inline-end',
 			(int) $inset,
 			(int) $top

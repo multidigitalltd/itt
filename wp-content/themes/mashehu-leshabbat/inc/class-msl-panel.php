@@ -328,6 +328,8 @@ final class MSL_Panel {
 			);
 		}
 
+		self::render_login_notice();
+
 		$inputs = self::input_count( $page_id );
 		$limit  = (int) ini_get( 'max_input_vars' );
 
@@ -346,6 +348,54 @@ final class MSL_Panel {
 				)
 			);
 		}
+	}
+
+	/**
+	 * Say plainly why the sign-in button is not on the site.
+	 *
+	 * It is hidden until the campaign has a Google client, and a button that
+	 * leads to a Google error page would be worse — but a feature that is built,
+	 * switched off and silent is indistinguishable from a feature that was never
+	 * built. This is the screen that should say which of the two it is.
+	 */
+	private static function render_login_notice(): void {
+		$auth    = MSL_Meta::get( 'auth', MSL_Importer::page_id() );
+		$on      = 1 === (int) ( $auth['login_enabled'] ?? 0 );
+		$has_id  = '' !== MSL_Auth::client_id();
+		$has_key = '' !== MSL_Auth::client_secret();
+
+		if ( $on && $has_id && $has_key ) {
+			printf(
+				'<div class="notice notice-success"><p><strong>%s</strong> %s</p></div>',
+				esc_html__( 'ההתחברות עם גוגל פעילה.', 'mashehu-leshabbat' ),
+				esc_html__( 'כפתור ההתחברות מוצג באתר, וכל מי שמתחבר מקבל קישור אישי קבוע ומעקב אחרי מי שהצטרף דרכו.', 'mashehu-leshabbat' )
+			);
+
+			return;
+		}
+
+		$missing = array();
+
+		if ( ! $on ) {
+			$missing[] = __( 'התיבה "להפעיל התחברות עם גוגל" אינה מסומנת', 'mashehu-leshabbat' );
+		}
+
+		if ( ! $has_id ) {
+			$missing[] = __( 'חסר Google Client ID', 'mashehu-leshabbat' );
+		}
+
+		if ( ! $has_key ) {
+			$missing[] = __( 'חסר Google Client Secret', 'mashehu-leshabbat' );
+		}
+
+		printf(
+			'<div class="notice notice-warning"><p><strong>%s</strong> %s</p><p>%s</p><p><code>%s</code></p><p>%s</p></div>',
+			esc_html__( 'ההתחברות עם גוגל בנויה אבל אינה פעילה, ולכן כפתור ההתחברות לא מוצג באתר.', 'mashehu-leshabbat' ),
+			esc_html( implode( ' · ', $missing ) . '.' ),
+			esc_html__( 'ב-Google Cloud › APIs & Services › Credentials יש ליצור OAuth 2.0 Client ID מסוג Web application, ולהוסיף תחת Authorized redirect URIs בדיוק את הכתובת הזאת:', 'mashehu-leshabbat' ),
+			esc_html( MSL_Auth::redirect_uri() ),
+			esc_html__( 'אחר כך להדביק את שני המפתחות בחלק "12 · התחברות וחשבונות" ולסמן את תיבת ההפעלה.', 'mashehu-leshabbat' )
+		);
 	}
 
 	/**

@@ -44,6 +44,18 @@ $msl_shown    = '' !== $msl_own ? (string) preg_replace( '#^https?://#', '', unt
 		<?php if ( null !== $msl_person && '' !== $msl_own ) : ?>
 			<p class="msl-invite__link" data-msl-link data-msl-url="<?php echo esc_url( $msl_own ); ?>"><?php echo esc_html( $msl_shown ); ?></p>
 
+			<?php
+			/*
+			 * What the link has actually done. Rendered from the server so a
+			 * returning person sees their real number on the first frame, and
+			 * refreshed by the script while the window is open.
+			 */
+			?>
+			<p class="msl-invite__count">
+				<span class="msl-invite__count-value" data-msl-refcount><?php echo esc_html( msl_num( MSL_Joins::referral_count( (string) $msl_person['referral_code'] ) ) ); ?></span>
+				<span class="msl-invite__count-label"<?php msl_i18n( 'referral', 'ref_label' ); ?>><?php msl_the( $msl_referral, 'ref_label' ); ?></span>
+			</p>
+
 			<div class="msl-invite__actions">
 				<a class="msl-btn msl-btn--whatsapp" data-msl-whatsapp
 					data-msl-template="<?php echo esc_attr( msl_t( $msl_referral, 'wa_message' ) ); ?>"

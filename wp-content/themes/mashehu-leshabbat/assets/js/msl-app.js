@@ -1776,6 +1776,18 @@
 		state.refCode = readCookie(config.cookies.mine);
 
 		/*
+		 * A signed-in person has a code whether or not they ever filled in the
+		 * form, and it is the one the server already rendered into the page.
+		 * Taking it here is what makes the count poll for them too — otherwise
+		 * the personal link is shown and nothing ever reports back on it.
+		 */
+		if (config.auth && config.auth.link) {
+			var own = config.auth.link.match(/\/join\/([A-Za-z0-9]{6,12})\/?$/);
+
+			if (own) { state.refCode = own[1]; }
+		}
+
+		/*
 		 * The server renders Hebrew so the HTML stays identical for every
 		 * visitor and a full-page cache cannot hand one visitor's language to
 		 * the next. Applying the stored preference is therefore this side's job:

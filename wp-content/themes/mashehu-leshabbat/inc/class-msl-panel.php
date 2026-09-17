@@ -39,21 +39,35 @@ final class MSL_Panel {
 	 * Hook the panel.
 	 */
 	public static function init(): void {
-		add_action( 'admin_menu', array( self::class, 'menu' ), 9 );
+		// After MSL_Admin's default priority, never before it. See menu().
+		add_action( 'admin_menu', array( self::class, 'menu' ), 11 );
+		add_action( 'admin_menu', array( self::class, 'move_first' ), 12 );
 		add_action( 'admin_post_msl_save_content', array( self::class, 'handle_save' ) );
 		add_action( 'admin_enqueue_scripts', array( self::class, 'assets' ) );
 	}
 
 	/**
-	 * Add the panel to the campaign menu, above everything else.
+	 * The hook suffix WordPress gave this screen.
 	 *
-	 * Priority 9 on admin_menu puts this ahead of MSL_Admin, so the parent menu
-	 * may not exist yet; add_submenu_page against a parent registered later
-	 * still lands in the right place because WordPress sorts by the parent slug
-	 * when the menu is built.
+	 * @var string
+	 */
+	private static string $hook = '';
+
+	/**
+	 * Add the panel to the campaign menu.
+	 *
+	 * This has to run *after* the parent menu exists, and the reason is not
+	 * cosmetic. add_submenu_page() derives the callback's hook name from
+	 * $admin_page_hooks[ $parent ], which add_menu_page() is what fills in. Ask
+	 * for the submenu first and that lookup misses, so the callback is hooked as
+	 * "admin_page_msl-content" — while admin.php, which recomputes the name once
+	 * every menu is registered, goes looking for "<parent>_page_msl-content".
+	 * The two never meet, the callback never runs, and the screen dies with
+	 * "Invalid plugin page." Registering first to sort first cost the whole
+	 * screen.
 	 */
 	public static function menu(): void {
-		add_submenu_page(
+		$hook = add_submenu_page(
 			'msl-overview',
 			__( 'תוכן העמוד', 'mashehu-leshabbat' ),
 			__( 'תוכן העמוד', 'mashehu-leshabbat' ),
@@ -61,15 +75,46 @@ final class MSL_Panel {
 			self::SLUG,
 			array( self::class, 'render' )
 		);
+
+		self::$hook = is_string( $hook ) ? $hook : '';
+	}
+
+	/**
+	 * Put the panel at the top of the campaign menu.
+	 *
+	 * Editing the content is the daily job, so it belongs above the reports.
+	 * Moving the entry afterwards is the safe way to get that: the ordering is
+	 * presentation, and it must not decide when the page is registered.
+	 */
+	public static function move_first(): void {
+		global $submenu;
+
+		if ( empty( $submenu['msl-overview'] ) || ! is_array( $submenu['msl-overview'] ) ) {
+			return;
+		}
+
+		foreach ( $submenu['msl-overview'] as $index => $item ) {
+			if ( isset( $item[2] ) && self::SLUG === $item[2] ) {
+				array_unshift( $submenu['msl-overview'], $item );
+				unset( $submenu['msl-overview'][ $index + 1 ] );
+				$submenu['msl-overview'] = array_values( $submenu['msl-overview'] );
+
+				return;
+			}
+		}
 	}
 
 	/**
 	 * Load the field assets on this screen only.
 	 *
+	 * Compared against the hook WordPress actually handed back, rather than a
+	 * guess at how it spells the parent's title — which is the same assumption
+	 * that broke the screen once already.
+	 *
 	 * @param string $hook Current admin screen hook.
 	 */
 	public static function assets( string $hook ): void {
-		if ( ! str_ends_with( $hook, '_page_' . self::SLUG ) ) {
+		if ( '' === self::$hook || $hook !== self::$hook ) {
 			return;
 		}
 

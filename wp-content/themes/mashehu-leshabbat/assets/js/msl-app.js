@@ -357,6 +357,11 @@
 	 * Referral
 	 * --------------------------------------------------------------- */
 
+	/* Whether this visitor actually owns a personal link. */
+	function hasOwnLink() {
+		return !!((config.auth && config.auth.link) || state.refCode);
+	}
+
 	function shareUrl() {
 		/* A signed-in person's link is theirs for good and the server already
 		   rendered it; a code minted by this session's join comes next; failing
@@ -367,8 +372,20 @@
 	}
 
 	function renderReferral() {
+		var mine = hasOwnLink();
 		var url = shareUrl();
 		var shown = url.replace(/^https?:\/\//, '').replace(/\/$/, '');
+
+		/*
+		 * Only somebody who has a code sees a link. Everybody else sees the
+		 * invitation to get one — the card used to print the site's own front
+		 * page under the words "your personal link", which is not a personal
+		 * link and carries nobody's attribution.
+		 */
+		$$('[data-msl-link-ready]').forEach(function (node) { node.hidden = !mine; });
+		$$('[data-msl-link-get]').forEach(function (node) { node.hidden = mine; });
+
+		if (!mine) { return; }
 
 		$$('[data-msl-link]').forEach(function (node) {
 			node.dataset.mslUrl = url;
@@ -1266,13 +1283,38 @@
 			link.addEventListener('click', function (event) {
 				setOpen(false);
 
+				var href = link.getAttribute('href') || '';
+
 				/* A menu entry pointing at #invite opens the share window rather
 				   than navigating. It is also the way back to it for anyone who
 				   closed it once — the automatic opening stays closed for days
 				   on purpose, and asking for it should always work. */
-				if (/#invite$/.test(link.getAttribute('href') || '')) {
+				if (/#invite$/.test(href)) {
 					event.preventDefault();
 					openInvite();
+
+					return;
+				}
+
+				/*
+				 * A section link on the page it points at scrolls rather than
+				 * reloads. The href still carries the full address so the same
+				 * entry works from the about page, where it has to navigate.
+				 */
+				var hash = href.indexOf('#') === -1 ? '' : href.slice(href.indexOf('#'));
+
+				if (hash.length < 2) { return; }
+
+				var target = document.getElementById(hash.slice(1));
+
+				if (!target) { return; }
+
+				event.preventDefault();
+				target.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
+
+				/* The address bar should still say where we are. */
+				if (window.history && window.history.replaceState) {
+					window.history.replaceState(null, '', hash);
 				}
 			});
 		});
@@ -1317,6 +1359,192 @@
 
 			openInvite();
 		}, Math.max(0, delay) * 1000);
+	}
+
+	/* ------------------------------------------------------------------
+	 * The reminder on the way out
+	 * --------------------------------------------------------------- */
+
+	/*
+	 * Shabbat comes round quickly and this page is easy to leave and forget.
+	 * On the way out we offer one reminder, carrying whatever light the visitor
+	 * chose so it is waiting for them rather than starting over.
+	 *
+	 * It opens once. Anyone who signs up, or closes it, does not see it again —
+	 * an exit popup that reappears is the reason people distrust exit popups.
+	 */
+	var remindModal = $('[data-msl-modal="remind"]');
+	var remindReturn = null;
+	var remindShown = false;
+
+	function remindSeen() {
+		try { return window.localStorage.getItem('msl_remind_seen') === '1'; } catch (e) { return false; }
+	}
+
+	function rememberRemindSeen() {
+		try { window.localStorage.setItem('msl_remind_seen', '1'); } catch (e) { /* nothing to do */ }
+	}
+
+	/* The label of whatever they picked, if they picked anything. */
+	function chosenLabel() {
+		var labels = chosen().map(function (input) {
+			if (input.dataset.mslOther === '1') {
+				var custom = ($('#msl-custom-label') || {}).value || '';
+
+				return custom.trim() || $('.msl-option__text', input.parentNode).textContent;
+			}
+
+			return $('.msl-option__text', input.parentNode).textContent;
+		});
+
+		return labels.filter(Boolean).join(' · ');
+	}
+
+	function openRemind() {
+		if (!remindModal || !remindModal.hidden || remindShown || remindSeen()) { return; }
+
+		/* Never over something the visitor is already doing. */
+		if (state.screen !== 'home') { return; }
+
+		var join = $('[data-msl-modal="join"]');
+		var invite = $('[data-msl-modal="invite"]');
+
+		if ((join && !join.hidden) || (invite && !invite.hidden)) { return; }
+
+		remindShown = true;
+		remindReturn = document.activeElement;
+
+		var label = chosenLabel();
+		var chosenBox = $('[data-msl-remind-chosen]');
+		var thing = $('[data-msl-remind-thing]');
+
+		if (chosenBox) { chosenBox.hidden = !label; }
+		if (thing) { thing.textContent = label; }
+
+		remindModal.hidden = false;
+		document.body.classList.add('is-locked');
+
+		var field = $('#msl-remind-email', remindModal);
+
+		if (field) { field.focus(); }
+	}
+
+	function closeRemind() {
+		if (!remindModal || remindModal.hidden) { return; }
+
+		remindModal.hidden = true;
+		document.body.classList.remove('is-locked');
+		rememberRemindSeen();
+
+		if (remindReturn && remindReturn.focus) { remindReturn.focus(); }
+
+		remindReturn = null;
+	}
+
+	function submitRemind(event) {
+		event.preventDefault();
+
+		var email = $('#msl-remind-email');
+		var name = $('#msl-remind-name');
+		var hp = $('#msl-remind-hp');
+		var error = $('#msl-remind-error');
+		var button = $('[data-msl-remind-submit]');
+		var value = (email.value || '').trim();
+
+		if (error) { error.textContent = ''; }
+
+		if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(value)) {
+			if (error) { error.textContent = t('auth.remind_err'); }
+
+			email.focus();
+
+			return;
+		}
+
+		button.disabled = true;
+
+		var picked = chosen()[0];
+
+		window.fetch(config.rest.remind, {
+			method: 'POST',
+			credentials: 'same-origin',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				name: (name.value || '').trim(),
+				email: value,
+				thing: picked ? Number(picked.value) : null,
+				custom_label: ($('#msl-custom-label') || {}).value || '',
+				lang: state.lang,
+				hp: hp ? hp.value : ''
+			})
+		})
+			.then(function (r) { return r.ok ? r.json() : Promise.reject(r); })
+			.then(function () {
+				rememberRemindSeen();
+
+				var form = $('[data-msl-remind-form]');
+				var done = $('[data-msl-remind-done]');
+				var chosenBox = $('[data-msl-remind-chosen]');
+
+				if (form) { form.hidden = true; }
+				if (chosenBox) { chosenBox.hidden = true; }
+				if (done) { done.hidden = false; }
+			})
+			.catch(function () {
+				button.disabled = false;
+
+				if (error) { error.textContent = t('auth.remind_err'); }
+			});
+	}
+
+	function bindRemind() {
+		if (!remindModal || !config.auth || !config.auth.remindOn) { return; }
+
+		$$('[data-msl-close-remind]').forEach(function (node) {
+			node.addEventListener('click', closeRemind);
+		});
+
+		var form = $('[data-msl-remind-form]');
+
+		if (form) { form.addEventListener('submit', submitRemind); }
+
+		document.addEventListener('keydown', function (event) {
+			if (event.key === 'Escape' && !remindModal.hidden) { closeRemind(); }
+		});
+
+		if (remindSeen()) { return; }
+
+		/*
+		 * Leaving, on a desktop, looks like the pointer crossing the top edge
+		 * towards the tabs or the address bar.
+		 */
+		document.addEventListener('mouseout', function (event) {
+			if (event.relatedTarget || event.clientY > 4) { return; }
+
+			openRemind();
+		});
+
+		/*
+		 * A phone has no pointer to leave the window, and the events that do
+		 * fire when someone leaves fire too late to show anything. Going quiet
+		 * is the only honest signal left, so that is what is used — and it is a
+		 * number the campaign can set or switch off.
+		 */
+		var idle = (config.auth.idle || 0) * 1000;
+
+		if (idle > 0) {
+			var timer = 0;
+			var restart = function () {
+				window.clearTimeout(timer);
+				timer = window.setTimeout(openRemind, idle);
+			};
+
+			['pointerdown', 'keydown', 'scroll', 'touchstart'].forEach(function (name) {
+				window.addEventListener(name, restart, { passive: true });
+			});
+
+			restart();
+		}
 	}
 
 	/* ------------------------------------------------------------------
@@ -1824,6 +2052,7 @@
 		bindMenu();
 		bindAccount();
 		bindInvite();
+		bindRemind();
 
 		syncOptions();
 		applyLanguage();

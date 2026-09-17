@@ -3673,3 +3673,67 @@ html.msl-a11y-scaled .msl-panel__title {
 	color: var(--msl-muted-2);
 	font-size: calc(14px * var(--msl-scale, 1));
 }
+
+/* A section reached from the menu has to stop below the sticky header, not
+   behind it. */
+#msl-stage,
+#msl-stats,
+#msl-map,
+#msl-referral {
+	scroll-margin-block-start: 96px;
+}
+
+@media (max-width: 720px) {
+	#msl-stage,
+	#msl-stats,
+	#msl-map,
+	#msl-referral {
+		scroll-margin-block-start: 150px;
+	}
+}
+
+/* ------------------------------------------------------------------
+ * The reminder window
+ *
+ * Shares the invitation window's frame, because it is the same object on the
+ * page in a different moment. What it adds is a form.
+ * --------------------------------------------------------------- */
+
+.msl-page .msl-remindbox__chosen {
+	margin: 0 0 16px;
+	padding: 10px 14px;
+	border-radius: 14px;
+	background: var(--msl-gold-soft);
+	font-size: calc(15px * var(--msl-scale, 1));
+}
+
+.msl-remindbox__chosen strong {
+	margin-inline-start: 6px;
+}
+
+.msl-remindbox {
+	text-align: start;
+}
+
+.msl-page .msl-remindbox .msl-field {
+	margin-block-start: 12px;
+}
+
+.msl-page .msl-remindbox__done {
+	margin: 4px 0 8px;
+	padding: 14px;
+	border-radius: 14px;
+	background: var(--msl-gold-soft);
+	font-size: calc(15px * var(--msl-scale, 1));
+	line-height: 1.55;
+}
+
+/* The trap field: present for a script, gone for a person. */
+.msl-honeypot {
+	position: absolute;
+	inline-size: 1px;
+	block-size: 1px;
+	overflow: hidden;
+	clip-path: inset(50%);
+	white-space: nowrap;
+}

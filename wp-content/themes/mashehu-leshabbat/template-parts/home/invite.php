@@ -73,9 +73,13 @@ $msl_shown    = '' !== $msl_own ? (string) preg_replace( '#^https?://#', '', unt
 					<?php msl_i18n( 'auth', 'link_locked_cta' ); ?>><?php msl_the( $msl_invite, 'link_locked_cta' ); ?></a>
 			</div>
 		<?php else : ?>
+			<?php
+			// Without sign-in the only way to earn a link is to join, so that is
+			// what this offers rather than a link nobody owns.
+			?>
 			<div class="msl-invite__actions">
 				<button type="button" class="msl-btn msl-btn--amber msl-btn--wide" data-msl-open-join
-					<?php msl_i18n( 'auth', 'invite_cta' ); ?>><?php msl_the( $msl_invite, 'invite_cta' ); ?></button>
+					<?php msl_i18n( 'auth', 'link_join_cta' ); ?>><?php msl_the( $msl_invite, 'link_join_cta' ); ?></button>
 			</div>
 		<?php endif; ?>
 

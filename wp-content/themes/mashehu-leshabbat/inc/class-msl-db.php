@@ -24,7 +24,7 @@ final class MSL_DB {
 	/**
 	 * Bumped whenever the schema below changes.
 	 */
-	private const SCHEMA_VERSION = '3';
+	private const SCHEMA_VERSION = '4';
 
 	/**
 	 * Option holding the installed schema version.
@@ -91,6 +91,21 @@ final class MSL_DB {
 	}
 
 	/**
+	 * People who asked to be reminded before Shabbat.
+	 *
+	 * Kept apart from the joins on purpose. Asking for a reminder is not adding
+	 * a candle, and folding the two together would make the counter — the one
+	 * number this whole campaign is about — quietly untrue.
+	 *
+	 * @return string
+	 */
+	public static function reminders_table(): string {
+		global $wpdb;
+
+		return $wpdb->prefix . 'msl_reminders';
+	}
+
+	/**
 	 * Whether the tables exist and are current.
 	 *
 	 * @return bool
@@ -121,6 +136,7 @@ final class MSL_DB {
 		$things  = self::things_table();
 		$deds    = self::dedications_table();
 		$people  = self::people_table();
+		$remind  = self::reminders_table();
 
 		// Note the deliberate omissions: no full name, no address, no free-text
 		// beyond the dedication, and no raw phone/email/IP — only salted hashes,
@@ -190,6 +206,20 @@ final class MSL_DB {
 				UNIQUE KEY provider_identity (provider, provider_id),
 				UNIQUE KEY referral_code (referral_code),
 				KEY email_hash (email_hash)
+			) {$charset};",
+			"CREATE TABLE {$remind} (
+				id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+				page_id BIGINT UNSIGNED NOT NULL,
+				name VARCHAR(80) NOT NULL DEFAULT '',
+				email VARCHAR(255) NOT NULL,
+				email_hash CHAR(64) NOT NULL,
+				thing_index SMALLINT UNSIGNED NULL,
+				custom_label VARCHAR(140) NOT NULL DEFAULT '',
+				lang CHAR(2) NOT NULL DEFAULT 'he',
+				created_at DATETIME NOT NULL,
+				PRIMARY KEY  (id),
+				UNIQUE KEY page_email (page_id, email_hash),
+				KEY page_created (page_id, created_at)
 			) {$charset};",
 			"CREATE TABLE {$deds} (
 				id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,

@@ -182,7 +182,9 @@ $msl_steps     = 3;
 						</label>
 					</div>
 
-					<p class="msl-note"<?php msl_i18n( 'join', 'privacy_note' ); ?>><?php msl_the( $msl, 'privacy_note' ); ?></p>
+					<?php if ( '' !== msl_t( $msl, 'privacy_note' ) ) : ?>
+						<p class="msl-note"<?php msl_i18n( 'join', 'privacy_note' ); ?>><?php msl_the( $msl, 'privacy_note' ); ?></p>
+					<?php endif; ?>
 				</section>
 
 				<?php

@@ -292,9 +292,21 @@ function msl_nav_links( array $nav ): void {
 			continue;
 		}
 
+		/*
+		 * An anchor belongs to the campaign page, which is not necessarily the
+		 * front page — pointing it at home_url() sent every section link to
+		 * whatever page happens to sit at the root. The permalink is the only
+		 * address that is right on both of the theme's pages.
+		 */
+		if ( str_starts_with( $url, '#' ) ) {
+			$campaign = MSL_Importer::page_id();
+			$base     = 0 !== $campaign ? (string) get_permalink( $campaign ) : home_url( '/' );
+			$url      = untrailingslashit( $base ) . '/' . $url;
+		}
+
 		printf(
 			'<li class="msl-menu__item"><a class="msl-menu__link" href="%s"%s>%s</a></li>',
-			esc_url( str_starts_with( $url, '#' ) ? home_url( '/' ) . $url : $url ),
+			esc_url( $url ),
 			msl_i18n_attr( 'nav', 'links.' . $index . '.label' ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 			esc_html( $label )
 		);

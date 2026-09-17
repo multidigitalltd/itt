@@ -137,6 +137,7 @@ final class MSL_Admin {
 			__( 'ערים', 'mashehu-leshabbat' )           => msl_num( $stats['cities'] ),
 			__( 'הקדשות מאושרות', 'mashehu-leshabbat' ) => msl_num( $stats['dedications'] ),
 			__( 'אחוז השלמה', 'mashehu-leshabbat' )     => $stats['pct'] . '%',
+			__( 'נרשמו לתזכורת', 'mashehu-leshabbat' )  => msl_num( MSL_Joins::reminder_count( $page_id ) ),
 			__( 'ב-10 הדקות האחרונות', 'mashehu-leshabbat' ) => msl_num( $stats['last10'] ),
 		);
 		?>
@@ -279,6 +280,16 @@ final class MSL_Admin {
 				<p>
 					<button type="submit" class="button"><?php esc_html_e( 'ייצוא CSV', 'mashehu-leshabbat' ); ?></button>
 					<span class="description"><?php esc_html_e( 'הייצוא כולל שם ועיר רק של מי שלא ביקש עילום שם, ולעולם לא טלפון, מייל או כתובת IP.', 'mashehu-leshabbat' ); ?></span>
+				</p>
+			</form>
+
+			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+				<?php wp_nonce_field( 'msl_export' ); ?>
+				<input type="hidden" name="action" value="msl_export">
+				<input type="hidden" name="set" value="reminders">
+				<p>
+					<button type="submit" class="button"><?php esc_html_e( 'ייצוא רשימת התזכורות', 'mashehu-leshabbat' ); ?></button>
+					<span class="description"><?php esc_html_e( 'כתובות של מי שביקש תזכורת לפני שבת. התבנית אוספת ושומרת אותן, אבל אינה שולחת — אין בה מנגנון דיוור. הקובץ נועד להימסר למערכת הדיוור שלכם.', 'mashehu-leshabbat' ); ?></span>
 				</p>
 			</form>
 
@@ -465,6 +476,77 @@ final class MSL_Admin {
 	 * Chunked deliberately: a full in-memory query over a campaign table would
 	 * exhaust the memory limit long before it finished.
 	 */
+	/**
+	 * The reminder list, as a CSV.
+	 *
+	 * Nothing in this theme sends those reminders — there is no mailer here and
+	 * no schedule. What it does is keep the list, correctly and separately, so
+	 * it can be handed to whatever actually does the sending. A campaign that
+	 * collects addresses it cannot export has collected nothing.
+	 *
+	 * @param int $page_id Page ID.
+	 */
+	private static function export_reminders( int $page_id ): void {
+		global $wpdb;
+
+		$table   = MSL_DB::reminders_table();
+		$join    = MSL_Meta::get( 'join', $page_id );
+		$options = array_values( (array) ( $join['options'] ?? array() ) );
+
+		nocache_headers();
+		header( 'Content-Type: text/csv; charset=utf-8' );
+		header( 'Content-Disposition: attachment; filename=or-leshabbat-reminders-' . gmdate( 'Y-m-d' ) . '.csv' );
+
+		$out = fopen( 'php://output', 'w' );
+
+		if ( false === $out ) {
+			exit;
+		}
+
+		fwrite( $out, "\xEF\xBB\xBF" );
+		fputcsv( $out, array( 'created_at', 'name', 'email', 'thing', 'lang' ), ',', '"', '' );
+
+		$offset = 0;
+
+		do {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+			$rows = $wpdb->get_results(
+				$wpdb->prepare(
+					"SELECT created_at, name, email, thing_index, custom_label, lang
+					 FROM {$table} WHERE page_id = %d ORDER BY id ASC LIMIT %d OFFSET %d",
+					$page_id,
+					500,
+					$offset
+				),
+				ARRAY_A
+			);
+
+			foreach ( (array) $rows as $row ) {
+				$label = '';
+
+				if ( null !== $row['thing_index'] ) {
+					$index = (int) $row['thing_index'];
+					$label = '' !== (string) $row['custom_label']
+						? (string) $row['custom_label']
+						: (string) ( $options[ $index ]['label_he'] ?? '' );
+				}
+
+				fputcsv(
+					$out,
+					array( $row['created_at'], $row['name'], $row['email'], $label, $row['lang'] ),
+					',',
+					'"',
+					''
+				);
+			}
+
+			$offset += 500;
+		} while ( count( (array) $rows ) === 500 );
+
+		fclose( $out );
+		exit;
+	}
+
 	public static function handle_export(): void {
 		global $wpdb;
 
@@ -478,6 +560,15 @@ final class MSL_Admin {
 
 		$page_id = MSL_Importer::page_id();
 		$table   = MSL_DB::joins_table();
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- checked above.
+		$set = isset( $_REQUEST['set'] ) ? sanitize_key( wp_unslash( (string) $_REQUEST['set'] ) ) : '';
+
+		if ( 'reminders' === $set ) {
+			self::export_reminders( $page_id );
+
+			return;
+		}
 
 		nocache_headers();
 		header( 'Content-Type: text/csv; charset=utf-8' );

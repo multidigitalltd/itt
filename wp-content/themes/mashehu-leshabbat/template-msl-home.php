@@ -41,6 +41,7 @@ foreach ( array( 'screen-art', 'screen-wall', 'screen-wow', 'screen-result' ) as
 }
 
 require MSL_DIR . 'template-parts/home/invite.php';
+require MSL_DIR . 'template-parts/home/remind.php';
 require MSL_DIR . 'template-parts/home/a11y-widget.php';
 
 get_footer();

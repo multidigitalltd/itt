@@ -522,6 +522,75 @@ final class MSL_Joins {
 	}
 
 	/**
+	 * Record a request for a reminder before Shabbat.
+	 *
+	 * Returns true whether the address was new or already on the list: from the
+	 * visitor's side "remind me" succeeded either way, and telling them their
+	 * address is already registered discloses that to anyone who guesses it.
+	 *
+	 * @param int                  $page_id Page the request came from.
+	 * @param array<string, mixed> $data    Validated values.
+	 * @return bool
+	 */
+	public static function remind( int $page_id, array $data ): bool {
+		global $wpdb;
+
+		if ( ! MSL_DB::ready() ) {
+			MSL_DB::install();
+		}
+
+		$email = (string) $data['email'];
+
+		if ( '' === $email ) {
+			return false;
+		}
+
+		$table = MSL_DB::reminders_table();
+
+		// Errors are expected: the address is UNIQUE per campaign, and asking
+		// twice is a normal thing for a person to do.
+		$suppress = $wpdb->suppress_errors( true );
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		$wpdb->insert(
+			$table,
+			array(
+				'page_id'      => $page_id,
+				'name'         => mb_substr( (string) $data['name'], 0, 80 ),
+				'email'        => $email,
+				'email_hash'   => MSL_DB::hash( strtolower( $email ) ),
+				'thing_index'  => null === $data['thing_index'] ? null : (int) $data['thing_index'],
+				'custom_label' => mb_substr( (string) $data['custom_label'], 0, 140 ),
+				'lang'         => (string) $data['lang'],
+				'created_at'   => current_time( 'mysql', true ),
+			)
+		);
+
+		$wpdb->suppress_errors( $suppress );
+
+		return true;
+	}
+
+	/**
+	 * How many people are waiting for a reminder.
+	 *
+	 * @param int $page_id Page ID.
+	 * @return int
+	 */
+	public static function reminder_count( int $page_id ): int {
+		global $wpdb;
+
+		if ( ! MSL_DB::ready() ) {
+			return 0;
+		}
+
+		$table = MSL_DB::reminders_table();
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		return (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$table} WHERE page_id = %d", $page_id ) );
+	}
+
+	/**
 	 * The public activity feed: consented joins, newest first.
 	 *
 	 * Anonymous rows never appear here, and no row carries anything beyond a

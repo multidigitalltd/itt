@@ -112,6 +112,16 @@ final class MSL_REST {
 
 		register_rest_route(
 			self::NAMESPACE,
+			'/remind',
+			array(
+				'methods'             => WP_REST_Server::CREATABLE,
+				'permission_callback' => '__return_true',
+				'callback'            => array( self::class, 'remind' ),
+			)
+		);
+
+		register_rest_route(
+			self::NAMESPACE,
 			'/referral/(?P<code>[a-z0-9]{6,12})',
 			array(
 				'methods'             => WP_REST_Server::READABLE,
@@ -198,6 +208,65 @@ final class MSL_REST {
 		return new WP_REST_Response(
 			array( 'pieces' => MSL_Joins::pieces( $page_id, MSL_Meta::get( 'join', $page_id ), $from, $to ) )
 		);
+	}
+
+	/**
+	 * Sign somebody up for a reminder before Shabbat.
+	 *
+	 * Deliberately not a join. The person asking has not added a candle, and
+	 * writing them into the joins table to make one number bigger would make
+	 * that number a lie. The two live in separate tables for exactly that reason.
+	 *
+	 * @param WP_REST_Request $request Request.
+	 * @return WP_REST_Response
+	 */
+	public static function remind( WP_REST_Request $request ): WP_REST_Response {
+		$page_id = MSL_Importer::page_id();
+		$join    = MSL_Meta::get( 'join', $page_id );
+
+		// The same two cheap gates the join flow uses, and for the same reason.
+		if ( '' !== trim( (string) $request->get_param( 'hp' ) ) ) {
+			return self::error( 'generic', $join, 400 );
+		}
+
+		$ip_hash = MSL_Joins::client_ip_hash();
+
+		if ( ! MSL_Joins::within_rate_limit( $ip_hash, false ) ) {
+			return self::error( 'rate', $join, 429 );
+		}
+
+		$email = sanitize_email( (string) $request->get_param( 'email' ) );
+
+		if ( '' === $email || ! is_email( $email ) ) {
+			return self::error( 'email', $join, 422 );
+		}
+
+		$options = array_values( (array) ( $join['options'] ?? array() ) );
+		$thing   = $request->get_param( 'thing' );
+		$thing   = null === $thing || '' === $thing ? null : (int) $thing;
+
+		if ( null !== $thing && ! isset( $options[ $thing ] ) ) {
+			$thing = null;
+		}
+
+		$ok = MSL_Joins::remind(
+			$page_id,
+			array(
+				'name'         => sanitize_text_field( (string) $request->get_param( 'name' ) ),
+				'email'        => $email,
+				'thing_index'  => $thing,
+				'custom_label' => sanitize_text_field( (string) $request->get_param( 'custom_label' ) ),
+				'lang'         => sanitize_key( (string) $request->get_param( 'lang' ) ) === 'en' ? 'en' : 'he',
+			)
+		);
+
+		if ( ! $ok ) {
+			return self::error( 'generic', $join, 500 );
+		}
+
+		MSL_Joins::within_rate_limit( $ip_hash, true );
+
+		return self::uncached( new WP_REST_Response( array( 'ok' => true ), 201 ) );
 	}
 
 	/**

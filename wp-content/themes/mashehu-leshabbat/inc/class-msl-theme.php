@@ -310,6 +310,7 @@ final class MSL_Theme {
 				'pieces'   => esc_url_raw( rest_url( MSL_REST::NAMESPACE . '/pieces' ) ),
 				'referral' => esc_url_raw( rest_url( MSL_REST::NAMESPACE . '/referral' ) ),
 				'join'     => esc_url_raw( rest_url( MSL_REST::NAMESPACE . '/join' ) ),
+				'remind'   => esc_url_raw( rest_url( MSL_REST::NAMESPACE . '/remind' ) ),
 				'nonce'    => esc_url_raw( rest_url( MSL_REST::NAMESPACE . '/nonce' ) ),
 			),
 			'campaign'  => array(
@@ -346,6 +347,8 @@ final class MSL_Theme {
 				'link'     => esc_url_raw( MSL_Auth::personal_link() ),
 				'delay'    => max( 0, (int) ( $auth['invite_delay'] ?? 0 ) ),
 				'days'     => max( 0, (int) ( $auth['invite_days'] ?? 0 ) ),
+				'remindOn' => 1 === (int) ( $auth['remind_on'] ?? 0 ),
+				'idle'     => max( 0, (int) ( $auth['remind_idle'] ?? 0 ) ),
 			),
 			'joinBase'  => esc_url_raw( home_url( '/join/' ) ),
 			'mapData'   => esc_url_raw( MSL_URI . 'assets/data/world-land.json?v=' . rawurlencode( self::asset_version( 'assets/data/world-land.json' ) ) ),

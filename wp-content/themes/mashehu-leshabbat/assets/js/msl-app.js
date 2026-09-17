@@ -1494,29 +1494,35 @@
 	 * course of a visit. It stops when the page is not on screen — there is no
 	 * reason to keep animating behind an overlay.
 	 */
-	function startCollage() {
-		var collage = $('[data-msl-collage]');
+	/*
+	 * Keep the candle field moving.
+	 *
+	 * The lighting and the burning out are CSS; this only decides where the
+	 * next one appears. A candle is moved at the moment its cycle restarts,
+	 * which is the one moment it is invisible — moving a lit candle would read
+	 * as a candle sliding across the page.
+	 *
+	 * Both gutters are fed in turn so neither is ever left dark by chance, and
+	 * the middle third is never used: the headline lives there.
+	 */
+	function startEmbers() {
+		var embers = $$('[data-msl-ember]');
 
-		if (!collage || reduceMotion || collage.hasAttribute('data-msl-collage-empty')) { return; }
+		if (!embers.length || reduceMotion) { return; }
 
-		var tiles = $$('[data-msl-tile]', collage);
+		var flip = 0;
 
-		if (tiles.length === 0) { return; }
+		embers.forEach(function (ember) {
+			ember.addEventListener('animationiteration', function () {
+				var near = (flip++ % 2) === 0;
+				var x = near ? 1 + Math.random() * 21 : 78 + Math.random() * 21;
 
-		window.setInterval(function () {
-			if (document.hidden || state.screen !== 'home') { return; }
-
-			var tile = tiles[Math.floor(Math.random() * tiles.length)];
-
-			tile.classList.add('is-swapping');
-
-			window.setTimeout(function () {
-				var layers = $$('.msl-collage__layer', tile);
-
-				layers.forEach(function (layer) { layer.classList.toggle('is-on'); });
-				tile.classList.remove('is-swapping');
-			}, 720);
-		}, 3200);
+				ember.style.setProperty('--msl-ember-x', x.toFixed(1) + '%');
+				ember.style.setProperty('--msl-ember-y', (4 + Math.random() * 88).toFixed(1) + '%');
+				ember.style.setProperty('--msl-ember-rot', (Math.random() * 17 - 8.5).toFixed(1) + 'deg');
+				ember.style.setProperty('--msl-ember-scale', (0.52 + Math.random() * 0.6).toFixed(2));
+			});
+		});
 	}
 
 	/* ------------------------------------------------------------------
@@ -1649,7 +1655,7 @@
 		bindMenu();
 		bindAccount();
 		bindInvite();
-		startCollage();
+		startEmbers();
 
 		syncOptions();
 		applyLanguage();

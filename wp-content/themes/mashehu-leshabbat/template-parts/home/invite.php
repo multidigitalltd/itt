@@ -35,7 +35,7 @@ $msl_shown    = '' !== $msl_own ? (string) preg_replace( '#^https?://#', '', unt
 			<span aria-hidden="true">×</span>
 		</button>
 
-		<span class="msl-invite__flame" aria-hidden="true"><?php msl_candle_svg(); ?></span>
+		<span class="msl-invite__flame" aria-hidden="true"><?php msl_candle_svg( 2.6, 1.9 ); ?></span>
 
 		<h2 class="msl-invite__title" id="msl-invite-title"<?php msl_i18n( 'auth', 'invite_title' ); ?>><?php msl_the( $msl_invite, 'invite_title' ); ?></h2>
 

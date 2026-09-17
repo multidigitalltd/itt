@@ -54,7 +54,6 @@
 	font-style: normal;
 	font-display: swap;
 }
-
 @font-face {
 	font-family: Atlas;
 	src: url("../fonts/atlas-regular.woff2") format("woff2");
@@ -62,7 +61,6 @@
 	font-style: normal;
 	font-display: swap;
 }
-
 @font-face {
 	font-family: Atlas;
 	src: url("../fonts/atlas-medium.woff2") format("woff2");
@@ -70,7 +68,6 @@
 	font-style: normal;
 	font-display: swap;
 }
-
 @font-face {
 	font-family: Atlas;
 	src: url("../fonts/atlas-bold.woff2") format("woff2");
@@ -78,7 +75,6 @@
 	font-style: normal;
 	font-display: swap;
 }
-
 @font-face {
 	font-family: Atlas;
 	src: url("../fonts/atlas-black.woff2") format("woff2");
@@ -86,7 +82,6 @@
 	font-style: normal;
 	font-display: swap;
 }
-
 @font-face {
 	font-family: Gloria;
 	src: url("../fonts/gloria-regular.woff2") format("woff2");
@@ -94,7 +89,6 @@
 	font-style: normal;
 	font-display: swap;
 }
-
 @font-face {
 	font-family: Gloria;
 	src: url("../fonts/gloria-demibold.woff2") format("woff2");
@@ -102,7 +96,6 @@
 	font-style: normal;
 	font-display: swap;
 }
-
 @font-face {
 	font-family: Gloria;
 	src: url("../fonts/gloria-bold.woff2") format("woff2");
@@ -110,7 +103,6 @@
 	font-style: normal;
 	font-display: swap;
 }
-
 /* ==========================================================================
    1  Tokens
    ========================================================================== */
@@ -344,7 +336,6 @@
 	   same value; app.js overwrites this from the page's own configuration. */
 	--msl-flame: #FFB25C;
 }
-
 /* ==========================================================================
    2  Base and utilities
    ========================================================================== */
@@ -361,11 +352,9 @@
 	-webkit-font-smoothing: antialiased;
 	text-rendering: optimizeLegibility;
 }
-
 .msl-page * {
 	box-sizing: border-box;
 }
-
 /*
  * The browser's own `[hidden] { display: none }` is a bare attribute selector,
  * so any class that sets `display` outruns it — which meant hiding a `.msl-btn`
@@ -375,7 +364,6 @@
 .msl-page [hidden] {
 	display: none !important;
 }
-
 .msl-page h1,
 .msl-page h2,
 .msl-page h3,
@@ -387,17 +375,14 @@
 	margin: 0;
 	padding: 0;
 }
-
 .msl-page ul,
 .msl-page ol {
 	list-style: none;
 }
-
 .msl-page fieldset {
 	border: 0;
 	min-inline-size: 0;
 }
-
 /*
  * Wrapped in :where() so it carries no specificity at all. As a plain
  * `.msl-page a` rule it beat every component that happens to be an anchor —
@@ -408,11 +393,9 @@
 	color: inherit;
 	text-decoration: none;
 }
-
 :where(.msl-page a):hover {
 	text-decoration: underline;
 }
-
 /* One visible focus ring for every control, on light and on dark alike. It is
    deliberately not removed anywhere in this file. */
 .msl-page :focus-visible {
@@ -420,12 +403,10 @@
 	outline-offset: 3px;
 	border-radius: 6px;
 }
-
 .msl-screen :focus-visible,
 .msl-panel :focus-visible {
 	outline-color: var(--msl-gold-figure);
 }
-
 .msl-visually-hidden {
 	position: absolute !important;
 	width: 1px;
@@ -437,7 +418,6 @@
 	white-space: nowrap;
 	border: 0;
 }
-
 .msl-skip-link {
 	position: fixed;
 	inset-block-start: 8px;
@@ -452,18 +432,15 @@
 	transform: translateY(-200%);
 	transition: transform var(--msl-t) var(--msl-ease);
 }
-
 .msl-skip-link:focus {
 	transform: translateY(0);
 	text-decoration: none;
 }
-
 .msl-shell {
 	max-inline-size: var(--msl-shell);
 	margin-inline: auto;
 	padding-inline: var(--msl-gutter);
 }
-
 /*
  * The halo deliberately spills 60px past the content column on each side, and
  * the collage tiles sit 44px outside it. Above about 1280px the page has the
@@ -474,7 +451,6 @@
 .msl-main {
 	overflow-x: clip;
 }
-
 .msl-heading {
 	font-family: var(--msl-font-display);
 	font-weight: 900;
@@ -483,7 +459,6 @@
 	letter-spacing: -0.035em;
 	text-wrap: balance;
 }
-
 .msl-subheading {
 	margin-block-start: 12px;
 	font-size: calc((18px) * var(--msl-scale, 1));
@@ -492,7 +467,6 @@
 	font-weight: 400;
 	text-wrap: pretty;
 }
-
 /* Every figure in the design is tabular, so a ticking counter never reflows
    the words beside it. */
 [data-msl-counter],
@@ -504,7 +478,6 @@
 [data-msl-dedications] {
 	font-variant-numeric: tabular-nums;
 }
-
 /* The honeypot: present for a script, gone for a person and for a screen
    reader. Not display:none — some bots skip hidden fields. */
 .msl-honeypot {
@@ -514,7 +487,6 @@
 	height: 1px;
 	overflow: hidden;
 }
-
 /* ==========================================================================
    3  Buttons
    ========================================================================== */
@@ -539,18 +511,15 @@
 		border-color var(--msl-t) ease,
 		color var(--msl-t) ease;
 }
-
 .msl-btn:hover {
 	text-decoration: none;
 }
-
 .msl-btn[disabled] {
 	cursor: default;
 	background: var(--msl-disabled-bg);
 	color: var(--msl-disabled-fg);
 	box-shadow: none;
 }
-
 .msl-btn--ink {
 	block-size: 44px;
 	padding-inline: 24px;
@@ -559,17 +528,14 @@
 	font-size: calc((15.5px) * var(--msl-scale, 1));
 	font-weight: 800;
 }
-
 .msl-btn--ink:hover:not([disabled]) {
 	transform: translateY(-2px);
 	background: var(--msl-ink-hover);
 	box-shadow: 0 12px 26px oklch(0.24 0.035 50 / 0.28);
 }
-
 .msl-btn--ink:active:not([disabled]) {
 	transform: translateY(0);
 }
-
 /* The hero and closing call to action: the one control the whole page is for. */
 .msl-btn--hero {
 	block-size: 66px;
@@ -580,34 +546,28 @@
 	font-weight: 800;
 	box-shadow: var(--msl-shadow-cta);
 }
-
 .msl-btn--hero:hover:not([disabled]) {
 	transform: translateY(-3px);
 	background: var(--msl-ink-hover);
 	box-shadow: var(--msl-shadow-cta-hover);
 }
-
 .msl-btn--hero:active:not([disabled]) {
 	transform: translateY(1px);
 	box-shadow: var(--msl-shadow-cta-active);
 }
-
 .msl-btn--on-warm {
 	padding-inline: 46px;
 	background: var(--msl-ink-deep);
 	box-shadow: var(--msl-shadow-warm);
 }
-
 .msl-btn--on-warm:hover:not([disabled]) {
 	transform: translateY(-3px) scale(1.02);
 	background: var(--msl-ink-deep);
 	box-shadow: var(--msl-shadow-warm-hover);
 }
-
 .msl-btn--on-warm:active:not([disabled]) {
 	transform: translateY(1px) scale(1);
 }
-
 .msl-btn--light {
 	padding: 13px 26px;
 	background: var(--msl-on-dark);
@@ -615,16 +575,13 @@
 	font-size: calc((15px) * var(--msl-scale, 1));
 	font-weight: 700;
 }
-
 .msl-btn--light:hover:not([disabled]) {
 	transform: translateY(-3px);
 	box-shadow: 0 14px 30px oklch(0.05 0.02 60 / 0.5);
 }
-
 .msl-btn--light:active:not([disabled]) {
 	transform: translateY(0);
 }
-
 .msl-btn--ghost {
 	padding: 13px 26px;
 	border: 1px solid var(--msl-ghost-border);
@@ -636,18 +593,15 @@
 	font-size: calc((15px) * var(--msl-scale, 1));
 	font-weight: 600;
 }
-
 .msl-btn--ghost:hover:not([disabled]) {
 	transform: translateY(-3px);
 	background: rgb(41 25 12 / 0.85);
 	background: color-mix(in oklab, var(--msl-ghost-hover) 85%, transparent);
 	border-color: var(--msl-ghost-border-hover);
 }
-
 .msl-btn--ghost:active:not([disabled]) {
 	transform: translateY(0);
 }
-
 .msl-btn--amber {
 	block-size: 58px;
 	background: var(--msl-amber);
@@ -655,12 +609,10 @@
 	font-size: calc((18px) * var(--msl-scale, 1));
 	font-weight: 800;
 }
-
 .msl-btn--amber:hover:not([disabled]) {
 	transform: translateY(-2px);
 	box-shadow: 0 16px 34px oklch(0.28 0.06 45 / 0.34);
 }
-
 .msl-btn--whatsapp {
 	block-size: 58px;
 	inline-size: 100%;
@@ -669,16 +621,13 @@
 	font-size: calc((18px) * var(--msl-scale, 1));
 	font-weight: 800;
 }
-
 .msl-btn--whatsapp:hover {
 	transform: translateY(-3px);
 	box-shadow: 0 16px 34px rgb(37 211 102 / 0.34);
 }
-
 .msl-btn--whatsapp:active {
 	transform: translateY(0);
 }
-
 .msl-btn--dark {
 	block-size: 54px;
 	background: var(--msl-raised-2);
@@ -686,12 +635,10 @@
 	font-size: calc((16px) * var(--msl-scale, 1));
 	font-weight: 700;
 }
-
 .msl-btn--dark:hover:not([disabled]) {
 	transform: translateY(-2px);
 	background: var(--msl-raised-3);
 }
-
 .msl-btn--soft {
 	block-size: 54px;
 	background: var(--msl-sheet);
@@ -699,24 +646,20 @@
 	font-size: calc((16px) * var(--msl-scale, 1));
 	font-weight: 700;
 }
-
 .msl-btn--soft:hover:not([disabled]) {
 	transform: translateY(-2px);
 	background: var(--msl-soft-hover);
 }
-
 .msl-btn--block {
 	inline-size: 100%;
 	block-size: 58px;
 	font-size: calc((18.5px) * var(--msl-scale, 1));
 	font-weight: 800;
 }
-
 .msl-btn--wide {
 	inline-size: 100%;
 	max-inline-size: 340px;
 }
-
 /* The back button leans toward its own arrow on hover. In RTL the arrow points
    the other way, so the lean follows the writing direction rather than a
    hard-coded axis. */
@@ -725,11 +668,9 @@
 	background: var(--msl-gold-soft);
 	box-shadow: none;
 }
-
 .msl-page--en .msl-back:hover:not([disabled]) {
 	transform: translateX(-4px);
 }
-
 .msl-textbtn {
 	border: 0;
 	background: none;
@@ -741,11 +682,9 @@
 	padding: 10px;
 	border-radius: 999px;
 }
-
 .msl-textbtn:hover {
 	color: var(--msl-ink);
 }
-
 .msl-iconbtn {
 	inline-size: 38px;
 	block-size: 38px;
@@ -759,12 +698,10 @@
 	cursor: pointer;
 	transition: background var(--msl-t-fast) ease, transform var(--msl-t-fast) ease;
 }
-
 .msl-iconbtn:hover {
 	background: var(--msl-warm);
 	transform: translateY(-1px);
 }
-
 /* ==========================================================================
    4  Header
    ========================================================================== */
@@ -779,7 +716,6 @@
 	background: color-mix(in oklab, var(--msl-header-bg) 82%, transparent);
 	border-block-end: 1px solid var(--msl-header-border);
 }
-
 .msl-header__inner {
 	max-inline-size: var(--msl-shell);
 	margin-inline: auto;
@@ -789,7 +725,6 @@
 	justify-content: space-between;
 	gap: 16px;
 }
-
 .msl-brand {
 	display: flex;
 	align-items: center;
@@ -797,11 +732,9 @@
 	color: inherit;
 	min-inline-size: 0;
 }
-
 .msl-brand:hover {
 	text-decoration: none;
 }
-
 .msl-brand__word {
 	font-family: var(--msl-font-display);
 	font-weight: 900;
@@ -809,7 +742,6 @@
 	letter-spacing: -0.01em;
 	white-space: nowrap;
 }
-
 .msl-logo__mark {
 	inline-size: var(--msl-mark-size, 28px);
 	block-size: var(--msl-mark-size, 28px);
@@ -820,11 +752,9 @@
 	align-items: center;
 	justify-content: center;
 }
-
 .msl-logo__mark--small {
 	--msl-mark-size: 18px;
 }
-
 .msl-logo__dot {
 	inline-size: 9px;
 	block-size: 9px;
@@ -832,26 +762,22 @@
 	background: var(--msl-accent-dot);
 	box-shadow: 0 0 10px var(--msl-accent-dot);
 }
-
 .msl-logo__mark--small .msl-logo__dot {
 	inline-size: 6px;
 	block-size: 6px;
 	box-shadow: none;
 }
-
 .msl-logo__image {
 	block-size: 32px;
 	inline-size: auto;
 	display: block;
 }
-
 .msl-header__actions {
 	display: flex;
 	align-items: center;
 	gap: 14px;
 	flex: none;
 }
-
 .msl-langtoggle {
 	block-size: 40px;
 	min-inline-size: 52px;
@@ -867,13 +793,11 @@
 	cursor: pointer;
 	transition: transform var(--msl-t-fast) ease, background var(--msl-t-fast) ease, border-color var(--msl-t-fast) ease;
 }
-
 .msl-langtoggle:hover {
 	transform: translateY(-2px);
 	background: var(--msl-warm);
 	border-color: var(--msl-border-warm);
 }
-
 .msl-countdown {
 	display: flex;
 	align-items: center;
@@ -890,12 +814,10 @@
 	font-variant-numeric: tabular-nums;
 	transition: background var(--msl-t-card) ease, border-color var(--msl-t-card) ease;
 }
-
 .msl-countdown:hover {
 	background: var(--msl-warm-hover);
 	border-color: var(--msl-border-warm);
 }
-
 .msl-countdown__dot {
 	inline-size: 6px;
 	block-size: 6px;
@@ -904,12 +826,10 @@
 	background: var(--msl-accent);
 	animation: msl-pulse 2.2s ease-in-out infinite;
 }
-
 @keyframes msl-pulse {
 	0%, 100% { opacity: .5; }
 	50% { opacity: 1; }
 }
-
 /* ==========================================================================
    5  Hero, collage, candles
    ========================================================================== */
@@ -918,7 +838,6 @@
 	position: relative;
 	padding-block: 74px 46px;
 }
-
 .msl-hero__halo {
 	position: absolute;
 	inset-inline-start: -60px;
@@ -927,7 +846,6 @@
 	block-size: calc(100% + 20px);
 	pointer-events: none;
 }
-
 .msl-hero__content {
 	position: relative;
 	z-index: 1;
@@ -937,7 +855,6 @@
 	text-align: center;
 	gap: 24px;
 }
-
 .msl-eyebrow {
 	display: flex;
 	align-items: center;
@@ -946,13 +863,11 @@
 	max-inline-size: 640px;
 	color: var(--msl-eyebrow);
 }
-
 .msl-eyebrow__rule {
 	flex: 1;
 	block-size: 1px;
 	background: var(--msl-rule);
 }
-
 .msl-eyebrow__label {
 	flex: none;
 	font-size: calc((13px) * var(--msl-scale, 1));
@@ -960,27 +875,23 @@
 	letter-spacing: 0.14em;
 	white-space: nowrap;
 }
-
 /* The candle. The flame is two stacked ellipses so the outer glow can flicker
    slower than the flame inside it — one shape reads as a blinking dot. */
 .msl-candle {
 	flex: none;
 	overflow: visible;
 }
-
 .msl-candle__glow {
 	fill: var(--msl-accent-light);
 	opacity: .28;
 	animation: msl-flick 2.6s ease-in-out infinite;
 	transform-origin: 50% 60%;
 }
-
 .msl-candle__flame {
 	fill: oklch(0.70 0.19 52);
 	animation: msl-flick 1.9s ease-in-out infinite;
 	transform-origin: 50% 70%;
 }
-
 .msl-candle__wick { fill: oklch(0.42 0.06 48); }
 .msl-candle__body { fill: var(--msl-warm); }
 .msl-candle__highlight { fill: var(--msl-on-dark); }
@@ -990,13 +901,11 @@
 .msl-candle__knop { fill: oklch(0.78 0.10 66); }
 .msl-candle__foot { fill: oklch(0.74 0.10 64); }
 .msl-candle__base { fill: oklch(0.68 0.10 60); }
-
 @keyframes msl-flick {
 	0%, 100% { transform: scaleY(1) scaleX(1); opacity: 1; }
 	40% { transform: scaleY(1.14) scaleX(0.92); opacity: .88; }
 	70% { transform: scaleY(0.95) scaleX(1.04); opacity: .96; }
 }
-
 /* The 660px cap is load-bearing: it is what leaves the gutter the collage tiles
    sit in. Widening it without re-placing the tiles puts them over the words. */
 .msl-hero__title {
@@ -1009,15 +918,12 @@
 	text-wrap: balance;
 	color: var(--msl-ink-strong);
 }
-
 .msl-hero__title span {
 	display: block;
 }
-
 .msl-hero__title-accent {
 	color: var(--msl-accent);
 }
-
 .msl-hero__sub {
 	max-inline-size: 600px;
 	font-size: calc((20px) * var(--msl-scale, 1));
@@ -1026,7 +932,6 @@
 	font-weight: 400;
 	text-wrap: pretty;
 }
-
 .msl-hero__actions {
 	display: flex;
 	align-items: center;
@@ -1035,7 +940,6 @@
 	justify-content: center;
 	margin-block-start: 4px;
 }
-
 .msl-counterchip {
 	display: flex;
 	align-items: center;
@@ -1045,7 +949,6 @@
 	background: var(--msl-surface);
 	border: 1px solid var(--msl-border-soft);
 }
-
 .msl-counterchip__value {
 	font-family: var(--msl-font-display);
 	font-weight: 900;
@@ -1053,103 +956,15 @@
 	color: var(--msl-ink);
 	letter-spacing: -0.02em;
 }
-
 .msl-counterchip__label {
 	font-size: calc((14.5px) * var(--msl-scale, 1));
 	color: var(--msl-muted);
 	font-weight: 500;
 }
-
-/* The collage: four bands per side, every tile anchored from the top so bands
-   can never collide. Each tile holds two stacked layers that cross-fade, which
-   is what lets a pool larger than eight images cycle through the positions. */
-.msl-collage__tile {
-	position: absolute;
-	z-index: 0;
-	inset-block-start: var(--msl-tile-top);
-	inline-size: var(--msl-tile-w);
-	block-size: 116px;
-	opacity: 1;
-	transform: rotate(var(--msl-tile-rotate)) scale(1);
-	transition: opacity var(--msl-t-swap) ease, transform var(--msl-t-swap) ease;
-}
-
-.msl-collage__tile--start { inset-inline-start: var(--msl-tile-inset); }
-.msl-collage__tile--end { inset-inline-end: var(--msl-tile-inset); }
-
-.msl-collage__tile.is-swapping {
-	opacity: 0;
-	transform: rotate(var(--msl-tile-rotate)) scale(0.9);
-}
-
-.msl-collage__inner {
-	position: relative;
-	inline-size: 100%;
-	block-size: 100%;
-	border-radius: var(--msl-tile-radius);
-	overflow: hidden;
-	box-shadow: var(--msl-shadow-tile);
-	background: oklch(0.90 0.05 80);
-	animation: msl-bob var(--msl-tile-bob) ease-in-out infinite;
-	animation-delay: var(--msl-tile-delay);
-	transition: box-shadow var(--msl-t-card) ease, filter var(--msl-t-card) ease;
-}
-
-.msl-collage__inner:hover {
-	animation-play-state: paused;
-	filter: brightness(1.07) saturate(1.05);
-	box-shadow: var(--msl-shadow-tile-hover);
-}
-
-.msl-collage__layer {
-	position: absolute;
-	inset: 0;
-	opacity: 0;
-	pointer-events: none;
-	transition: opacity var(--msl-t-fade) ease;
-}
-
-.msl-collage__layer.is-on {
-	opacity: 1;
-	pointer-events: auto;
-}
-
-.msl-collage__layer img {
-	inline-size: 100%;
-	block-size: 100%;
-	object-fit: cover;
-	display: block;
-}
-
-/*
- * Empty portrait slots. The eight tiles alternate through four warm tints so
- * the gutter reads as a collage of people rather than as eight identical
- * grey boxes, which is what the design file shows in place of photography.
- */
-.msl-collage__layer--slot {
-	background: var(--msl-slot-bg, oklch(0.84 0.045 62));
-}
-
-.msl-collage__tile:nth-child(4n+2) .msl-collage__layer--slot { --msl-slot-bg: oklch(0.90 0.032 68); }
-.msl-collage__tile:nth-child(4n+3) .msl-collage__layer--slot { --msl-slot-bg: oklch(0.78 0.055 55); }
-.msl-collage__tile:nth-child(4n+4) .msl-collage__layer--slot { --msl-slot-bg: oklch(0.94 0.022 74); }
-
-.msl-slot {
-	inline-size: 100%;
-	block-size: 100%;
-	display: block;
-}
-
-.msl-slot__head,
-.msl-slot__body {
-	fill: oklch(0.62 0.05 50 / 0.42);
-}
-
 @keyframes msl-bob {
 	0%, 100% { transform: translateY(0); }
 	50% { transform: translateY(-11px); }
 }
-
 /* ==========================================================================
    6  Split stage
    ========================================================================== */
@@ -1159,7 +974,6 @@
 	grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
 	gap: 16px;
 }
-
 .msl-panel {
 	position: relative;
 	border-radius: 36px;
@@ -1168,22 +982,18 @@
 	box-shadow: var(--msl-shadow-panel);
 	transition: box-shadow var(--msl-t-slow) ease, transform var(--msl-t-slow) var(--msl-ease);
 }
-
 .msl-panel:hover {
 	transform: translateY(-4px);
 	box-shadow: var(--msl-shadow-panel-hover);
 }
-
 .msl-panel--wall {
 	background: var(--msl-dark-deep);
 }
-
 .msl-panel__canvas {
 	display: block;
 	inline-size: 100%;
 	block-size: 560px;
 }
-
 /* First thing after the canvas on purpose: everything below paints over it, so
    the overlay text stays readable whatever the canvas is doing underneath. */
 .msl-panel__scrim {
@@ -1194,7 +1004,6 @@
 	pointer-events: none;
 	background: linear-gradient(to bottom, oklch(0.10 0.02 60 / 0.78), oklch(0.10 0.02 60 / 0));
 }
-
 .msl-panel__lead {
 	position: absolute;
 	inset-block-start: 26px;
@@ -1205,14 +1014,12 @@
 	gap: 3px;
 	pointer-events: none;
 }
-
 .msl-panel__lead--end {
 	inset-inline-start: auto;
 	inset-inline-end: 30px;
 	align-items: flex-end;
 	text-align: end;
 }
-
 .msl-panel__title {
 	max-inline-size: 230px;
 	font-family: var(--msl-font-display);
@@ -1223,19 +1030,16 @@
 	line-height: 1.1;
 	text-shadow: var(--msl-text-shadow);
 }
-
 .msl-panel__sub {
 	font-size: calc((13px) * var(--msl-scale, 1));
 	color: var(--msl-on-dark-sub);
 	font-weight: 500;
 	text-shadow: var(--msl-text-shadow-soft);
 }
-
 .msl-panel__figure {
 	font-weight: 700;
 	color: var(--msl-accent-gold);
 }
-
 .msl-panel__pct {
 	position: absolute;
 	inset-block-start: 26px;
@@ -1245,7 +1049,6 @@
 	gap: 7px;
 	pointer-events: none;
 }
-
 .msl-panel__pct-value {
 	font-family: var(--msl-font-display);
 	font-weight: 900;
@@ -1255,14 +1058,12 @@
 	font-variant-numeric: tabular-nums;
 	text-shadow: var(--msl-text-shadow);
 }
-
 .msl-panel__pct-label {
 	font-size: calc((12.5px) * var(--msl-scale, 1));
 	color: var(--msl-on-dark-sub);
 	font-weight: 500;
 	text-shadow: var(--msl-text-shadow-soft);
 }
-
 .msl-panel__action {
 	position: absolute;
 	inset-block-end: 24px;
@@ -1270,7 +1071,6 @@
 	display: flex;
 	justify-content: center;
 }
-
 /* ==========================================================================
    7  Marquee
    ========================================================================== */
@@ -1282,7 +1082,6 @@
 	background: var(--msl-warm-strong);
 	padding-block: 13px;
 }
-
 /* Both the track and each half are max-content, never a percentage: percentage
    widths make the two halves overlap and the loop visibly jumps. */
 .msl-marquee__track {
@@ -1290,11 +1089,9 @@
 	inline-size: max-content;
 	animation: msl-marquee 34s linear infinite;
 }
-
 .msl-marquee__track:hover {
 	animation-play-state: paused;
 }
-
 .msl-marquee__half {
 	display: flex;
 	gap: 34px;
@@ -1302,7 +1099,6 @@
 	flex: none;
 	padding-inline-start: 34px;
 }
-
 .msl-marquee__item {
 	display: flex;
 	align-items: center;
@@ -1313,7 +1109,6 @@
 	font-weight: 600;
 	color: var(--msl-marquee-text);
 }
-
 .msl-marquee__dot {
 	inline-size: 5px;
 	block-size: 5px;
@@ -1321,21 +1116,17 @@
 	background: var(--msl-accent);
 	flex: none;
 }
-
 @keyframes msl-marquee {
 	from { transform: translateX(0); }
 	to { transform: translateX(50%); }
 }
-
 .msl-page--en .msl-marquee__track {
 	animation-name: msl-marquee-ltr;
 }
-
 @keyframes msl-marquee-ltr {
 	from { transform: translateX(0); }
 	to { transform: translateX(-50%); }
 }
-
 /* ==========================================================================
    8  Stats
    ========================================================================== */
@@ -1343,18 +1134,15 @@
 .msl-stats {
 	padding-block-start: 90px;
 }
-
 .msl-stats .msl-subheading {
 	margin-block: 10px 30px;
 	font-size: calc((18px) * var(--msl-scale, 1));
 }
-
 .msl-stats__grid {
 	display: grid;
 	grid-template-columns: repeat(4, minmax(0, 1fr));
 	gap: 14px;
 }
-
 .msl-stat {
 	padding: 28px 22px;
 	border-radius: 26px;
@@ -1364,17 +1152,14 @@
 	min-inline-size: 0;
 	transition: transform var(--msl-t-card) var(--msl-ease), box-shadow var(--msl-t-card) ease;
 }
-
 .msl-stat:hover {
 	transform: translateY(-5px);
 	box-shadow: var(--msl-shadow-stat);
 }
-
 .msl-stat--ink { background: var(--msl-ink); color: var(--msl-on-dark); }
 .msl-stat--gold { background: var(--msl-gold-bg); color: var(--msl-stat-gold-ink); }
 .msl-stat--plain { background: var(--msl-surface); color: var(--msl-ink); }
 .msl-stat--orange { background: var(--msl-orange-bg); color: var(--msl-stat-orange-ink); }
-
 .msl-stat__value {
 	font-family: var(--msl-font-display);
 	font-weight: 900;
@@ -1384,7 +1169,6 @@
 	line-height: 1;
 	white-space: nowrap;
 }
-
 /*
  * The design sets the label to 72% opacity. On three of the four cards that
  * still clears 4.5:1, and on the fourth it clears it by a hair — so the value
@@ -1397,7 +1181,6 @@
 	opacity: .72;
 	text-wrap: pretty;
 }
-
 .msl-progress {
 	margin-block-start: 14px;
 	padding: 30px 32px;
@@ -1406,12 +1189,10 @@
 	border: 1px solid var(--msl-border);
 	transition: border-color var(--msl-t-card) ease, box-shadow var(--msl-t-card) ease;
 }
-
 .msl-progress:hover {
 	border-color: var(--msl-border-hover);
 	box-shadow: var(--msl-shadow-card);
 }
-
 .msl-progress__head {
 	display: flex;
 	align-items: baseline;
@@ -1419,13 +1200,11 @@
 	gap: 20px;
 	margin-block-end: 18px;
 }
-
 .msl-progress__label {
 	font-size: calc((18px) * var(--msl-scale, 1));
 	color: oklch(0.42 0.035 55);
 	font-weight: 500;
 }
-
 .msl-progress__value {
 	font-family: var(--msl-font-display);
 	font-weight: 900;
@@ -1435,14 +1214,12 @@
 	font-variant-numeric: tabular-nums;
 	white-space: nowrap;
 }
-
 .msl-progress__track {
 	block-size: 12px;
 	border-radius: 999px;
 	background: var(--msl-track);
 	overflow: hidden;
 }
-
 .msl-progress__fill {
 	display: block;
 	block-size: 100%;
@@ -1450,18 +1227,15 @@
 	background: linear-gradient(to left, var(--msl-accent), var(--msl-accent-light));
 	transition: inline-size var(--msl-t-slow) ease;
 }
-
 .msl-page--en .msl-progress__fill {
 	background: linear-gradient(to right, var(--msl-accent), var(--msl-accent-light));
 }
-
 .msl-progress__note {
 	margin-block-start: 16px;
 	font-size: calc((15px) * var(--msl-scale, 1));
 	color: var(--msl-muted-2);
 	font-weight: 400;
 }
-
 /* ==========================================================================
    9  Nav cards
    ========================================================================== */
@@ -1472,7 +1246,6 @@
 	grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 	gap: 14px;
 }
-
 .msl-navcard {
 	display: flex;
 	align-items: center;
@@ -1487,13 +1260,11 @@
 	color: inherit;
 	transition: transform var(--msl-t-card) var(--msl-ease), border-color var(--msl-t-card) ease, box-shadow var(--msl-t-card) ease;
 }
-
 .msl-navcard:hover {
 	transform: translateY(-4px);
 	border-color: var(--msl-border-active);
 	box-shadow: var(--msl-shadow-card-lift);
 }
-
 .msl-navcard__thumb {
 	inline-size: 130px;
 	block-size: 92px;
@@ -1502,13 +1273,11 @@
 	overflow: hidden;
 	background: var(--msl-dark);
 }
-
 .msl-navcard__thumb canvas {
 	display: block;
 	inline-size: 100%;
 	block-size: 100%;
 }
-
 .msl-navcard__body {
 	flex: 1;
 	display: flex;
@@ -1516,26 +1285,22 @@
 	gap: 6px;
 	min-inline-size: 0;
 }
-
 .msl-navcard__title {
 	font-family: var(--msl-font-display);
 	font-size: calc((22px) * var(--msl-scale, 1));
 	font-weight: 900;
 	letter-spacing: -0.02em;
 }
-
 .msl-navcard__sub {
 	font-size: calc((15px) * var(--msl-scale, 1));
 	font-weight: 400;
 	color: var(--msl-muted);
 	line-height: 1.5;
 }
-
 .msl-navcard__figure {
 	color: var(--msl-accent-text);
 	font-weight: 700;
 }
-
 /* The chevron points along the reading direction, so it means "onward" in both
    languages rather than "left" in one of them. */
 .msl-navcard__chevron {
@@ -1544,11 +1309,9 @@
 	font-size: calc((24px) * var(--msl-scale, 1));
 	line-height: 1;
 }
-
 .msl-page--en .msl-navcard__chevron {
 	transform: scaleX(-1);
 }
-
 /* ==========================================================================
    10  Map
    ========================================================================== */
@@ -1556,12 +1319,10 @@
 .msl-map {
 	padding-block-start: 90px;
 }
-
 .msl-map__head {
 	max-inline-size: 680px;
 	margin-block-end: 26px;
 }
-
 .msl-map__frame {
 	position: relative;
 	border-radius: 32px;
@@ -1569,17 +1330,14 @@
 	background: var(--msl-dark);
 	transition: box-shadow var(--msl-t-slow) ease;
 }
-
 .msl-map__frame:hover {
 	box-shadow: 0 30px 70px oklch(0.30 0.05 50 / 0.26);
 }
-
 .msl-map__canvas {
 	display: block;
 	inline-size: 100%;
 	block-size: 540px;
 }
-
 /* ==========================================================================
    11  Referral
    ========================================================================== */
@@ -1587,18 +1345,15 @@
 .msl-referral {
 	padding-block-start: 90px;
 }
-
 .msl-referral__head {
 	max-inline-size: 680px;
 	margin-block-end: 26px;
 }
-
 .msl-referral__grid {
 	display: grid;
 	grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 	gap: 16px;
 }
-
 .msl-linkcard {
 	padding: 36px 34px;
 	border-radius: 32px;
@@ -1608,14 +1363,12 @@
 	flex-direction: column;
 	gap: 22px;
 }
-
 .msl-linkcard__label {
 	font-size: calc((12.5px) * var(--msl-scale, 1));
 	letter-spacing: 0.08em;
 	color: var(--msl-link-label);
 	font-weight: 600;
 }
-
 /* The link stays left-to-right in both languages — a URL read right-to-left is
    not a URL — but it still aligns to the start of the line. */
 .msl-linkcard__value {
@@ -1632,20 +1385,17 @@
 	text-overflow: ellipsis;
 	white-space: nowrap;
 }
-
 .msl-linkcard__actions {
 	display: flex;
 	flex-direction: column;
 	gap: 10px;
 }
-
 .msl-linkcard__row,
 .msl-result__row {
 	display: grid;
 	grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 	gap: 10px;
 }
-
 .msl-refcount {
 	padding: 36px 34px;
 	border-radius: 32px;
@@ -1656,12 +1406,10 @@
 	gap: 20px;
 	transition: border-color var(--msl-t-card) ease, box-shadow var(--msl-t-card) ease;
 }
-
 .msl-refcount:hover {
 	border-color: var(--msl-border-hover);
 	box-shadow: var(--msl-shadow-card);
 }
-
 .msl-refcount__value {
 	font-family: var(--msl-font-display);
 	font-weight: 900;
@@ -1670,21 +1418,18 @@
 	line-height: 1;
 	color: var(--msl-accent);
 }
-
 .msl-refcount__label {
 	margin-block-start: 4px;
 	font-size: calc((16px) * var(--msl-scale, 1));
 	color: var(--msl-body);
 	font-weight: 500;
 }
-
 .msl-refcount__bar {
 	block-size: 10px;
 	border-radius: 999px;
 	background: var(--msl-track-soft);
 	overflow: hidden;
 }
-
 .msl-refcount__fill {
 	display: block;
 	block-size: 100%;
@@ -1692,24 +1437,20 @@
 	background: linear-gradient(to left, var(--msl-accent), var(--msl-accent-light));
 	transition: inline-size var(--msl-t-slow) ease;
 }
-
 .msl-page--en .msl-refcount__fill {
 	background: linear-gradient(to right, var(--msl-accent), var(--msl-accent-light));
 }
-
 .msl-refcount__next {
 	margin-block-start: 10px;
 	font-size: calc((14px) * var(--msl-scale, 1));
 	color: var(--msl-muted-2);
 	font-weight: 500;
 }
-
 .msl-milestones {
 	display: flex;
 	flex-wrap: wrap;
 	gap: 9px;
 }
-
 /* Shared goals, deliberately not a ranking: there is no leaderboard of people
    anywhere on this site. */
 .msl-milestone {
@@ -1726,28 +1467,23 @@
 	font-variant-numeric: tabular-nums;
 	transition: background var(--msl-t-card) ease, border-color var(--msl-t-card) ease, color var(--msl-t-card) ease;
 }
-
 .msl-milestone.is-reached {
 	background: var(--msl-gold-bg);
 	border-color: var(--msl-ink);
 	color: var(--msl-stat-gold-ink);
 	font-weight: 800;
 }
-
 .msl-milestone__mark {
 	inline-size: 0;
 	overflow: hidden;
 	transition: inline-size var(--msl-t-card) ease;
 }
-
 .msl-milestone.is-reached .msl-milestone__mark {
 	inline-size: 1em;
 }
-
 .msl-milestone.is-reached .msl-milestone__mark::before {
 	content: "✓";
 }
-
 /* ==========================================================================
    12  Closing and footer
    ========================================================================== */
@@ -1755,7 +1491,6 @@
 .msl-closing {
 	padding-block: 70px 110px;
 }
-
 .msl-closing__inner {
 	border-radius: 36px;
 	padding: 80px 40px;
@@ -1766,7 +1501,6 @@
 	align-items: center;
 	gap: 22px;
 }
-
 .msl-closing__title {
 	font-family: var(--msl-font-display);
 	font-weight: 900;
@@ -1777,7 +1511,6 @@
 	color: var(--msl-cta-ink);
 	text-wrap: balance;
 }
-
 .msl-closing__urgency {
 	max-inline-size: 540px;
 	font-size: calc((18px) * var(--msl-scale, 1));
@@ -1786,19 +1519,16 @@
 	font-weight: 500;
 	text-wrap: pretty;
 }
-
 .msl-closing__counter {
 	font-size: calc((15px) * var(--msl-scale, 1));
 	color: var(--msl-cta-body);
 	font-weight: 600;
 }
-
 .msl-footer {
 	border-block-start: 1px solid var(--msl-border);
 	background: rgb(248 242 232 / 0.6);
 	background: color-mix(in oklab, var(--msl-canvas) 60%, transparent);
 }
-
 .msl-footer__inner {
 	max-inline-size: var(--msl-shell);
 	margin-inline: auto;
@@ -1811,23 +1541,19 @@
 	font-size: calc((14px) * var(--msl-scale, 1));
 	color: var(--msl-muted-3);
 }
-
 .msl-footer__links {
 	display: flex;
 	flex-wrap: wrap;
 	gap: 18px;
 }
-
 .msl-footer__links a,
 .msl-footer__credit a {
 	color: var(--msl-muted-3);
 }
-
 .msl-footer__links a:hover,
 .msl-footer__credit a:hover {
 	color: var(--msl-ink);
 }
-
 /* ==========================================================================
    13  Join dialog
    ========================================================================== */
@@ -1841,11 +1567,9 @@
 	justify-content: center;
 	padding: 28px;
 }
-
 .msl-modal[hidden] {
 	display: none;
 }
-
 .msl-modal__backdrop {
 	position: absolute;
 	inset: 0;
@@ -1856,7 +1580,6 @@
 	animation: msl-fade .26s ease both;
 	border: 0;
 }
-
 .msl-modal__sheet {
 	position: relative;
 	inline-size: 100%;
@@ -1870,23 +1593,19 @@
 	box-shadow: var(--msl-shadow-sheet);
 	animation: msl-rise .36s var(--msl-ease) both;
 }
-
 @keyframes msl-fade {
 	from { opacity: 0; }
 	to { opacity: 1; }
 }
-
 @keyframes msl-rise {
 	from { opacity: 0; transform: translateY(26px); }
 	to { opacity: 1; transform: none; }
 }
-
 .msl-join {
 	display: flex;
 	flex-direction: column;
 	min-block-size: 0;
 }
-
 .msl-join__head {
 	padding: 24px 32px 6px;
 	display: flex;
@@ -1894,12 +1613,10 @@
 	justify-content: space-between;
 	gap: 12px;
 }
-
 .msl-steps {
 	display: flex;
 	gap: 6px;
 }
-
 .msl-steps__segment {
 	inline-size: 32px;
 	block-size: 4px;
@@ -1907,17 +1624,14 @@
 	background: var(--msl-border-soft);
 	transition: background var(--msl-t) ease;
 }
-
 .msl-steps__segment.is-done {
 	background: var(--msl-accent);
 }
-
 .msl-join__body {
 	flex: 1;
 	overflow-y: auto;
 	padding: 16px 32px 20px;
 }
-
 .msl-join__foot {
 	padding: 14px 32px 28px;
 	display: flex;
@@ -1925,7 +1639,6 @@
 	align-items: center;
 	gap: 6px;
 }
-
 .msl-join__foot-group {
 	inline-size: 100%;
 	display: flex;
@@ -1933,11 +1646,9 @@
 	align-items: center;
 	gap: 6px;
 }
-
 .msl-join__foot-group[hidden] {
 	display: none;
 }
-
 .msl-step__title {
 	font-family: var(--msl-font-display);
 	font-weight: 900;
@@ -1946,14 +1657,12 @@
 	letter-spacing: -0.035em;
 	margin-block-end: 6px;
 }
-
 .msl-step__sub {
 	font-size: calc((16px) * var(--msl-scale, 1));
 	color: var(--msl-muted);
 	font-weight: 400;
 	margin-block-end: 22px;
 }
-
 /* The options are checkboxes wearing the design's cards: the input carries the
    semantics and the keyboard behaviour, the label carries the look. */
 .msl-options {
@@ -1961,11 +1670,9 @@
 	grid-template-columns: 1fr 1fr;
 	gap: 11px;
 }
-
 .msl-option--wide {
 	grid-column: span 2;
 }
-
 .msl-option__input,
 .msl-chip__input,
 .msl-anon__input {
@@ -1976,7 +1683,6 @@
 	margin: 0;
 	pointer-events: none;
 }
-
 .msl-option__label {
 	display: flex;
 	flex-direction: column;
@@ -1990,17 +1696,14 @@
 	background: var(--msl-surface);
 	transition: transform var(--msl-t) var(--msl-ease), box-shadow var(--msl-t) ease, border-color var(--msl-t) ease, background var(--msl-t) ease;
 }
-
 .msl-option__label:hover {
 	transform: translateY(-3px);
 	border-color: var(--msl-border-active);
 	box-shadow: 0 12px 26px oklch(0.34 0.06 50 / 0.14);
 }
-
 .msl-option__label:active {
 	transform: translateY(0);
 }
-
 .msl-option__dot {
 	inline-size: 10px;
 	block-size: 10px;
@@ -2008,54 +1711,45 @@
 	background: var(--msl-border-soft);
 	transition: background var(--msl-t) ease;
 }
-
 .msl-option__text {
 	font-size: calc((17px) * var(--msl-scale, 1));
 	font-weight: 500;
 	color: var(--msl-chip-text);
 	line-height: 1.25;
 }
-
 .msl-option__input:checked + .msl-option__label {
 	border-color: var(--msl-ink);
 	background: var(--msl-gold-bg);
 }
-
 .msl-option__input:checked + .msl-option__label .msl-option__dot {
 	background: var(--msl-accent-strong);
 }
-
 .msl-option__input:checked + .msl-option__label .msl-option__text {
 	font-weight: 800;
 	color: var(--msl-ink);
 }
-
 /* Three is the cap. Rather than let a fourth click fail silently, the ones that
    are not yet chosen dim and stop responding once the cap is reached. */
 .msl-options.is-full .msl-option__input:not(:checked) + .msl-option__label {
 	opacity: .5;
 	cursor: not-allowed;
 }
-
 .msl-options.is-full .msl-option__input:not(:checked) + .msl-option__label:hover {
 	transform: none;
 	border-color: var(--msl-border);
 	box-shadow: none;
 }
-
 .msl-option__input:focus-visible + .msl-option__label,
 .msl-chip__input:focus-visible + .msl-chip__label,
 .msl-anon__input:focus-visible + .msl-anon__label {
 	outline: 3px solid var(--msl-accent-text);
 	outline-offset: 3px;
 }
-
 .msl-chips {
 	display: flex;
 	flex-wrap: wrap;
 	gap: 10px;
 }
-
 .msl-chip__label {
 	display: inline-flex;
 	padding: 13px 20px;
@@ -2068,24 +1762,20 @@
 	color: var(--msl-chip-text);
 	transition: transform var(--msl-t-fast) ease, border-color var(--msl-t-fast) ease, background var(--msl-t-fast) ease;
 }
-
 .msl-chip__label:hover {
 	transform: translateY(-2px);
 	border-color: var(--msl-border-active);
 }
-
 .msl-chip__input:checked + .msl-chip__label {
 	border-color: var(--msl-ink);
 	background: var(--msl-gold-bg);
 	color: var(--msl-ink);
 	font-weight: 800;
 }
-
 .msl-field {
 	display: block;
 	margin-block-start: 16px;
 }
-
 .msl-field__label {
 	display: block;
 	margin-block-end: 6px;
@@ -2093,13 +1783,11 @@
 	font-weight: 600;
 	color: var(--msl-chip-ink);
 }
-
 .msl-field__pair {
 	display: grid;
 	grid-template-columns: 1fr 1fr;
 	gap: 11px;
 }
-
 .msl-input {
 	inline-size: 100%;
 	block-size: 56px;
@@ -2112,24 +1800,20 @@
 	padding-inline: 16px;
 	transition: border-color var(--msl-t-fast) ease;
 }
-
 .msl-input--area {
 	block-size: 104px;
 	padding: 14px 16px;
 	resize: vertical;
 	line-height: 1.5;
 }
-
 .msl-input:focus {
 	border-color: var(--msl-accent-text);
 	outline: 3px solid var(--msl-accent-text);
 	outline-offset: 2px;
 }
-
 .msl-input[aria-invalid="true"] {
 	border-color: var(--msl-danger);
 }
-
 .msl-field__error {
 	display: none;
 	margin-block-start: 6px;
@@ -2137,11 +1821,9 @@
 	font-weight: 600;
 	color: var(--msl-danger);
 }
-
 .msl-field__error:not(:empty) {
 	display: block;
 }
-
 .msl-note {
 	margin-block-start: 12px;
 	font-size: calc((13.5px) * var(--msl-scale, 1));
@@ -2149,19 +1831,16 @@
 	font-weight: 400;
 	line-height: 1.5;
 }
-
 .msl-remind {
 	margin-block-start: 22px;
 	padding-block-start: 20px;
 	border-block-start: 1px solid var(--msl-border);
 }
-
 .msl-remind__title {
 	font-size: calc((17px) * var(--msl-scale, 1));
 	font-weight: 700;
 	color: oklch(0.26 0.035 50);
 }
-
 .msl-remind__sub {
 	margin-block-start: 5px;
 	font-size: calc((14px) * var(--msl-scale, 1));
@@ -2170,11 +1849,9 @@
 	line-height: 1.55;
 	text-wrap: pretty;
 }
-
 .msl-anon {
 	margin-block-start: 18px;
 }
-
 .msl-anon__label {
 	display: flex;
 	align-items: center;
@@ -2189,7 +1866,6 @@
 	font-weight: 500;
 	transition: border-color var(--msl-t-fast) ease, background var(--msl-t-fast) ease;
 }
-
 .msl-anon__box {
 	inline-size: 22px;
 	block-size: 22px;
@@ -2204,36 +1880,29 @@
 	background: transparent;
 	transition: background var(--msl-t-fast) ease, border-color var(--msl-t-fast) ease;
 }
-
 .msl-anon__input:checked + .msl-anon__label {
 	border-color: var(--msl-ink);
 	background: var(--msl-gold-bg);
 }
-
 .msl-anon__input:checked + .msl-anon__label .msl-anon__box {
 	background: var(--msl-anon-box);
 	border-color: var(--msl-anon-box-bd);
 }
-
 .msl-anon__input:checked + .msl-anon__label .msl-anon__box::before {
 	content: "✓";
 }
-
 .msl-formerror {
 	margin-block-start: 16px;
 	font-size: calc((15px) * var(--msl-scale, 1));
 	font-weight: 700;
 	color: var(--msl-danger);
 }
-
 .msl-formerror:empty {
 	display: none;
 }
-
 .msl-step[hidden] {
 	display: none;
 }
-
 /* ==========================================================================
    14  Full-screen screens
    ========================================================================== */
@@ -2245,16 +1914,13 @@
 	background: var(--msl-stage);
 	animation: msl-fade var(--msl-t-slow) ease both;
 }
-
 .msl-screen[hidden] {
 	display: none;
 }
-
 .msl-screen--wow {
 	z-index: 60;
 	background: var(--msl-wow-bg);
 }
-
 .msl-screen--result {
 	z-index: 60;
 	display: flex;
@@ -2267,7 +1933,6 @@
 	-webkit-backdrop-filter: blur(10px);
 	backdrop-filter: blur(10px);
 }
-
 .msl-screen__canvas {
 	position: absolute;
 	inset: 0;
@@ -2275,19 +1940,15 @@
 	block-size: 100%;
 	touch-action: none;
 }
-
 .msl-screen--art .msl-screen__canvas {
 	cursor: grab;
 }
-
 .msl-screen--art .msl-screen__canvas:active {
 	cursor: grabbing;
 }
-
 .msl-screen--wall .msl-screen__canvas {
 	cursor: pointer;
 }
-
 .msl-screen__top {
 	position: absolute;
 	inset-block-start: 0;
@@ -2300,11 +1961,9 @@
 	background: linear-gradient(to bottom, var(--msl-stage) 40%, transparent);
 	pointer-events: none;
 }
-
 .msl-screen__top > * {
 	pointer-events: auto;
 }
-
 .msl-screen__heading {
 	display: flex;
 	flex-direction: column;
@@ -2312,7 +1971,6 @@
 	gap: 3px;
 	text-align: center;
 }
-
 .msl-screen__title {
 	font-family: var(--msl-font-display);
 	font-size: calc((22px) * var(--msl-scale, 1));
@@ -2320,7 +1978,6 @@
 	letter-spacing: -0.02em;
 	color: var(--msl-on-dark);
 }
-
 .msl-screen__count {
 	font-family: var(--msl-font-display);
 	font-weight: 900;
@@ -2328,7 +1985,6 @@
 	letter-spacing: -0.035em;
 	color: var(--msl-on-dark);
 }
-
 .msl-screen__sub {
 	display: flex;
 	align-items: center;
@@ -2337,22 +1993,18 @@
 	font-weight: 400;
 	color: var(--msl-on-dark-muted);
 }
-
 .msl-screen--wall .msl-screen__sub {
 	font-size: calc((13.5px) * var(--msl-scale, 1));
 	font-weight: 500;
 }
-
 .msl-screen__figure {
 	color: var(--msl-gold-num);
 	font-weight: 700;
 }
-
 .msl-screen__spacer {
 	inline-size: 100px;
 	flex: none;
 }
-
 .msl-screen__bottom {
 	position: absolute;
 	inset-block-end: 0;
@@ -2364,7 +2016,6 @@
 	align-items: center;
 	gap: 14px;
 }
-
 /*
  * "My candle" sits opposite the zoom column, at the same height: it is the
  * other way of moving the camera, and putting it in the top bar would push it
@@ -2377,11 +2028,9 @@
 	inset-inline-start: var(--msl-gutter);
 	z-index: 2;
 }
-
 .msl-mine[hidden] {
 	display: none;
 }
-
 .msl-zoom {
 	position: absolute;
 	inset-block-start: 100px;
@@ -2393,7 +2042,6 @@
 	overflow: hidden;
 	background: var(--msl-zoom-sep);
 }
-
 .msl-zoom__btn {
 	inline-size: 48px;
 	block-size: 48px;
@@ -2406,11 +2054,9 @@
 	font-family: var(--msl-font-text);
 	transition: background var(--msl-t-fast) ease;
 }
-
 .msl-zoom__btn:hover {
 	background: var(--msl-zoom-sep);
 }
-
 .msl-zoom__level {
 	block-size: 34px;
 	display: flex;
@@ -2422,7 +2068,6 @@
 	color: var(--msl-zoom-label);
 	font-variant-numeric: tabular-nums;
 }
-
 .msl-pick {
 	inline-size: 100%;
 	max-inline-size: 440px;
@@ -2434,18 +2079,15 @@
 	align-items: center;
 	gap: 15px;
 }
-
 .msl-pick[hidden] {
 	display: none;
 }
-
 .msl-pick--stack {
 	max-inline-size: 420px;
 	flex-direction: column;
 	align-items: flex-start;
 	gap: 4px;
 }
-
 .msl-pick__avatar {
 	inline-size: 40px;
 	block-size: 40px;
@@ -2453,7 +2095,6 @@
 	border-radius: 999px;
 	background: linear-gradient(160deg, var(--msl-accent-gold), var(--msl-accent-deep));
 }
-
 .msl-pick__body {
 	flex: 1;
 	display: flex;
@@ -2461,19 +2102,16 @@
 	gap: 3px;
 	min-inline-size: 0;
 }
-
 .msl-pick__name {
 	font-size: calc((18px) * var(--msl-scale, 1));
 	font-weight: 800;
 	color: var(--msl-ink-panel);
 }
-
 .msl-pick__sub {
 	font-size: calc((14.5px) * var(--msl-scale, 1));
 	font-weight: 400;
 	color: var(--msl-pick-sub);
 }
-
 .msl-hint {
 	text-align: center;
 	font-size: calc((14.5px) * var(--msl-scale, 1));
@@ -2482,7 +2120,6 @@
 	max-inline-size: 540px;
 	text-wrap: pretty;
 }
-
 /* --- The moment after joining --- */
 
 .msl-wow__count {
@@ -2496,12 +2133,10 @@
 	opacity: 0;
 	transition: opacity var(--msl-t-fade) ease;
 }
-
 .msl-wow__count.is-shown,
 .msl-wow__text.is-shown {
 	opacity: 1;
 }
-
 .msl-wow__number {
 	font-family: var(--msl-font-display);
 	font-weight: 900;
@@ -2510,13 +2145,11 @@
 	letter-spacing: -0.04em;
 	font-variant-numeric: tabular-nums;
 }
-
 .msl-wow__label {
 	font-size: calc((14.5px) * var(--msl-scale, 1));
 	color: var(--msl-on-dark-muted);
 	font-weight: 500;
 }
-
 .msl-wow__text {
 	position: absolute;
 	inset-inline: 0;
@@ -2531,7 +2164,6 @@
 	opacity: 0;
 	transition: opacity .7s ease;
 }
-
 .msl-wow__title {
 	font-family: var(--msl-font-display);
 	font-weight: 900;
@@ -2541,7 +2173,6 @@
 	color: var(--msl-on-dark);
 	text-wrap: balance;
 }
-
 .msl-wow__body {
 	font-size: calc((19px) * var(--msl-scale, 1));
 	line-height: 1.6;
@@ -2550,13 +2181,11 @@
 	max-inline-size: 580px;
 	text-wrap: pretty;
 }
-
 .msl-wow__figure {
 	color: var(--msl-gold-num);
 	font-weight: 700;
 	font-variant-numeric: tabular-nums;
 }
-
 .msl-wow__text .msl-btn--hero {
 	margin-block-start: 4px;
 	block-size: 60px;
@@ -2566,11 +2195,9 @@
 	color: var(--msl-ink-panel);
 	box-shadow: none;
 }
-
 .msl-wow__text .msl-btn--hero:hover {
 	background: var(--msl-gold-soft);
 }
-
 /* --- The share card --- */
 
 .msl-result {
@@ -2581,26 +2208,22 @@
 	gap: 14px;
 	animation: msl-rise .4s var(--msl-ease) both;
 }
-
 .msl-card {
 	border-radius: 32px;
 	overflow: hidden;
 	background: var(--msl-sheet);
 	box-shadow: 0 30px 70px oklch(0.28 0.05 50 / 0.3);
 }
-
 .msl-card__art {
 	position: relative;
 	block-size: 200px;
 	background: var(--msl-dark);
 }
-
 .msl-card__art canvas {
 	display: block;
 	inline-size: 100%;
 	block-size: 200px;
 }
-
 .msl-card__body {
 	padding: 24px 28px 28px;
 	display: flex;
@@ -2609,7 +2232,6 @@
 	text-align: center;
 	align-items: center;
 }
-
 .msl-card__title {
 	font-family: var(--msl-font-display);
 	font-weight: 900;
@@ -2617,7 +2239,6 @@
 	line-height: 1.15;
 	letter-spacing: -0.03em;
 }
-
 .msl-card__thing {
 	inline-size: 100%;
 	display: flex;
@@ -2626,48 +2247,40 @@
 	padding-block: 18px;
 	border-block: 1px solid var(--msl-border);
 }
-
 .msl-card__label {
 	font-size: calc((12.5px) * var(--msl-scale, 1));
 	letter-spacing: 0.06em;
 	color: var(--msl-muted-3);
 	font-weight: 600;
 }
-
 .msl-card__value {
 	font-size: calc((22px) * var(--msl-scale, 1));
 	font-weight: 800;
 	color: var(--msl-accent-strong);
 	line-height: 1.3;
 }
-
 .msl-card__dedication {
 	font-size: calc((15px) * var(--msl-scale, 1));
 	color: var(--msl-muted);
 	font-weight: 400;
 }
-
 .msl-card__dedication[hidden] {
 	display: none;
 }
-
 .msl-card__count {
 	font-size: calc((16px) * var(--msl-scale, 1));
 	color: oklch(0.44 0.03 55);
 	font-weight: 500;
 }
-
 .msl-card__figure {
 	font-weight: 800;
 	color: var(--msl-ink);
 }
-
 .msl-card__ask {
 	font-size: calc((18px) * var(--msl-scale, 1));
 	font-weight: 800;
 	color: var(--msl-ink);
 }
-
 .msl-card__brand {
 	display: flex;
 	align-items: center;
@@ -2677,19 +2290,16 @@
 	font-weight: 900;
 	font-size: calc((15px) * var(--msl-scale, 1));
 }
-
 .msl-result__actions {
 	display: flex;
 	flex-direction: column;
 	gap: 10px;
 }
-
 .msl-result__link {
 	padding: 20px 22px;
 	border-radius: 24px;
 	background: var(--msl-warm-strong);
 }
-
 .msl-result__link-label {
 	font-size: calc((12.5px) * var(--msl-scale, 1));
 	letter-spacing: 0.06em;
@@ -2697,7 +2307,6 @@
 	font-weight: 600;
 	margin-block-end: 8px;
 }
-
 .msl-result__link-value {
 	font-size: calc((16px) * var(--msl-scale, 1));
 	color: var(--msl-res-ink);
@@ -2708,18 +2317,15 @@
 	text-overflow: ellipsis;
 	white-space: nowrap;
 }
-
 .msl-result__refcount {
 	margin-block-start: 14px;
 	font-size: calc((15px) * var(--msl-scale, 1));
 	color: var(--msl-cta-body);
 	font-weight: 500;
 }
-
 .msl-result__refcount span:first-child {
 	font-weight: 800;
 }
-
 .msl-result__bar {
 	margin-block-start: 12px;
 	block-size: 6px;
@@ -2727,7 +2333,6 @@
 	background: var(--msl-res-track);
 	overflow: hidden;
 }
-
 .msl-result__fill {
 	display: block;
 	block-size: 100%;
@@ -2735,19 +2340,16 @@
 	background: var(--msl-res-fill);
 	transition: inline-size var(--msl-t-slow) ease;
 }
-
 .msl-result__next {
 	margin-block-start: 9px;
 	font-size: calc((12.5px) * var(--msl-scale, 1));
 	color: var(--msl-res-label);
 	font-weight: 600;
 }
-
 /* When a screen is open the page behind it must not scroll under the fingers. */
 .msl-page.is-locked {
 	overflow: hidden;
 }
-
 /* ==========================================================================
    15  Accessibility widget and its modes
    ========================================================================== */
@@ -2758,7 +2360,6 @@
 	inset-inline-start: 22px;
 	z-index: 90;
 }
-
 .msl-a11y__toggle {
 	inline-size: 52px;
 	block-size: 52px;
@@ -2773,12 +2374,10 @@
 	box-shadow: 0 10px 26px oklch(0.24 0.035 50 / 0.34);
 	transition: transform var(--msl-t) var(--msl-ease), background var(--msl-t) ease;
 }
-
 .msl-a11y__toggle:hover {
 	transform: translateY(-2px);
 	background: var(--msl-ink-hover);
 }
-
 .msl-a11y__panel {
 	position: absolute;
 	inset-block-end: 64px;
@@ -2795,11 +2394,9 @@
 	flex-direction: column;
 	gap: 8px;
 }
-
 .msl-a11y__panel[hidden] {
 	display: none;
 }
-
 .msl-a11y__head {
 	display: flex;
 	align-items: center;
@@ -2807,23 +2404,19 @@
 	gap: 10px;
 	margin-block-end: 4px;
 }
-
 .msl-a11y__title {
 	font-size: calc((16px) * var(--msl-scale, 1));
 	font-weight: 800;
 	color: var(--msl-ink);
 }
-
 .msl-a11y__size {
 	display: flex;
 	align-items: center;
 	gap: 8px;
 }
-
 .msl-a11y__size button {
 	flex: 1;
 }
-
 .msl-a11y__item {
 	inline-size: 100%;
 	display: flex;
@@ -2842,28 +2435,23 @@
 	cursor: pointer;
 	transition: border-color var(--msl-t-fast) ease, background var(--msl-t-fast) ease;
 }
-
 .msl-a11y__item:hover {
 	border-color: var(--msl-border-active);
 }
-
 .msl-a11y__item[aria-pressed="true"] {
 	border-color: var(--msl-ink);
 	background: var(--msl-gold-bg);
 	color: var(--msl-stat-gold-ink);
 	font-weight: 800;
 }
-
 .msl-a11y__item[aria-pressed="true"]::after {
 	content: "✓";
 }
-
 .msl-a11y__note {
 	font-size: calc((13px) * var(--msl-scale, 1));
 	color: var(--msl-muted-3);
 	font-variant-numeric: tabular-nums;
 }
-
 /* --- The adjustments themselves --- */
 
 /*
@@ -2877,13 +2465,11 @@ html.msl-a11y-dark {
 	filter: invert(1) hue-rotate(180deg);
 	background: #1A1A1A;
 }
-
 html.msl-a11y-dark img,
 html.msl-a11y-dark video,
 html.msl-a11y-dark canvas {
 	filter: invert(1) hue-rotate(180deg);
 }
-
 /*
  * Two colours, chosen by context rather than by element. An earlier version
  * listed which things should end up white on black and which black on white,
@@ -2905,43 +2491,36 @@ html.msl-a11y-contrast .msl-page *:not(canvas) {
 	box-shadow: none !important;
 	opacity: 1 !important;
 }
-
 html.msl-a11y-contrast .msl-page :is(.msl-panel, .msl-screen, .msl-map__frame, .msl-linkcard, .msl-stat--ink, .msl-card__art),
 html.msl-a11y-contrast .msl-page :is(.msl-panel, .msl-screen, .msl-map__frame, .msl-linkcard, .msl-stat--ink, .msl-card__art) *:not(canvas) {
 	background-color: #000000 !important;
 	color: #FFFFFF !important;
 	border-color: #FFFFFF !important;
 }
-
 html.msl-a11y-contrast .msl-page :where(.msl-btn, .msl-input, .msl-option__label, .msl-chip__label, .msl-milestone, .msl-a11y__item, .msl-iconbtn) {
 	border: 2px solid currentColor !important;
 }
-
 html.msl-a11y-links .msl-page a {
 	text-decoration: underline !important;
 	text-underline-offset: 3px;
 	font-weight: 700;
 }
-
 html.msl-a11y-readable .msl-page,
 html.msl-a11y-readable .msl-page :where(h1, h2, h3, button, input, textarea, label) {
 	font-family: Arial, "Segoe UI", system-ui, sans-serif !important;
 	letter-spacing: normal !important;
 }
-
 html.msl-a11y-spacing .msl-page :where(p, li, label, span) {
 	line-height: 1.8 !important;
 	letter-spacing: 0.06em !important;
 	word-spacing: 0.16em !important;
 }
-
 html.msl-a11y-still .msl-page *,
 html.msl-a11y-still .msl-page *::before,
 html.msl-a11y-still .msl-page *::after {
 	animation: none !important;
 	transition: none !important;
 }
-
 /* ==========================================================================
    16  Responsive
    ========================================================================== */
@@ -2950,51 +2529,36 @@ html.msl-a11y-still .msl-page *::after {
 	:root {
 		--msl-gutter: 28px;
 	}
-
 	.msl-heading,
 	.msl-closing__title {
 		font-size: calc((clamp(34px, 5.2vw, 56px)) * var(--msl-scale, 1));
 	}
 }
-
-/* The tiles have no gutter to live in once the column narrows, so they go
-   rather than crowd the headline. */
-@media (max-width: 1000px) {
-	.msl-collage {
-		display: none;
-	}
 }
-
 @media (max-width: 900px) {
 	.msl-stage,
 	.msl-referral__grid,
 	.msl-navcards {
 		grid-template-columns: minmax(0, 1fr);
 	}
-
 	.msl-panel__canvas {
 		block-size: 420px;
 	}
-
 	.msl-stats__grid {
 		grid-template-columns: repeat(2, minmax(0, 1fr));
 	}
-
 	.msl-map__canvas {
 		block-size: 380px;
 	}
-
 	.msl-hero {
 		padding-block-start: 48px;
 	}
 }
-
 @media (max-width: 720px) {
 	.msl-header__inner {
 		flex-wrap: wrap;
 		gap: 10px;
 	}
-
 	/*
 	 * flex-basis matters as much as flex-wrap here. The row is `flex: none` by
 	 * default, so it sizes to its content and wrapping never triggers — it just
@@ -3007,7 +2571,6 @@ html.msl-a11y-still .msl-page *::after {
 		justify-content: center;
 		min-inline-size: 0;
 	}
-
 	.msl-countdown {
 		order: 3;
 		flex: 1 1 100%;
@@ -3015,101 +2578,80 @@ html.msl-a11y-still .msl-page *::after {
 		white-space: normal;
 		text-align: center;
 	}
-
 	.msl-eyebrow__label {
 		white-space: normal;
 	}
-
-
 	.msl-hero__sub {
 		font-size: calc((18px) * var(--msl-scale, 1));
 	}
-
 	.msl-btn--hero {
 		block-size: 58px;
 		padding-inline: 30px;
 		font-size: calc((18px) * var(--msl-scale, 1));
 	}
-
 	.msl-hero__actions {
 		flex-direction: column;
 		inline-size: 100%;
 	}
-
 	.msl-hero__actions .msl-btn--hero {
 		inline-size: 100%;
 	}
-
 	.msl-stats,
 	.msl-map,
 	.msl-referral {
 		padding-block-start: 60px;
 	}
-
 	.msl-closing {
 		padding-block: 50px 70px;
 	}
-
 	.msl-closing__inner {
 		padding: 48px 24px;
 	}
-
 	.msl-linkcard,
 	.msl-refcount {
 		padding: 26px 22px;
 	}
-
 	.msl-screen__top,
 	.msl-screen__bottom {
 		padding-inline: 20px;
 	}
-
 	.msl-screen__spacer {
 		display: none;
 	}
-
 	.msl-zoom {
 		inset-block-start: auto;
 		inset-block-end: 190px;
 		inset-inline-end: 16px;
 	}
-
 	.msl-modal {
 		padding: 0;
 		align-items: flex-end;
 	}
-
 	.msl-modal__sheet {
 		max-inline-size: none;
 		max-block-size: 94vh;
 		border-end-start-radius: 0;
 		border-end-end-radius: 0;
 	}
-
 	.msl-join__head,
 	.msl-join__body,
 	.msl-join__foot {
 		padding-inline: 20px;
 	}
-
 	.msl-step__title {
 		font-size: calc((30px) * var(--msl-scale, 1));
 	}
-
 	.msl-wow__title {
 		font-size: calc((38px) * var(--msl-scale, 1));
 	}
-
 	.msl-wow__number {
 		font-size: calc((46px) * var(--msl-scale, 1));
 	}
-
 	.msl-screen--result {
 		padding: 16px;
 		align-items: flex-start;
 	}
 }
-
 @media (max-width: 520px) {
 	.msl-stats__grid,
 	.msl-field__pair,
@@ -3118,68 +2660,39 @@ html.msl-a11y-still .msl-page *::after {
 	.msl-result__row {
 		grid-template-columns: minmax(0, 1fr);
 	}
-
 	.msl-option--wide {
 		grid-column: auto;
 	}
-
 	.msl-navcard {
 		flex-wrap: wrap;
 	}
-
 	.msl-navcard__thumb {
 		inline-size: 100%;
 		block-size: 120px;
 	}
-
 	/* The two panel overlays sit in opposite top corners. On a phone-width
 	   panel they meet in the middle, so both come in and come down a size. */
 	.msl-panel__lead,
 	.msl-panel__pct {
 		inset-block-start: 18px;
 	}
-
 	.msl-panel__lead {
 		inset-inline-start: 18px;
 	}
-
 	.msl-panel__lead--end {
 		inset-inline-end: 18px;
 	}
-
 	.msl-panel__pct {
 		inset-inline-end: 18px;
 	}
-
 	.msl-panel__title {
 		font-size: calc(18px * var(--msl-scale, 1));
 		max-inline-size: 9ch;
 	}
-
 	.msl-panel__pct-value {
 		font-size: calc(20px * var(--msl-scale, 1));
 	}
 }
-
-/* ==========================================================================
-   17  Reduced motion
-   ========================================================================== */
-
-/*
- * The flames and the halo hold still, the marquee and the collage stop, and
- * every hover transform stays — those are feedback, not decoration. The join
- * sequence is never removed: it is the payoff for the whole flow. It is
- * shortened to a fade instead, in app.js.
- */
-@media (prefers-reduced-motion: reduce) {
-	.msl-candle__glow,
-	.msl-candle__flame,
-	.msl-countdown__dot,
-	.msl-collage__inner,
-	.msl-marquee__track {
-		animation: none !important;
-	}
-
 	.msl-modal__backdrop,
 	.msl-modal__sheet,
 	.msl-screen,
@@ -3187,12 +2700,7 @@ html.msl-a11y-still .msl-page *::after {
 	.msl-result {
 		animation-duration: .01ms !important;
 	}
-
-	.msl-collage__tile {
-		transition-duration: .01ms !important;
-	}
 }
-
 /* ==========================================================================
    18  Enlarged text
    ========================================================================== */
@@ -3216,11 +2724,9 @@ html.msl-a11y-scaled .msl-zoom__level {
 	white-space: normal;
 	height: auto;
 }
-
 html.msl-a11y-scaled .msl-input--area {
 	min-block-size: 104px;
 }
-
 html.msl-a11y-scaled .msl-stat__value,
 html.msl-a11y-scaled .msl-progress__value,
 html.msl-a11y-scaled .msl-marquee__item,
@@ -3229,31 +2735,25 @@ html.msl-a11y-scaled .msl-refcount__value,
 html.msl-a11y-scaled .msl-countdown {
 	white-space: normal;
 }
-
 html.msl-a11y-scaled .msl-header__inner {
 	flex-wrap: wrap;
 }
-
 html.msl-a11y-scaled .msl-header__actions {
 	flex: 1 1 100%;
 	flex-wrap: wrap;
 	justify-content: flex-end;
 	min-inline-size: 0;
 }
-
 html.msl-a11y-scaled .msl-eyebrow {
 	flex-wrap: wrap;
 	justify-content: center;
 }
-
 html.msl-a11y-scaled .msl-hero__title {
 	line-height: 1.06;
 }
-
 html.msl-a11y-scaled .msl-panel__title {
 	max-inline-size: none;
 }
-
 /*
  * Locking the page behind an overlay.
  *
@@ -3263,7 +2763,6 @@ html.msl-a11y-scaled .msl-panel__title {
 .msl-locked {
 	overflow: hidden;
 }
-
 /* ------------------------------------------------------------------
  * The account control in the header
  * --------------------------------------------------------------- */
@@ -3271,7 +2770,6 @@ html.msl-a11y-scaled .msl-panel__title {
 .msl-account {
 	position: relative;
 }
-
 .msl-account__btn {
 	display: flex;
 	align-items: center;
@@ -3284,11 +2782,9 @@ html.msl-a11y-scaled .msl-panel__title {
 	font: inherit;
 	cursor: pointer;
 }
-
 .msl-account__btn:hover {
 	background: var(--msl-gold-soft);
 }
-
 .msl-account__avatar {
 	inline-size: 28px;
 	block-size: 28px;
@@ -3296,11 +2792,9 @@ html.msl-a11y-scaled .msl-panel__title {
 	object-fit: cover;
 	flex: 0 0 auto;
 }
-
 .msl-account__avatar--blank {
 	background: var(--msl-gold-soft);
 }
-
 .msl-account__name {
 	font-size: calc(14px * var(--msl-scale, 1));
 	font-weight: 600;
@@ -3309,7 +2803,6 @@ html.msl-a11y-scaled .msl-panel__title {
 	text-overflow: ellipsis;
 	white-space: nowrap;
 }
-
 .msl-account__menu {
 	position: absolute;
 	inset-block-start: calc(100% + 8px);
@@ -3321,23 +2814,19 @@ html.msl-a11y-scaled .msl-panel__title {
 	background: var(--msl-sheet);
 	box-shadow: var(--msl-shadow-sheet);
 }
-
 .msl-account__menu[hidden] {
 	display: none;
 }
-
 .msl-account__as {
 	margin: 0 0 6px;
 	padding: 6px 10px;
 	font-size: calc(13px * var(--msl-scale, 1));
 	color: var(--msl-muted-2);
 }
-
 .msl-account__as strong {
 	display: block;
 	color: inherit;
 }
-
 .msl-account__item {
 	display: block;
 	inline-size: 100%;
@@ -3352,11 +2841,9 @@ html.msl-a11y-scaled .msl-panel__title {
 	text-decoration: none;
 	cursor: pointer;
 }
-
 .msl-account__item:hover {
 	background: var(--msl-gold-soft);
 }
-
 /* The header is already tight on a phone; the name is the first thing that
    can go, because the avatar alone still says who is signed in. */
 @media (max-width: 720px) {
@@ -3364,7 +2851,6 @@ html.msl-a11y-scaled .msl-panel__title {
 		display: none;
 	}
 }
-
 /* ------------------------------------------------------------------
  * The invitation popup
  * --------------------------------------------------------------- */
@@ -3378,11 +2864,9 @@ html.msl-a11y-scaled .msl-panel__title {
 	justify-content: center;
 	padding: 24px;
 }
-
 .msl-invite[hidden] {
 	display: none;
 }
-
 .msl-invite__backdrop {
 	position: absolute;
 	inset: 0;
@@ -3393,7 +2877,6 @@ html.msl-a11y-scaled .msl-panel__title {
 	animation: msl-fade .26s ease both;
 	border: 0;
 }
-
 .msl-invite__card {
 	position: relative;
 	inline-size: 100%;
@@ -3407,7 +2890,6 @@ html.msl-a11y-scaled .msl-panel__title {
 	text-align: center;
 	animation: msl-rise .36s var(--msl-ease) both;
 }
-
 .msl-invite__close {
 	position: absolute;
 	inset-block-start: 14px;
@@ -3422,31 +2904,26 @@ html.msl-a11y-scaled .msl-panel__title {
 	line-height: 1;
 	cursor: pointer;
 }
-
 .msl-invite__close:hover {
 	background: var(--msl-gold-soft);
 }
-
 .msl-invite__flame {
 	display: block;
 	inline-size: 44px;
 	margin: 0 auto 14px;
 }
-
 .msl-invite__title {
 	margin: 0 0 10px;
 	font-family: var(--msl-font-display);
 	font-size: calc(26px * var(--msl-scale, 1));
 	line-height: 1.2;
 }
-
 .msl-invite__body {
 	margin: 0 0 20px;
 	color: var(--msl-muted-2);
 	font-size: calc(16px * var(--msl-scale, 1));
 	line-height: 1.55;
 }
-
 .msl-invite__link {
 	margin: 0 0 16px;
 	padding: 12px 16px;
@@ -3458,24 +2935,20 @@ html.msl-a11y-scaled .msl-panel__title {
 	direction: ltr;
 	word-break: break-all;
 }
-
 .msl-invite__actions {
 	display: flex;
 	flex-direction: column;
 	gap: 10px;
 	margin-block-end: 8px;
 }
-
 .msl-invite__dismiss {
 	inline-size: 100%;
 }
-
 .msl-linkcard__locked {
 	margin: 0 0 14px;
 	color: var(--msl-muted-2);
 	line-height: 1.5;
 }
-
 /* ------------------------------------------------------------------
  * The site menu
  * --------------------------------------------------------------- */
@@ -3484,7 +2957,6 @@ html.msl-a11y-scaled .msl-panel__title {
 	position: relative;
 	margin-inline-start: 18px;
 }
-
 .msl-menu__toggle {
 	display: flex;
 	align-items: center;
@@ -3499,12 +2971,10 @@ html.msl-a11y-scaled .msl-panel__title {
 	font-weight: 600;
 	cursor: pointer;
 }
-
 .msl-menu__toggle:hover,
 .msl-menu.is-open .msl-menu__toggle {
 	background: var(--msl-gold-soft);
 }
-
 /* Three rules drawn with one element, so the button carries no extra markup. */
 .msl-menu__bars {
 	position: relative;
@@ -3513,7 +2983,6 @@ html.msl-a11y-scaled .msl-panel__title {
 	border-radius: 2px;
 	background: currentcolor;
 }
-
 .msl-menu__bars::before,
 .msl-menu__bars::after {
 	content: "";
@@ -3523,10 +2992,8 @@ html.msl-a11y-scaled .msl-panel__title {
 	border-radius: 2px;
 	background: currentcolor;
 }
-
 .msl-menu__bars::before { inset-block-start: -5px; }
 .msl-menu__bars::after { inset-block-start: 5px; }
-
 .msl-menu__list {
 	position: absolute;
 	inset-block-start: calc(100% + 8px);
@@ -3540,11 +3007,9 @@ html.msl-a11y-scaled .msl-panel__title {
 	background: var(--msl-sheet);
 	box-shadow: var(--msl-shadow-sheet);
 }
-
 .msl-menu__list[hidden] {
 	display: none;
 }
-
 .msl-menu__link {
 	display: block;
 	padding: 9px 12px;
@@ -3553,21 +3018,17 @@ html.msl-a11y-scaled .msl-panel__title {
 	font-size: calc(15px * var(--msl-scale, 1));
 	text-decoration: none;
 }
-
 .msl-menu__link:hover {
 	background: var(--msl-gold-soft);
 }
-
 @media (max-width: 720px) {
 	.msl-menu {
 		margin-inline-start: 10px;
 	}
-
 	.msl-menu__word {
 		display: none;
 	}
 }
-
 /* ------------------------------------------------------------------
  * The "about the project" page
  * --------------------------------------------------------------- */
@@ -3575,17 +3036,14 @@ html.msl-a11y-scaled .msl-panel__title {
 .msl-main--page {
 	padding-block: 40px 80px;
 }
-
 .msl-about {
 	inline-size: min(100% - (2 * var(--msl-gutter)), 720px);
 	margin-inline: auto;
 }
-
 .msl-about__head {
 	text-align: center;
 	margin-block-end: 36px;
 }
-
 .msl-about__eyebrow {
 	margin: 0 0 10px;
 	color: var(--msl-muted-2);
@@ -3593,21 +3051,18 @@ html.msl-a11y-scaled .msl-panel__title {
 	font-weight: 700;
 	letter-spacing: 0.06em;
 }
-
 .msl-about__title {
 	margin: 0 0 18px;
 	font-family: var(--msl-font-display);
 	font-size: clamp(30px, 6vw, 46px);
 	line-height: 1.12;
 }
-
 .msl-about__lead {
 	margin: 0;
 	font-size: calc(19px * var(--msl-scale, 1));
 	line-height: 1.6;
 	color: var(--msl-muted-2);
 }
-
 /* The verse is the one thing on the page that is not our own words, and it is
    set to look like it. */
 .msl-verse {
@@ -3617,41 +3072,102 @@ html.msl-a11y-scaled .msl-panel__title {
 	background: var(--msl-gold-soft);
 	text-align: center;
 }
-
 .msl-verse__text {
 	margin: 0 0 10px;
 	font-family: var(--msl-font-display);
 	font-size: calc(21px * var(--msl-scale, 1));
 	line-height: 1.7;
 }
-
 .msl-verse__source {
 	color: var(--msl-muted-2);
 	font-size: calc(14px * var(--msl-scale, 1));
 }
-
 .msl-about__block {
 	margin-block-end: 34px;
 }
-
 .msl-about__heading {
 	margin: 0 0 12px;
 	font-family: var(--msl-font-display);
 	font-size: calc(25px * var(--msl-scale, 1));
 	line-height: 1.25;
 }
-
 .msl-about__body p {
 	margin: 0 0 14px;
 	font-size: calc(17px * var(--msl-scale, 1));
 	line-height: 1.75;
 }
-
 .msl-about__body p:last-child {
 	margin-block-end: 0;
 }
-
 .msl-about__foot {
 	margin-block-start: 44px;
 	text-align: center;
+}
+
+/* ------------------------------------------------------------------
+ * The candle field behind the hero
+ * --------------------------------------------------------------- */
+
+.msl-emberfield {
+	position: absolute;
+	inset: 0;
+	z-index: 0;
+	pointer-events: none;
+	overflow: hidden;
+}
+
+/*
+ * One candle. It lights, burns and goes out on its own clock, and the script
+ * moves it somewhere new while it is dark — so what the eye sees is candles
+ * appearing around the headline rather than the same ones blinking on the spot.
+ */
+.msl-ember {
+	position: absolute;
+	inset-inline-start: var(--msl-ember-x);
+	inset-block-start: var(--msl-ember-y);
+	transform: rotate(var(--msl-ember-rot)) scale(var(--msl-ember-scale));
+	transform-origin: 50% 100%;
+	opacity: 0;
+	animation: msl-ember-cycle var(--msl-ember-dur) var(--msl-ember-delay) infinite ease-in-out;
+	will-change: opacity;
+}
+
+.msl-ember .msl-candle {
+	display: block;
+}
+
+/* Longer alight than dark: the field should read as candles burning with a few
+   going out, not as a string of fairy lights blinking. */
+@keyframes msl-ember-cycle {
+	0%        { opacity: 0; }
+	9%, 74%   { opacity: 1; }
+	88%, 100% { opacity: 0; }
+}
+
+/*
+ * The middle of the hero belongs to the headline. The gutters are narrow on a
+ * phone, so the field thins out rather than crowding the words.
+ */
+@media (max-width: 900px) {
+	.msl-ember {
+		transform: rotate(var(--msl-ember-rot)) scale(calc(var(--msl-ember-scale) * 0.72));
+	}
+
+	.msl-ember:nth-child(3n) {
+		display: none;
+	}
+}
+
+@media (max-width: 620px) {
+	.msl-ember:nth-child(2n) {
+		display: none;
+	}
+}
+
+/* Standing still, the field is simply a lit border: no cycling, no moving. */
+@media (prefers-reduced-motion: reduce) {
+	.msl-ember {
+		animation: none;
+		opacity: 0.75;
+	}
 }

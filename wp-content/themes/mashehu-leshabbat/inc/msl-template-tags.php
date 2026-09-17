@@ -249,21 +249,6 @@ function msl_countdown( array $chrome, array $campaign ): string {
 	return sprintf( msl_t( $chrome, 'countdown_clock' ), $parsha, $clock );
 }
 
-/**
- * An empty portrait slot for the hero collage.
- *
- * Drawn rather than shipped as an image: the slot is decoration that exists
- * only until the client's photography arrives, and a placeholder file would
- * have to be removed again on launch.
- */
-function msl_portrait_slot_svg(): void {
-	?>
-	<svg class="msl-slot" viewBox="0 0 100 100" aria-hidden="true" focusable="false" preserveAspectRatio="xMidYMid slice">
-		<circle class="msl-slot__head" cx="50" cy="38" r="17"></circle>
-		<path class="msl-slot__body" d="M14 100 Q14 66 50 66 Q86 66 86 100 Z"></path>
-	</svg>
-	<?php
-}
 
 /**
  * Render a multi-line content value as paragraphs.
@@ -314,4 +299,72 @@ function msl_nav_links( array $nav ): void {
 			esc_html( $label )
 		);
 	}
+}
+
+/**
+ * The field of candles behind the hero.
+ *
+ * Positions come from a fixed seed rather than rand(), so the same page always
+ * renders the same field: a layout that reshuffles on every request is a layout
+ * nobody can review, and a full-page cache would freeze one shuffle anyway.
+ *
+ * Each candle is placed in the gutter on one side or the other — never across
+ * the middle, where the headline is — and carries its own rhythm as custom
+ * properties. Everything that moves after that is CSS.
+ *
+ * @param int $count How many candles to place.
+ */
+function msl_hero_candles( int $count ): void {
+	$count = max( 0, min( 60, $count ) );
+
+	if ( 0 === $count ) {
+		return;
+	}
+
+	// A small deterministic generator, so the field is stable without seeding
+	// the global one and disturbing anything else on the request.
+	$seed = 20260214;
+	$next = static function ( int $max ) use ( &$seed ): int {
+		$seed = ( $seed * 1103515245 + 12345 ) & 0x7FFFFFFF;
+
+		return $max > 0 ? $seed % $max : 0;
+	};
+
+	echo '<div class="msl-emberfield" aria-hidden="true" data-msl-embers>';
+
+	for ( $i = 0; $i < $count; $i++ ) {
+		// Alternate sides so neither gutter is ever left empty by chance. The
+		// bands stop short of the middle, which is where the headline is.
+		$near  = 0 === $i % 2;
+		$x     = $near ? 1 + $next( 210 ) / 10 : 78 + $next( 210 ) / 10;
+		$y     = 3 + $next( 900 ) / 10;
+		$scale = 58 + $next( 62 );
+		$rot   = $next( 170 ) / 10 - 8.5;
+		$dur   = 9 + $next( 70 ) / 10;
+
+		/*
+		 * A negative delay starts the animation part-way through instead of
+		 * holding it at nothing. Spreading them across the duration means the
+		 * field is already alight on the first frame — a positive delay would
+		 * give every visitor an empty hero for the first several seconds,
+		 * which is the one moment it has to be doing its job.
+		 */
+		$delay = -1 * ( $next( (int) ( $dur * 10 ) ) / 10 );
+
+		printf(
+			'<span class="msl-ember" data-msl-ember style="--msl-ember-x:%s%%;--msl-ember-y:%s%%;--msl-ember-scale:%s;--msl-ember-rot:%sdeg;--msl-ember-dur:%ss;--msl-ember-delay:%ss">',
+			esc_attr( (string) $x ),
+			esc_attr( (string) $y ),
+			esc_attr( (string) ( $scale / 100 ) ),
+			esc_attr( (string) $rot ),
+			esc_attr( (string) $dur ),
+			esc_attr( (string) $delay )
+		);
+
+		msl_candle_svg( 2.4 + $next( 16 ) / 10, 1.7 + $next( 12 ) / 10, $next( 20 ) / 10 );
+
+		echo '</span>';
+	}
+
+	echo '</div>';
 }

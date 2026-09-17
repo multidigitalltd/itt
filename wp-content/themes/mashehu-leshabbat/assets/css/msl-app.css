@@ -3104,70 +3104,12 @@ html.msl-a11y-scaled .msl-panel__title {
 	text-align: center;
 }
 
-/* ------------------------------------------------------------------
- * The candle field behind the hero
- * --------------------------------------------------------------- */
-
-.msl-emberfield {
+/* The points of light sit behind everything in the hero and take no clicks. */
+.msl-hero__motes {
 	position: absolute;
 	inset: 0;
 	z-index: 0;
+	inline-size: 100%;
+	block-size: 100%;
 	pointer-events: none;
-	overflow: hidden;
-}
-
-/*
- * One candle. It lights, burns and goes out on its own clock, and the script
- * moves it somewhere new while it is dark — so what the eye sees is candles
- * appearing around the headline rather than the same ones blinking on the spot.
- */
-.msl-ember {
-	position: absolute;
-	inset-inline-start: var(--msl-ember-x);
-	inset-block-start: var(--msl-ember-y);
-	transform: rotate(var(--msl-ember-rot)) scale(var(--msl-ember-scale));
-	transform-origin: 50% 100%;
-	opacity: 0;
-	animation: msl-ember-cycle var(--msl-ember-dur) var(--msl-ember-delay) infinite ease-in-out;
-	will-change: opacity;
-}
-
-.msl-ember .msl-candle {
-	display: block;
-}
-
-/* Longer alight than dark: the field should read as candles burning with a few
-   going out, not as a string of fairy lights blinking. */
-@keyframes msl-ember-cycle {
-	0%        { opacity: 0; }
-	9%, 74%   { opacity: 1; }
-	88%, 100% { opacity: 0; }
-}
-
-/*
- * The middle of the hero belongs to the headline. The gutters are narrow on a
- * phone, so the field thins out rather than crowding the words.
- */
-@media (max-width: 900px) {
-	.msl-ember {
-		transform: rotate(var(--msl-ember-rot)) scale(calc(var(--msl-ember-scale) * 0.72));
-	}
-
-	.msl-ember:nth-child(3n) {
-		display: none;
-	}
-}
-
-@media (max-width: 620px) {
-	.msl-ember:nth-child(2n) {
-		display: none;
-	}
-}
-
-/* Standing still, the field is simply a lit border: no cycling, no moving. */
-@media (prefers-reduced-motion: reduce) {
-	.msl-ember {
-		animation: none;
-		opacity: 0.75;
-	}
 }

@@ -24,6 +24,16 @@ final class MSL_Importer {
 	public const OPTION = 'msl_pages';
 
 	/**
+	 * Option recording which set of blueprints has been provisioned.
+	 */
+	private const VERSION_OPTION = 'msl_pages_version';
+
+	/**
+	 * Bumped whenever a blueprint is added, so an existing install gets it.
+	 */
+	private const VERSION = '2';
+
+	/**
 	 * Page blueprints.
 	 */
 	private const PAGES = array(
@@ -52,6 +62,7 @@ final class MSL_Importer {
 	 */
 	public static function init(): void {
 		add_action( 'after_switch_theme', array( self::class, 'provision' ), 5 );
+		add_action( 'admin_init', array( self::class, 'maybe_provision' ) );
 		add_action( 'admin_menu', array( self::class, 'menu' ) );
 		add_action( 'admin_post_msl_provision', array( self::class, 'handle_request' ) );
 	}
@@ -107,6 +118,23 @@ final class MSL_Importer {
 	}
 
 	/**
+	 * Create blueprint pages a running install has never seen.
+	 *
+	 * Provisioning used to happen only on after_switch_theme, which meant a
+	 * theme update that adds a page never created it: the theme was already
+	 * active, so the hook never fired again and the new page simply did not
+	 * exist. That is exactly what happened to the "about" page. One option read
+	 * per admin request is the whole cost of never letting it happen again.
+	 */
+	public static function maybe_provision(): void {
+		if ( self::VERSION === (string) get_option( self::VERSION_OPTION, '' ) ) {
+			return;
+		}
+
+		self::provision();
+	}
+
+	/**
 	 * Create any missing page and seed its content.
 	 *
 	 * Safe to run more than once: an existing page is never overwritten, only
@@ -137,6 +165,7 @@ final class MSL_Importer {
 		}
 
 		update_option( self::OPTION, $pages, false );
+		update_option( self::VERSION_OPTION, self::VERSION, false );
 
 		self::set_front_page( absint( $pages['home'] ?? 0 ) );
 

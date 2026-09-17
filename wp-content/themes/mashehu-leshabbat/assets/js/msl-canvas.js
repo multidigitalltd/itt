@@ -56,6 +56,11 @@ window.MSLCanvas = (function () {
 	var halo = [];
 	var haloLast = 0;
 
+	var motes = [];
+	var moteLast = 0;
+	/* How many points of light the hero holds at once. Set from the page. */
+	var moteCount = 22;
+
 	var flares = [];
 	var wallSeen = null;
 	var wallExtra = 0;
@@ -1208,6 +1213,146 @@ window.MSLCanvas = (function () {
 	 * result: it is meant to be felt and not noticed, so resist raising the
 	 * spawn rate or the peak alpha.
 	 */
+	/*
+	 * The points of light in the hero.
+	 *
+	 * They drift in from every edge and rise, kindling as they come and fading
+	 * as they go. Kept as a separate field from the halo rather than folded into
+	 * it: the halo's spawn rate and peak alpha were tuned twice during design
+	 * and are not mine to move, and this wants to be seen while the halo wants
+	 * to be felt.
+	 *
+	 * One canvas and one loop for all of them. Two dozen animated DOM nodes each
+	 * carrying their own compositing layer is the expensive way to do this, and
+	 * it is what the first attempt at this did.
+	 */
+	function drawMotes(cv, t) {
+		if (!cv) { return; }
+
+		var f = fit(cv);
+		var g = f.g;
+		var w = f.w;
+		var h = f.h;
+
+		g.clearRect(0, 0, w, h);
+
+		if (w < 2 || h < 2) { return; }
+
+		/* Standing still, the field is a scatter of lit points that does not
+		   move at all — not a slower version of the same drift. */
+		if (state.still) {
+			if (motes.length !== moteCount) { motes = seedMotes(t, w, h, true); }
+
+			motes.forEach(function (p) { paintMote(g, p.x0 * w, p.y0 * h, p.r, 0.5); });
+
+			return;
+		}
+
+		while (motes.length < moteCount && t - moteLast > 90) {
+			moteLast = t;
+			motes.push(spawnMote(t));
+		}
+
+		motes = motes.filter(function (p) {
+			var u = (t - p.t0) / p.dur;
+
+			if (u >= 1) { return false; }
+
+			/* Rising: the vertical travel eases out, so a point slows as it
+			   climbs instead of shooting off the top at a constant rate. */
+			var e = 1 - Math.pow(1 - u, 1.7);
+			var x = (p.x0 + Math.sin(u * p.sway + p.phase) * p.amp) * w;
+			var y = (p.y0 - p.rise * e) * h;
+
+			/* Kindle, hold, fade. The hold is the long part — these are lights
+			   coming on, not sparks. */
+			var alpha = Math.min(1, u / 0.18) * Math.min(1, (1 - u) / 0.28);
+
+			paintMote(g, x, y, p.r, alpha);
+
+			return true;
+		});
+	}
+
+	/* One point: a small core inside a soft halo, drawn from the accent. */
+	function paintMote(g, x, y, r, alpha) {
+		var c = accentRGB();
+		var R = r * 7;
+		var gr = g.createRadialGradient(x, y, 0, x, y, R);
+
+		gr.addColorStop(0, 'rgba(' + c[0] + ',' + c[1] + ',' + c[2] + ',' + (0.72 * alpha).toFixed(3) + ')');
+		gr.addColorStop(0.28, 'rgba(' + c[0] + ',' + c[1] + ',' + c[2] + ',' + (0.30 * alpha).toFixed(3) + ')');
+		gr.addColorStop(1, 'rgba(' + c[0] + ',' + c[1] + ',' + c[2] + ',0)');
+
+		g.fillStyle = gr;
+		g.beginPath();
+		g.arc(x, y, R, 0, TAU);
+		g.fill();
+
+		g.fillStyle = 'rgba(255,248,235,' + (0.85 * alpha).toFixed(3) + ')';
+		g.beginPath();
+		g.arc(x, y, r * 0.75, 0, TAU);
+		g.fill();
+	}
+
+	/*
+	 * Where a point comes from.
+	 *
+	 * Mostly from below, because that is what rising means — but a share of them
+	 * enter from the sides and from above the fold too, so the field arrives
+	 * from every direction rather than streaming up in one column.
+	 */
+	function spawnMote(t) {
+		var side = Math.random();
+		var x0;
+		var y0;
+
+		if (side < 0.62) {
+			x0 = Math.random();
+			y0 = 1.04 + Math.random() * 0.12;
+		} else if (side < 0.81) {
+			x0 = -0.05 - Math.random() * 0.08;
+			y0 = 0.35 + Math.random() * 0.75;
+		} else {
+			x0 = 1.05 + Math.random() * 0.08;
+			y0 = 0.35 + Math.random() * 0.75;
+		}
+
+		return {
+			t0: t,
+			dur: 9000 + Math.random() * 9000,
+			x0: x0,
+			y0: y0,
+			rise: 0.55 + Math.random() * 0.75,
+			r: 1.4 + Math.random() * 2.6,
+			sway: 1.6 + Math.random() * 2.4,
+			amp: 0.02 + Math.random() * 0.06,
+			phase: Math.random() * TAU
+		};
+	}
+
+	/* A still field: the same points, placed rather than travelling. */
+	function seedMotes(t, w, h) {
+		var out = [];
+		var i;
+
+		for (i = 0; i < moteCount; i++) {
+			out.push({
+				t0: t,
+				dur: 1,
+				x0: Math.random(),
+				y0: 0.08 + Math.random() * 0.84,
+				rise: 0,
+				r: 1.4 + Math.random() * 2.6,
+				sway: 0,
+				amp: 0,
+				phase: 0
+			});
+		}
+
+		return out;
+	}
+
 	function drawHalo(cv, t) {
 		if (!cv) { return; }
 
@@ -1499,6 +1644,7 @@ window.MSLCanvas = (function () {
 		if (!cells || !sprites) { return; }
 
 		each('halo', function (cv) { drawHalo(cv, t); });
+		each('motes', function (cv) { drawMotes(cv, t); });
 		each('hero', function (cv) { drawArt(cv, { t: t, cover: 0.86, dy: 0.02 }); });
 		each('artmini', function (cv) { drawArt(cv, { t: t, cover: 1.15, dy: 0.02 }); });
 		each('card', function (cv) { drawArt(cv, { t: t, cover: 1.55, dy: 0.30, gy: 0.28 }); });
@@ -1613,6 +1759,8 @@ window.MSLCanvas = (function () {
 		state.accent = options.accent || state.accent;
 		state.artwork = options.artwork || state.artwork;
 		state.still = !!options.still;
+
+		if (typeof options.motes === 'number') { moteCount = Math.max(0, Math.min(80, options.motes)); }
 		mapPoints = options.mapPoints || [];
 
 		buildArt();

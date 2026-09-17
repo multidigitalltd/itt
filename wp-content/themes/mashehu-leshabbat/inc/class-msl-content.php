@@ -89,7 +89,7 @@ final class MSL_Content {
 				'sub_en'     => 'This Shabbat, thousands of Jews in Israel and around the world are choosing one light to add. What is your light?',
 				'already_he' => 'כבר בפנים',
 				'already_en' => 'already in',
-				'candle_count' => 22,
+				'light_count' => 26,
 			),
 			'stage'    => array(
 				'art_title_he'       => 'היצירה של השבת הזאת',

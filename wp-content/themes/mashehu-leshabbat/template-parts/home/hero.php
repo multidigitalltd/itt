@@ -1,6 +1,6 @@
 <?php
 /**
- * The hero: halo, candle field, eyebrow, headline, call to action, live counter.
+ * The hero: halo, points of light, eyebrow, headline, call to action, counter.
  *
  * @package Mashehu_LeShabbat
  *
@@ -18,17 +18,15 @@ $msl_stats = MSL_Stats::all( (int) get_the_ID() );
 
 	<?php
 	/*
-	 * Decorative: the candles carry nothing the headline does not, so they are
-	 * hidden from assistive technology rather than read out two dozen times.
+	 * Decorative: the points of light carry nothing the headline does not, so
+	 * the canvas is hidden from assistive technology rather than described.
 	 *
-	 * They live in the gutters either side of the headline. The gutter exists
-	 * because the headline is capped at 660px, and that cap is what makes room
-	 * for them. Each one lights, burns and goes out on its own rhythm, and the
-	 * script moves a candle to a new place while it is dark — so the field keeps
-	 * shifting rather than pulsing on the spot.
+	 * They drift in from every edge and rise, kindling as they come. One canvas
+	 * in the shared render loop, not two dozen animated elements — and it pauses
+	 * itself the moment the hero scrolls out of view.
 	 */
-	msl_hero_candles( (int) $msl[ 'candle_count' ] );
 	?>
+	<canvas class="msl-hero__motes" data-msl-canvas="motes" aria-hidden="true"></canvas>
 
 	<div class="msl-hero__content">
 		<p class="msl-eyebrow">

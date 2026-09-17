@@ -1494,36 +1494,7 @@
 	 * course of a visit. It stops when the page is not on screen — there is no
 	 * reason to keep animating behind an overlay.
 	 */
-	/*
-	 * Keep the candle field moving.
-	 *
-	 * The lighting and the burning out are CSS; this only decides where the
-	 * next one appears. A candle is moved at the moment its cycle restarts,
-	 * which is the one moment it is invisible — moving a lit candle would read
-	 * as a candle sliding across the page.
-	 *
-	 * Both gutters are fed in turn so neither is ever left dark by chance, and
-	 * the middle third is never used: the headline lives there.
-	 */
-	function startEmbers() {
-		var embers = $$('[data-msl-ember]');
 
-		if (!embers.length || reduceMotion) { return; }
-
-		var flip = 0;
-
-		embers.forEach(function (ember) {
-			ember.addEventListener('animationiteration', function () {
-				var near = (flip++ % 2) === 0;
-				var x = near ? 1 + Math.random() * 21 : 78 + Math.random() * 21;
-
-				ember.style.setProperty('--msl-ember-x', x.toFixed(1) + '%');
-				ember.style.setProperty('--msl-ember-y', (4 + Math.random() * 88).toFixed(1) + '%');
-				ember.style.setProperty('--msl-ember-rot', (Math.random() * 17 - 8.5).toFixed(1) + 'deg');
-				ember.style.setProperty('--msl-ember-scale', (0.52 + Math.random() * 0.6).toFixed(2));
-			});
-		});
-	}
 
 	/* ------------------------------------------------------------------
 	 * Wiring
@@ -1640,6 +1611,7 @@
 			count: state.participants,
 			accent: config.campaign.accent,
 			artwork: config.campaign.artwork,
+			motes: config.campaign.lights,
 			mapData: config.mapData,
 			mapPoints: config.mapPoints,
 			still: reduceMotion
@@ -1655,7 +1627,6 @@
 		bindMenu();
 		bindAccount();
 		bindInvite();
-		startEmbers();
 
 		syncOptions();
 		applyLanguage();

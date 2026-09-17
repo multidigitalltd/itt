@@ -245,6 +245,7 @@ final class MSL_Theme {
 		$stats    = MSL_Stats::all( $page_id );
 		$join     = MSL_Meta::get( 'join', $page_id );
 		$stage    = MSL_Meta::get( 'stage', $page_id );
+		$hero     = MSL_Meta::get( 'hero', $page_id );
 		$auth     = MSL_Meta::get( 'auth', $page_id );
 
 		$options = array();
@@ -277,6 +278,7 @@ final class MSL_Theme {
 				'closed'         => 1 === (int) $campaign['closed'],
 				'maxThings'      => MSL_Joins::MAX_THINGS,
 				'demoNames'      => 1 === (int) ( $stage['demo_names'] ?? 0 ),
+				'lights'         => max( 0, min( 80, (int) ( $hero['light_count'] ?? 0 ) ) ),
 			),
 			'stats'     => array(
 				'participants' => $stats['participants'],

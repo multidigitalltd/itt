@@ -201,6 +201,68 @@ final class MSL_Theme {
 	public const ARTWORKS = array( 'candles', 'star', 'menorah', 'tablets', 'kiddush', 'jerusalem', 'israel', 'light' );
 
 	/**
+	 * Where a menu item can point.
+	 *
+	 * The menu used to take a typed address, and that is why it led nowhere. A
+	 * person filling in a field cannot know that the artwork's anchor is spelled
+	 * `#msl-stage`, and a typed `/about/` is wrong the moment WordPress lives in
+	 * a subdirectory or the permalinks are not pretty — which is exactly what it
+	 * was doing. So the editor picks a destination by name and the address is
+	 * worked out here, from the pages this install actually has.
+	 *
+	 * `anchor` is a section of the campaign page, `page` is one of the theme's
+	 * pages, `action` opens a window instead of navigating, and `custom` is the
+	 * escape hatch for an address that is genuinely outside the site.
+	 *
+	 * An anchor added here needs a matching line in the `scroll-margin` rule in
+	 * msl-app.css, or the section it names stops behind the sticky header.
+	 *
+	 * @var array<string, array<string, string>>
+	 */
+	public const NAV_TARGETS = array(
+		'stage'    => array(
+			'label'  => 'היצירה וקיר הנרות',
+			'anchor' => 'msl-stage',
+		),
+		'zmanim'   => array(
+			'label'  => 'זמני השבת',
+			'anchor' => 'msl-zmanim',
+		),
+		'stats'    => array(
+			'label'  => 'השבת הזאת',
+			'anchor' => 'msl-stats',
+		),
+		'map'      => array(
+			'label'  => 'המפה',
+			'anchor' => 'msl-map',
+		),
+		'referral' => array(
+			'label'  => 'סקשן השיתוף',
+			'anchor' => 'msl-referral',
+		),
+		'home'     => array(
+			'label' => 'עמוד הקמפיין',
+			'page'  => 'home',
+		),
+		'about'    => array(
+			'label' => 'עמוד "על המיזם"',
+			'page'  => 'about',
+		),
+		'join'     => array(
+			'label'  => 'פתיחת חלון ההצטרפות',
+			'action' => 'join',
+		),
+		'invite'   => array(
+			'label'  => 'פתיחת חלון הקישור האישי',
+			'action' => 'invite',
+		),
+		'custom'   => array(
+			'label'  => 'כתובת אחרת — מהשדה שמתחת',
+			'custom' => 'url',
+		),
+	);
+
+	/**
 	 * Which artwork this Shabbat is made of.
 	 *
 	 * The rotation is *derived* from the week number rather than stored and
@@ -349,6 +411,7 @@ final class MSL_Theme {
 				'referral' => esc_url_raw( rest_url( MSL_REST::NAMESPACE . '/referral' ) ),
 				'join'     => esc_url_raw( rest_url( MSL_REST::NAMESPACE . '/join' ) ),
 				'remind'   => esc_url_raw( rest_url( MSL_REST::NAMESPACE . '/remind' ) ),
+				'zmanim'   => esc_url_raw( rest_url( MSL_REST::NAMESPACE . '/zmanim' ) ),
 				'nonce'    => esc_url_raw( rest_url( MSL_REST::NAMESPACE . '/nonce' ) ),
 			),
 			'campaign'  => array(

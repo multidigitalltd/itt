@@ -326,6 +326,21 @@ final class MSL_Fields {
 	}
 
 	/**
+	 * The menu destinations, as select options.
+	 *
+	 * @return array<string, string>
+	 */
+	private static function nav_options(): array {
+		$options = array();
+
+		foreach ( MSL_Theme::NAV_TARGETS as $key => $spec ) {
+			$options[ $key ] = $spec['label'];
+		}
+
+		return $options;
+	}
+
+	/**
 	 * The place list, as select options.
 	 *
 	 * The names live with the code that calls Hebcal rather than here, because
@@ -427,12 +442,18 @@ final class MSL_Fields {
 					self::number( 'place_id', 'מיקום אחר (מזהה GeoNames)', 0, 99999999, 'רק אם העיר הדרושה אינה ברשימה. המספר נמצא בכתובת של העיר באתר geonames.org, למשל 281184 לירושלים. אפס = משתמשים בעיר שנבחרה למעלה.' ),
 					self::number( 'havdalah', 'צאת השבת — דקות אחרי השקיעה', 0, 120, 'אפס = צאת הכוכבים לפי החישוב הרגיל של Hebcal. מי שנוהג בזמן אחר יכול לכתוב כאן מספר דקות, למשל 42 או 72.' ),
 					self::checkbox( 'show', 'להציג את לוח הזמנים בעמוד', 'כיבוי משאיר את הזמנים פעילים לספירה לאחור ולשם הפרשה, בלי להציג את הלוח עצמו.' ),
+					self::checkbox( 'pick_on', 'לאפשר לגולשים לבחור עיר משלהם', 'כפתור "שינוי מיקום" על הלוח, עם רשימת הערים שלמעלה. הבחירה משנה רק את הלוח — הספירה לאחור והיצירה נשארות של הקמפיין, כי כל המשתתפים משלימים את אותה יצירה באותו רגע.' ),
 					self::bi( 'text', 'title', 'כותרת הלוח' ),
 					self::bi( 'text', 'label_hdate', 'תווית התאריך העברי' ),
 					self::bi( 'text', 'label_parsha', 'תווית פרשת השבוע' ),
 					self::bi( 'text', 'label_candles', 'תווית כניסת השבת' ),
 					self::bi( 'text', 'label_havdalah', 'תווית צאת השבת' ),
 					self::bi( 'text', 'note', 'שורת המיקום מתחת ללוח', 3, 'המחרוזת %s מוחלפת בשם המקום.' ),
+					self::bi( 'text', 'pick_cta', 'כפתור שינוי המיקום' ),
+					self::bi( 'text', 'pick_label', 'תווית רשימת הערים' ),
+					self::bi( 'text', 'pick_apply', 'כפתור האישור ברשימה' ),
+					self::bi( 'text', 'pick_il', 'כותרת קבוצת הערים בארץ' ),
+					self::bi( 'text', 'pick_world', 'כותרת קבוצת הערים בעולם' ),
 				)
 			),
 			'hero'     => self::section(
@@ -628,7 +649,8 @@ final class MSL_Fields {
 						array(
 							self::text( 'label_he', 'תווית (עברית)' ),
 							self::text( 'label_en', 'תווית (English)' ),
-							self::url( 'url', 'קישור', 'כתובת מלאה, עוגן כמו ‎#msl-referral כדי לגלול בתוך עמוד הבית, או ‎#invite כדי לפתוח את חלון הקישור האישי.' ),
+							self::select( 'target', 'לאן הפריט מוביל', self::nav_options(), 'הכתובת נבנית מהעמודים שקיימים באתר הזה, ולכן היא נכונה גם כשוורדפרס יושב בתיקייה או כשמבנה הקישורים שונה.' ),
+							self::url( 'url', 'כתובת חופשית', 'ממולא רק כשנבחר למעלה "כתובת אחרת". כתובת מלאה, או נתיב שמתחיל ב-/ .' ),
 						),
 						'רשימה ריקה = אין תפריט בכלל, וכפתור התפריט לא מוצג.'
 					),

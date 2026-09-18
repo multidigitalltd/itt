@@ -15,10 +15,10 @@ $msl_campaign = MSL_Meta::get( 'campaign' );
 $msl_auth     = MSL_Meta::get( 'auth' );
 $msl_person   = MSL_Auth::current();
 $msl_nav      = MSL_Meta::get( 'nav', MSL_Importer::page_id() );
-$msl_has_nav  = array() !== array_filter(
-	(array) ( $msl_nav['links'] ?? array() ),
-	static fn( $row ): bool => is_array( $row ) && '' !== (string) ( $row['url'] ?? '' )
-);
+
+// Asked of the same function that prints them, so the button can never appear
+// over a list that turned out to have nothing in it.
+$msl_has_nav  = array() !== msl_nav_rows( $msl_nav );
 ?>
 <header class="msl-header">
 	<div class="msl-header__inner">

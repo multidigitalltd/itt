@@ -98,6 +98,14 @@
 		return value === undefined ? '' : value;
 	}
 
+	/* The same lookup in a named language, for the few strings that have to be
+	   written into the page in both at once — values that came from an API and
+	   have no dictionary entry of their own to be swapped for. */
+	function tIn(lang, key) {
+		var value = (config.i18n[lang] || {})[key];
+		return value === undefined ? '' : value;
+	}
+
 	function applyLanguage() {
 		var dict = dictionary();
 
@@ -1267,6 +1275,154 @@
 	/* The site menu. On a phone it is the only way to reach the rest of the
 	   page, so it closes on a choice as well as on Escape and on a click away —
 	   an anchor that scrolls behind an open menu is a menu nobody closed. */
+	/* ------------------------------------------------------------------
+	 * The Shabbat times: letting a visitor use their own city
+	 *
+	 * The page arrives with the campaign's city rendered into it. Choosing
+	 * another one asks our own server for that city's times — the browser never
+	 * talks to hebcal.com — and rewrites the card in place, so the artwork
+	 * canvas beside it is not thrown away mid-animation.
+	 *
+	 * Without the script the same <form> is an ordinary GET and the server
+	 * renders the card for the city in the address. Everything here is an
+	 * improvement on a page that already works.
+	 * --------------------------------------------------------------- */
+
+	var placeKey = 'msl_place';
+
+	function readPlace() {
+		try { return window.localStorage.getItem(placeKey) || ''; } catch (e) { return ''; }
+	}
+
+	function writePlace(id) {
+		try { window.localStorage.setItem(placeKey, String(id)); } catch (e) { /* nothing to do */ }
+	}
+
+	/* One value, written in both languages so the toggle keeps working. */
+	function setPair(node, pair) {
+		if (!node) { return; }
+
+		node.textContent = '';
+
+		['he', 'en'].forEach(function (lang) {
+			var span = document.createElement('span');
+			span.setAttribute('data-msl-only', lang);
+			span.textContent = pair[lang] || '';
+			node.appendChild(span);
+		});
+	}
+
+	function slot(card, name) {
+		return card.querySelector('[data-msl-zmanim="' + name + '"]');
+	}
+
+	function renderZmanim(card, data) {
+		if (!data || !data.names) { return; }
+
+		card.setAttribute('data-msl-place', String(data.place));
+
+		setPair(slot(card, 'hdate'), data.hdate || { he: '', en: '' });
+		setPair(slot(card, 'parsha'), data.parsha);
+
+		var candles = slot(card, 'candles');
+		var havdalah = slot(card, 'havdalah');
+
+		if (candles) { candles.textContent = data.candles || ''; }
+		if (havdalah) { havdalah.textContent = data.havdalah || ''; }
+
+		var holiday = slot(card, 'holiday');
+
+		if (holiday) {
+			setPair(holiday, data.holiday);
+			holiday.hidden = !data.holiday.he;
+		}
+
+		var note = slot(card, 'note');
+
+		if (note) {
+			note.textContent = '';
+
+			['he', 'en'].forEach(function (lang) {
+				var template = tIn(lang, 'zmanim.note');
+
+				if (!template) { return; }
+
+				var span = document.createElement('span');
+				span.setAttribute('data-msl-only', lang);
+				span.textContent = format(template, [data.names[lang] || '']);
+				note.appendChild(span);
+			});
+		}
+	}
+
+	function loadZmanim(card, id, remember) {
+		if (!config.rest || !config.rest.zmanim) { return; }
+
+		window.fetch(config.rest.zmanim + '?place=' + encodeURIComponent(id), { credentials: 'same-origin' })
+			.then(function (response) { return response.ok ? response.json() : null; })
+			.then(function (data) {
+				if (!data) { return; }
+
+				renderZmanim(card, data);
+
+				if (remember) { writePlace(id); }
+
+				/* The address should say which city is on screen, so a refresh
+				   and a shared link both land on the same card. */
+				if (window.history && window.history.replaceState) {
+					try {
+						var url = new URL(window.location.href);
+						url.searchParams.set('msl_place', String(id));
+						window.history.replaceState(null, '', url.toString());
+					} catch (e) { /* an address we cannot parse is not worth failing over */ }
+				}
+			})
+			.catch(function () { /* the card keeps the city it already shows */ });
+	}
+
+	function bindPlaces() {
+		var card = $('[data-msl-zmanim-card]');
+
+		if (!card) { return; }
+
+		var picker = $('[data-msl-placepick]', card);
+		var select = $('[data-msl-place-select]', card);
+
+		if (picker && select) {
+			var apply = function (event) {
+				if (event) { event.preventDefault(); }
+
+				var id = parseInt(select.value, 10);
+
+				if (!id || String(id) === card.getAttribute('data-msl-place')) {
+					picker.open = false;
+
+					return;
+				}
+
+				loadZmanim(card, id, true);
+				picker.open = false;
+			};
+
+			select.addEventListener('change', apply);
+
+			var form = $('.msl-placepick__form', picker);
+
+			if (form) { form.addEventListener('submit', apply); }
+		}
+
+		/* A city chosen on an earlier visit. Not read by the server — that would
+		   make the cached page visitor-specific — so it is applied here, and
+		   only when the address is not already asking for a particular city. */
+		var stored = readPlace();
+		var asked = new URLSearchParams(window.location.search).get('msl_place');
+
+		if (!asked && stored && stored !== card.getAttribute('data-msl-place')) {
+			if (select) { select.value = stored; }
+			loadZmanim(card, stored, false);
+		}
+	}
+
 	function bindMenu() {
 		var wrap = $('[data-msl-menu]');
 
@@ -2058,6 +2214,7 @@
 		bindShare();
 		startEntrances();
 		bindHeroCandles();
+		bindPlaces();
 		bindMenu();
 		bindAccount();
 		bindInvite();

@@ -3026,6 +3026,22 @@ html.msl-a11y-scaled .msl-panel__title {
 .msl-menu__link:hover {
 	background: var(--msl-gold-soft);
 }
+/*
+ * An entry that opens a window rather than going somewhere is a button, because
+ * that is what it does. It is given the anchor's clothes here so the menu reads
+ * as one list.
+ */
+.msl-page .msl-menu__link--action {
+	inline-size: 100%;
+	padding: 9px 12px;
+	border: 0;
+	background: none;
+	font: inherit;
+	font-size: calc(15px * var(--msl-scale, 1));
+	color: inherit;
+	text-align: start;
+	cursor: pointer;
+}
 @media (max-width: 720px) {
 	.msl-menu {
 		margin-inline-start: 10px;
@@ -3675,8 +3691,9 @@ html.msl-a11y-scaled .msl-panel__title {
 }
 
 /* A section reached from the menu has to stop below the sticky header, not
-   behind it. */
+   behind it. One line per anchor in MSL_Theme::NAV_TARGETS. */
 #msl-stage,
+#msl-zmanim,
 #msl-stats,
 #msl-map,
 #msl-referral {
@@ -3685,6 +3702,7 @@ html.msl-a11y-scaled .msl-panel__title {
 
 @media (max-width: 720px) {
 	#msl-stage,
+	#msl-zmanim,
 	#msl-stats,
 	#msl-map,
 	#msl-referral {
@@ -3757,8 +3775,16 @@ html.msl-a11y-scaled .msl-panel__title {
 	border: 1px solid var(--msl-border);
 	box-shadow: var(--msl-shadow-card);
 }
+.msl-zmanim__head {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 10px 16px;
+	margin-block-end: 18px;
+}
 .msl-page .msl-zmanim__title {
-	margin: 0 0 18px;
+	margin: 0;
 	font-family: var(--msl-font-display);
 	font-weight: 800;
 	font-size: calc(19px * var(--msl-scale, 1));
@@ -3840,5 +3866,126 @@ html.msl-a11y-scaled .msl-panel__title {
 @media (max-width: 380px) {
 	.msl-zmanim__list {
 		grid-template-columns: minmax(0, 1fr);
+	}
+}
+
+/*
+ * Choosing a city.
+ *
+ * A <details> so it opens and closes without a line of script, and so the form
+ * inside it is a working GET when the script never runs. The marker is replaced
+ * with our own chevron: `display: inline-flex` on a summary drops the native
+ * triangle in some browsers and keeps it in others, and a disclosure that looks
+ * different per browser reads as broken.
+ */
+.msl-placepick {
+	position: relative;
+}
+.msl-placepick__toggle {
+	display: inline-flex;
+	align-items: center;
+	gap: 7px;
+	padding: 7px 14px;
+	border-radius: 999px;
+	border: 1px solid var(--msl-border);
+	background: var(--msl-surface-warm);
+	color: var(--msl-body);
+	font-size: calc(13.5px * var(--msl-scale, 1));
+	font-weight: 600;
+	cursor: pointer;
+	list-style: none;
+	/* Comfortably past the 24px minimum, and past 40px once the padding counts. */
+	min-block-size: 40px;
+	box-sizing: border-box;
+}
+.msl-placepick__toggle::-webkit-details-marker {
+	display: none;
+}
+.msl-placepick__toggle::after {
+	content: "";
+	inline-size: 7px;
+	block-size: 7px;
+	/*
+	 * Physical borders on purpose. A caret for a panel that opens downwards
+	 * means the same thing in both directions, and the logical pair tilts it
+	 * the other way in RTL for no reason anyone reading it would understand.
+	 */
+	border-right: 2px solid currentColor;
+	border-bottom: 2px solid currentColor;
+	transform: translateY(-2px) rotate(45deg);
+	opacity: .55;
+}
+.msl-placepick[open] .msl-placepick__toggle::after {
+	transform: translateY(1px) rotate(225deg);
+}
+.msl-placepick__toggle:hover {
+	background: var(--msl-warm);
+	color: var(--msl-ink);
+}
+.msl-placepick__form {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: end;
+	gap: 10px;
+	margin-block-start: 12px;
+	padding: 14px;
+	border-radius: 18px;
+	background: var(--msl-surface-warm);
+	border: 1px solid var(--msl-border);
+}
+.msl-page .msl-placepick__label {
+	display: block;
+	margin: 0 0 5px;
+	font-size: calc(13px * var(--msl-scale, 1));
+	color: var(--msl-muted);
+}
+.msl-placepick__select {
+	min-inline-size: 190px;
+	min-block-size: 44px;
+	padding: 9px 12px;
+	border-radius: 12px;
+	border: 1px solid var(--msl-border);
+	background: var(--msl-surface);
+	color: var(--msl-ink);
+	font: inherit;
+	font-size: calc(15px * var(--msl-scale, 1));
+}
+.msl-page .msl-placepick__apply {
+	min-block-size: 44px;
+	padding-inline: 18px;
+	font-size: calc(14.5px * var(--msl-scale, 1));
+}
+
+/*
+ * Above phone width the panel floats under its own button instead of sitting in
+ * the flow. Two reasons: opening it no longer reflows the card underneath, and
+ * the <details> keeps the width of its summary, so the button stays where the
+ * header put it rather than stretching across the card.
+ */
+@media (min-width: 521px) {
+	.msl-placepick__form {
+		position: absolute;
+		inset-block-start: calc(100% + 8px);
+		inset-inline-end: 0;
+		z-index: 4;
+		margin-block-start: 0;
+		flex-wrap: nowrap;
+		min-inline-size: 320px;
+		background: var(--msl-surface);
+		box-shadow: var(--msl-shadow-card);
+	}
+}
+
+@media (max-width: 520px) {
+	.msl-zmanim__head {
+		align-items: stretch;
+	}
+	.msl-placepick__form,
+	.msl-placepick__select,
+	.msl-page .msl-placepick__apply {
+		inline-size: 100%;
+	}
+	.msl-placepick__select {
+		min-inline-size: 0;
 	}
 }

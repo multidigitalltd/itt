@@ -54,6 +54,11 @@ final class MSL_Zmanim {
 	public const DEFAULT_PLACE = 281184;
 
 	/**
+	 * The query argument a visitor's chosen place travels in.
+	 */
+	public const QUERY = 'msl_place';
+
+	/**
 	 * The places offered in the editor.
 	 *
 	 * Hebcal takes a GeoNames id. Every id below was checked against the live
@@ -62,132 +67,166 @@ final class MSL_Zmanim {
 	 * wrong this file must not be. Anything not listed is reachable through the
 	 * "another place" field.
 	 *
-	 * @var array<int, array{he: string, en: string}>
+	 * `r` groups the list for the picker on the page: Israel first, then the
+	 * rest, because that is the order the people this is for read it in.
+	 *
+	 * @var array<int, array{he: string, en: string, r: string}>
 	 */
 	public const PLACES = array(
 		281184  => array(
 			'he' => 'ירושלים',
 			'en' => 'Jerusalem',
+			'r'  => 'il',
 		),
 		293397  => array(
 			'he' => 'תל אביב',
 			'en' => 'Tel Aviv',
+			'r'  => 'il',
 		),
 		294801  => array(
 			'he' => 'חיפה',
 			'en' => 'Haifa',
+			'r'  => 'il',
 		),
 		295530  => array(
 			'he' => 'באר שבע',
 			'en' => 'Beersheba',
+			'r'  => 'il',
 		),
 		295514  => array(
 			'he' => 'בני ברק',
 			'en' => 'Bnei Brak',
+			'r'  => 'il',
 		),
 		293703  => array(
 			'he' => 'ראשון לציון',
 			'en' => 'Rishon LeZion',
+			'r'  => 'il',
 		),
 		295629  => array(
 			'he' => 'אשדוד',
 			'en' => 'Ashdod',
+			'r'  => 'il',
 		),
 		295620  => array(
 			'he' => 'אשקלון',
 			'en' => 'Ashkelon',
+			'r'  => 'il',
 		),
 		294071  => array(
 			'he' => 'נתניה',
 			'en' => 'Netanya',
+			'r'  => 'il',
 		),
 		294751  => array(
 			'he' => 'חולון',
 			'en' => 'Holon',
+			'r'  => 'il',
 		),
 		294946  => array(
 			'he' => 'חדרה',
 			'en' => 'Hadera',
+			'r'  => 'il',
 		),
 		294098  => array(
 			'he' => 'נצרת',
 			'en' => 'Nazareth',
+			'r'  => 'il',
 		),
 		295721  => array(
 			'he' => 'עכו',
 			'en' => 'Acre',
+			'r'  => 'il',
 		),
 		293100  => array(
 			'he' => 'צפת',
 			'en' => 'Safed',
+			'r'  => 'il',
 		),
 		293322  => array(
 			'he' => 'טבריה',
 			'en' => 'Tiberias',
+			'r'  => 'il',
 		),
 		295277  => array(
 			'he' => 'אילת',
 			'en' => 'Eilat',
+			'r'  => 'il',
 		),
 		5128581 => array(
 			'he' => 'ניו יורק',
 			'en' => 'New York',
+			'r'  => 'world',
 		),
 		5368361 => array(
 			'he' => 'לוס אנג׳לס',
 			'en' => 'Los Angeles',
+			'r'  => 'world',
 		),
 		4164138 => array(
 			'he' => 'מיאמי',
 			'en' => 'Miami',
+			'r'  => 'world',
 		),
 		6167865 => array(
 			'he' => 'טורונטו',
 			'en' => 'Toronto',
+			'r'  => 'world',
 		),
 		6077243 => array(
 			'he' => 'מונטריאול',
 			'en' => 'Montreal',
+			'r'  => 'world',
 		),
 		2643743 => array(
 			'he' => 'לונדון',
 			'en' => 'London',
+			'r'  => 'world',
 		),
 		2643123 => array(
 			'he' => 'מנצ׳סטר',
 			'en' => 'Manchester',
+			'r'  => 'world',
 		),
 		2988507 => array(
 			'he' => 'פריז',
 			'en' => 'Paris',
+			'r'  => 'world',
 		),
 		2803138 => array(
 			'he' => 'אנטוורפן',
 			'en' => 'Antwerp',
+			'r'  => 'world',
 		),
 		2950159 => array(
 			'he' => 'ברלין',
 			'en' => 'Berlin',
+			'r'  => 'world',
 		),
 		524901  => array(
 			'he' => 'מוסקבה',
 			'en' => 'Moscow',
+			'r'  => 'world',
 		),
 		3435910 => array(
 			'he' => 'בואנוס איירס',
 			'en' => 'Buenos Aires',
+			'r'  => 'world',
 		),
 		2147714 => array(
 			'he' => 'סידני',
 			'en' => 'Sydney',
+			'r'  => 'world',
 		),
 		2158177 => array(
 			'he' => 'מלבורן',
 			'en' => 'Melbourne',
+			'r'  => 'world',
 		),
 		993800  => array(
 			'he' => 'יוהנסבורג',
 			'en' => 'Johannesburg',
+			'r'  => 'world',
 		),
 	);
 
@@ -240,7 +279,11 @@ final class MSL_Zmanim {
 	 * @param array<string, mixed> $zmanim Resolved zmanim section.
 	 * @return int
 	 */
-	public static function place( array $zmanim ): int {
+	public static function place( array $zmanim, ?int $override = null ): int {
+		if ( null !== $override && isset( self::PLACES[ $override ] ) ) {
+			return $override;
+		}
+
 		$custom = (int) ( $zmanim['place_id'] ?? 0 );
 
 		if ( $custom > 0 ) {
@@ -253,6 +296,43 @@ final class MSL_Zmanim {
 	}
 
 	/**
+	 * Whether visitors may change the place.
+	 *
+	 * @param array<string, mixed> $zmanim Resolved zmanim section.
+	 * @return bool
+	 */
+	public static function pickable( array $zmanim ): bool {
+		return self::enabled( $zmanim ) && 1 === (int) ( $zmanim['pick_on'] ?? 0 );
+	}
+
+	/**
+	 * The place a visitor asked for, from the address bar.
+	 *
+	 * **Only a place on the list is honoured.** This is the one value here a
+	 * stranger controls, and it decides where the server sends a request and how
+	 * many cache entries exist. An allowlist makes both bounded: an id that is
+	 * not on it is ignored rather than fetched.
+	 *
+	 * A query string is also the one visitor-specific thing a page cache varies
+	 * on by default, which is why the choice travels in the address rather than
+	 * in a cookie — a cookie would hand one visitor's city to everyone behind
+	 * the cache, exactly as a language cookie once did here.
+	 *
+	 * @param array<string, mixed> $zmanim Resolved zmanim section.
+	 * @return int
+	 */
+	public static function requested( array $zmanim ): int {
+		if ( ! self::pickable( $zmanim ) ) {
+			return self::place( $zmanim );
+		}
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- a public, read-only preference.
+		$asked = isset( $_GET[ self::QUERY ] ) ? absint( wp_unslash( $_GET[ self::QUERY ] ) ) : 0;
+
+		return self::place( $zmanim, $asked > 0 ? $asked : null );
+	}
+
+	/**
 	 * The place's name, in the language being rendered.
 	 *
 	 * Hebcal's own location title is English only, so a place we named ourselves
@@ -262,8 +342,8 @@ final class MSL_Zmanim {
 	 * @param array<string, mixed> $week   Fetched week, for the fallback title.
 	 * @return string
 	 */
-	public static function place_name( array $zmanim, array $week ): string {
-		return self::place_names( $zmanim, $week )[ MSL_I18N::lang() ];
+	public static function place_name( array $zmanim, array $week, ?int $override = null ): string {
+		return self::place_names( $zmanim, $week, $override )[ MSL_I18N::lang() ];
 	}
 
 	/**
@@ -276,11 +356,14 @@ final class MSL_Zmanim {
 	 * @param array<string, mixed> $week   Fetched week, for the fallback title.
 	 * @return array{he: string, en: string}
 	 */
-	public static function place_names( array $zmanim, array $week ): array {
-		$place = self::place( $zmanim );
+	public static function place_names( array $zmanim, array $week, ?int $override = null ): array {
+		$place = self::place( $zmanim, $override );
 
 		if ( isset( self::PLACES[ $place ] ) ) {
-			return self::PLACES[ $place ];
+			return array(
+				'he' => self::PLACES[ $place ]['he'],
+				'en' => self::PLACES[ $place ]['en'],
+			);
 		}
 
 		$title = (string) ( $week['place'] ?? '' );
@@ -294,15 +377,16 @@ final class MSL_Zmanim {
 	/**
 	 * This week's times, or null when they could not be had.
 	 *
-	 * @param array<string, mixed> $zmanim Resolved zmanim section.
+	 * @param array<string, mixed> $zmanim   Resolved zmanim section.
+	 * @param int|null             $override A place from the list, chosen by the visitor.
 	 * @return array<string, mixed>|null
 	 */
-	public static function week( array $zmanim ): ?array {
+	public static function week( array $zmanim, ?int $override = null ): ?array {
 		if ( ! self::enabled( $zmanim ) ) {
 			return null;
 		}
 
-		$place = self::place( $zmanim );
+		$place = self::place( $zmanim, $override );
 		$havd  = max( 0, min( 120, (int) ( $zmanim['havdalah'] ?? 0 ) ) );
 		$key   = 'msl_zmanim_' . $place . '_' . $havd;
 
@@ -515,6 +599,45 @@ final class MSL_Zmanim {
 	}
 
 	/**
+	 * Everything the times card shows, ready to print.
+	 *
+	 * One method rather than four calls from the template, because the same
+	 * answer has to come back through the REST route when a visitor picks a
+	 * different city. Two code paths building the same card is two cards that
+	 * will disagree with each other eventually.
+	 *
+	 * @param array<string, mixed> $zmanim   Resolved zmanim section.
+	 * @param int|null             $override A place from the list, chosen by the visitor.
+	 * @return array<string, mixed>|null
+	 */
+	public static function card( array $zmanim, ?int $override = null ): ?array {
+		$week = self::week( $zmanim, $override );
+
+		if ( null === $week ) {
+			return null;
+		}
+
+		$zone = self::zone( $zmanim, $override );
+		$date = self::hebrew_date( $zmanim, $override );
+
+		return array(
+			'place'    => self::place( $zmanim, $override ),
+			'names'    => self::place_names( $zmanim, $week, $override ),
+			'hdate'    => $date,
+			'parsha'   => array(
+				'he' => (string) $week['parsha_he'],
+				'en' => (string) $week['parsha_en'],
+			),
+			'holiday'  => array(
+				'he' => (string) $week['holiday_he'],
+				'en' => (string) $week['holiday_en'],
+			),
+			'candles'  => (string) wp_date( 'H:i', (int) $week['candles'], $zone ),
+			'havdalah' => (int) $week['havdalah'] > 0 ? (string) wp_date( 'H:i', (int) $week['havdalah'], $zone ) : '',
+		);
+	}
+
+	/**
 	 * The bare name of a portion.
 	 *
 	 * Hebcal answers "פרשת האזינו" and "Parashat Ha’azinu", sometimes vowelled.
@@ -548,13 +671,13 @@ final class MSL_Zmanim {
 	 * @param array<string, mixed> $zmanim Resolved zmanim section.
 	 * @return array{he: string, en: string}|null
 	 */
-	public static function hebrew_date( array $zmanim ): ?array {
+	public static function hebrew_date( array $zmanim, ?int $override = null ): ?array {
 		if ( ! self::enabled( $zmanim ) ) {
 			return null;
 		}
 
-		$place = self::place( $zmanim );
-		$zone  = self::zone( $zmanim );
+		$place = self::place( $zmanim, $override );
+		$zone  = self::zone( $zmanim, $override );
 		$today = wp_date( 'Y-m-d', null, $zone );
 		$after = self::after_sunset( $place, (string) $today );
 		$key   = 'msl_hdate_' . $place . '_' . $today . ( $after ? '_n' : '' );
@@ -669,8 +792,8 @@ final class MSL_Zmanim {
 	 * @param array<string, mixed> $zmanim Resolved zmanim section.
 	 * @return DateTimeZone
 	 */
-	public static function zone( array $zmanim ): DateTimeZone {
-		$week = self::enabled( $zmanim ) ? self::week( $zmanim ) : null;
+	public static function zone( array $zmanim, ?int $override = null ): DateTimeZone {
+		$week = self::enabled( $zmanim ) ? self::week( $zmanim, $override ) : null;
 		$tzid = null !== $week ? (string) $week['tzid'] : '';
 
 		if ( '' !== $tzid ) {

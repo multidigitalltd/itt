@@ -112,6 +112,23 @@ final class MSL_REST {
 
 		register_rest_route(
 			self::NAMESPACE,
+			'/zmanim',
+			array(
+				'methods'             => WP_REST_Server::READABLE,
+				'permission_callback' => '__return_true',
+				'callback'            => array( self::class, 'zmanim' ),
+				'args'                => array(
+					'place' => array(
+						'type'              => 'integer',
+						'required'          => true,
+						'sanitize_callback' => 'absint',
+					),
+				),
+			)
+		);
+
+		register_rest_route(
+			self::NAMESPACE,
 			'/remind',
 			array(
 				'methods'             => WP_REST_Server::CREATABLE,
@@ -156,6 +173,38 @@ final class MSL_REST {
 	/* ---------------------------------------------------------------------
 	 * Read routes
 	 * ------------------------------------------------------------------ */
+
+	/**
+	 * The Shabbat times of one place.
+	 *
+	 * Here so a visitor can read their own city's times without the browser ever
+	 * talking to hebcal.com, and without reloading a page whose artwork canvas
+	 * is mid-animation. The answer is built by the same method the page itself
+	 * renders from, so the two cannot drift apart.
+	 *
+	 * A place that is not on the list is refused rather than fetched: this
+	 * argument comes from a stranger, and it decides where the server sends a
+	 * request.
+	 *
+	 * @param WP_REST_Request $request Incoming request.
+	 * @return WP_REST_Response
+	 */
+	public static function zmanim( WP_REST_Request $request ): WP_REST_Response {
+		$zmanim = MSL_Meta::get( 'zmanim', MSL_Importer::page_id() );
+		$place  = (int) $request->get_param( 'place' );
+
+		if ( ! MSL_Zmanim::pickable( $zmanim ) || ! isset( MSL_Zmanim::PLACES[ $place ] ) ) {
+			return new WP_REST_Response( array( 'message' => 'unknown place' ), 400 );
+		}
+
+		$card = MSL_Zmanim::card( $zmanim, $place );
+
+		if ( null === $card ) {
+			return new WP_REST_Response( array( 'message' => 'unavailable' ), 503 );
+		}
+
+		return new WP_REST_Response( $card );
+	}
 
 	/**
 	 * Live counters.

@@ -308,37 +308,164 @@ function msl_paragraphs( string $text ): void {
  * @param array<string, mixed> $nav Resolved nav content.
  */
 function msl_nav_links( array $nav ): void {
+	foreach ( msl_nav_rows( $nav ) as $row ) {
+		if ( '' !== $row['action'] ) {
+			printf(
+				'<li class="msl-menu__item"><button type="button" class="msl-menu__link msl-menu__link--action" data-msl-open-%s%s>%s</button></li>',
+				esc_attr( $row['action'] ),
+				msl_i18n_attr( 'nav', 'links.' . $row['index'] . '.label' ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+				esc_html( $row['label'] )
+			);
+
+			continue;
+		}
+
+		printf(
+			'<li class="msl-menu__item"><a class="msl-menu__link" href="%s"%s>%s</a></li>',
+			esc_url( $row['href'] ),
+			msl_i18n_attr( 'nav', 'links.' . $row['index'] . '.label' ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+			esc_html( $row['label'] )
+		);
+	}
+}
+
+/**
+ * The menu, resolved into things that actually exist.
+ *
+ * A row is dropped when it has no label or when its destination cannot be
+ * resolved — a menu entry that leads nowhere is worse than one fewer entry, and
+ * this is the function that decides it once for both the header and the check
+ * that asks whether there is a menu at all.
+ *
+ * @param array<string, mixed> $nav Resolved nav section.
+ * @return array<int, array{index: int, label: string, href: string, action: string}>
+ */
+function msl_nav_rows( array $nav ): array {
+	$rows = array();
+
 	foreach ( (array) ( $nav['links'] ?? array() ) as $index => $row ) {
 		if ( ! is_array( $row ) ) {
 			continue;
 		}
 
 		$label = msl_t( $row, 'label' );
-		$url   = (string) ( $row['url'] ?? '' );
 
-		if ( '' === $label || '' === $url ) {
+		if ( '' === $label ) {
 			continue;
 		}
 
-		/*
-		 * An anchor belongs to the campaign page, which is not necessarily the
-		 * front page — pointing it at home_url() sent every section link to
-		 * whatever page happens to sit at the root. The permalink is the only
-		 * address that is right on both of the theme's pages.
-		 */
-		if ( str_starts_with( $url, '#' ) ) {
-			$campaign = MSL_Importer::page_id();
-			$base     = 0 !== $campaign ? (string) get_permalink( $campaign ) : home_url( '/' );
-			$url      = untrailingslashit( $base ) . '/' . $url;
+		$resolved = msl_nav_destination( $row );
+
+		if ( '' === $resolved['href'] && '' === $resolved['action'] ) {
+			continue;
 		}
 
-		printf(
-			'<li class="msl-menu__item"><a class="msl-menu__link" href="%s"%s>%s</a></li>',
-			esc_url( $url ),
-			msl_i18n_attr( 'nav', 'links.' . $index . '.label' ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-			esc_html( $label )
+		$rows[] = array(
+			'index'  => (int) $index,
+			'label'  => $label,
+			'href'   => $resolved['href'],
+			'action' => $resolved['action'],
 		);
 	}
+
+	return $rows;
+}
+
+/**
+ * Turn one stored menu row into an address or an action.
+ *
+ * Rows saved before destinations existed carry only a typed address, so those
+ * are read the way they were meant: a `#` is an anchor on the campaign page,
+ * `#invite` is the share window, and a root-relative path is resolved against
+ * the site's own root so it survives an install in a subdirectory.
+ *
+ * @param array<string, mixed> $row One stored menu row.
+ * @return array{href: string, action: string}
+ */
+function msl_nav_destination( array $row ): array {
+	$none   = array(
+		'href'   => '',
+		'action' => '',
+	);
+	$url    = trim( (string) ( $row['url'] ?? '' ) );
+	$target = (string) ( $row['target'] ?? '' );
+
+	if ( '' === $target ) {
+		if ( '#invite' === $url ) {
+			$target = 'invite';
+		} elseif ( str_starts_with( $url, '#' ) ) {
+			return array(
+				'href'   => msl_campaign_anchor( ltrim( $url, '#' ) ),
+				'action' => '',
+			);
+		} else {
+			$target = 'custom';
+		}
+	}
+
+	$spec = MSL_Theme::NAV_TARGETS[ $target ] ?? array();
+
+	if ( isset( $spec['anchor'] ) ) {
+		return array(
+			'href'   => msl_campaign_anchor( $spec['anchor'] ),
+			'action' => '',
+		);
+	}
+
+	if ( isset( $spec['action'] ) ) {
+		return array(
+			'href'   => '',
+			'action' => $spec['action'],
+		);
+	}
+
+	if ( isset( $spec['page'] ) ) {
+		$page = MSL_Importer::page_id( $spec['page'] );
+
+		return $page > 0 ? array(
+			'href'   => (string) get_permalink( $page ),
+			'action' => '',
+		) : $none;
+	}
+
+	if ( '' === $url ) {
+		return $none;
+	}
+
+	// A path typed without a domain belongs to this site, and this site may not
+	// be at the root of its own domain.
+	if ( str_starts_with( $url, '/' ) ) {
+		return array(
+			'href'   => home_url( $url ),
+			'action' => '',
+		);
+	}
+
+	return array(
+		'href'   => $url,
+		'action' => '',
+	);
+}
+
+/**
+ * The address of a section of the campaign page.
+ *
+ * The fragment is appended to the permalink as it comes, with nothing added
+ * between them: a pretty permalink already ends in a slash, and a plain one is
+ * a query string that a slash would break.
+ *
+ * @param string $id Element id, without the hash.
+ * @return string
+ */
+function msl_campaign_anchor( string $id ): string {
+	if ( '' === $id ) {
+		return '';
+	}
+
+	$campaign = MSL_Importer::page_id();
+	$base     = $campaign > 0 ? (string) get_permalink( $campaign ) : home_url( '/' );
+
+	return $base . '#' . $id;
 }
 
 /**

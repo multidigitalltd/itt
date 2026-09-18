@@ -638,6 +638,26 @@ final class MSL_Fields {
 					self::bi( 'text', 'sending', 'הודעת שליחה' ),
 				)
 			),
+			'verses'   => self::section(
+				'14 · פסוקים ומאמרי חכמים על השבת',
+				'home',
+				array(
+					self::bi( 'text', 'title', 'כותרת הסקשן' ),
+					self::bi( 'textarea', 'sub', 'שורת משנה', 2 ),
+					self::repeater(
+						'quotes',
+						'הציטוטים',
+						'text_he',
+						array(
+							self::textarea( 'text_he', 'הציטוט (עברית)', 3 ),
+							self::textarea( 'text_en', 'הציטוט (English)', 3 ),
+							self::text( 'source_he', 'המקור (עברית)' ),
+							self::text( 'source_en', 'המקור (English)' ),
+						),
+						'רשימה ריקה = הסקשן לא מוצג בכלל. ציטוט בלי מקור יוצג בלי שורת המקור.'
+					),
+				)
+			),
 			'nav'      => self::section(
 				'13 · תפריט האתר',
 				'home',

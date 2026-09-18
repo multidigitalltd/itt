@@ -1437,6 +1437,13 @@
 			list.hidden = !open;
 			toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
 			wrap.classList.toggle('is-open', open);
+
+			/* The state is already in aria-expanded; the label follows it too so
+			   the button says what pressing it will do, in the words the editor
+			   chose. Below 720px this label is the button's only name. */
+			var label = t(open ? 'nav.menu_close' : 'nav.menu_open');
+
+			if (label) { toggle.setAttribute('aria-label', label); }
 		};
 
 		toggle.addEventListener('click', function (event) {

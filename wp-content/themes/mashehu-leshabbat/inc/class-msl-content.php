@@ -362,6 +362,50 @@ final class MSL_Content {
 				'sending_he'         => 'שולח…',
 				'sending_en'         => 'Sending…',
 			),
+			'verses'            => array(
+				'title_he' => 'על מעלת השבת',
+				'title_en' => 'In praise of Shabbat',
+				'sub_he'   => 'מה שנאמר עליה לפנינו — בתורה, בנביאים, ובדברי חכמים שחיו ממנה.',
+				'sub_en'   => 'What was said of it before us — in the Torah, the Prophets, and the words of the sages who lived by it.',
+				'quotes'   => array(
+					array(
+						'text_he'   => 'וַיְבָרֶךְ אֱלֹהִים אֶת־יוֹם הַשְּׁבִיעִי וַיְקַדֵּשׁ אֹתוֹ',
+						'text_en'   => 'And God blessed the seventh day and made it holy',
+						'source_he' => 'בראשית ב׳, ג׳',
+						'source_en' => 'Genesis 2:3',
+					),
+					array(
+						'text_he'   => 'זָכוֹר אֶת־יוֹם הַשַּׁבָּת לְקַדְּשׁוֹ',
+						'text_en'   => 'Remember the Sabbath day, to keep it holy',
+						'source_he' => 'שמות כ׳, ח׳',
+						'source_en' => 'Exodus 20:8',
+					),
+					array(
+						'text_he'   => 'וְקָרָאתָ לַשַּׁבָּת עֹנֶג, לִקְדוֹשׁ ה׳ מְכֻבָּד',
+						'text_en'   => 'And you shall call the Sabbath a delight, the holy day of the Lord honoured',
+						'source_he' => 'ישעיהו נ״ח, י״ג',
+						'source_en' => 'Isaiah 58:13',
+					),
+					array(
+						'text_he'   => 'מתנה טובה יש לי בבית גנזי, ושבת שמה',
+						'text_en'   => 'I have a precious gift in My treasury, and its name is Shabbat',
+						'source_he' => 'תלמוד בבלי, שבת י׳ ע״ב',
+						'source_en' => 'Talmud Bavli, Shabbat 10b',
+					),
+					array(
+						'text_he'   => 'אלמלי משמרין ישראל שתי שבתות כהלכתן — מיד נגאלין',
+						'text_en'   => 'Were Israel to keep two Shabbatot properly, they would be redeemed at once',
+						'source_he' => 'תלמוד בבלי, שבת קי״ח ע״ב',
+						'source_en' => 'Talmud Bavli, Shabbat 118b',
+					),
+					array(
+						'text_he'   => 'יותר משישראל שמרו את השבת — שמרה השבת אותם',
+						'text_en'   => 'More than the Jewish people have kept Shabbat, Shabbat has kept them',
+						'source_he' => 'אחד העם',
+						'source_en' => 'Ahad Ha’am',
+					),
+				),
+			),
 			'nav'               => array(
 				'links'          => array(
 					array( 'label_he' => 'היצירה', 'label_en' => 'The artwork', 'target' => 'stage', 'url' => '' ),

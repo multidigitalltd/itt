@@ -29,8 +29,18 @@ $msl_has_nav  = array() !== msl_nav_rows( $msl_nav );
 
 		<?php if ( $msl_has_nav ) : ?>
 			<nav class="msl-menu" data-msl-menu aria-label="<?php echo esc_attr( msl_t( $msl_nav, 'menu_open' ) ); ?>">
+				<?php
+				/*
+				 * The label is on the button and not only inside it, because
+				 * below 720px the word is hidden and the button's whole content
+				 * is a decorative span — leaving it with no name at all on every
+				 * phone. It repeats the visible word exactly, so the name still
+				 * contains the label wherever the word is shown.
+				 */
+				?>
 				<button type="button" class="msl-menu__toggle" data-msl-menu-toggle
-					aria-expanded="false" aria-controls="msl-menu-list">
+					aria-expanded="false" aria-controls="msl-menu-list"
+					aria-label="<?php echo esc_attr( msl_t( $msl_nav, 'menu_open' ) ); ?>">
 					<span class="msl-menu__bars" aria-hidden="true"></span>
 					<span class="msl-menu__word"<?php msl_i18n( 'nav', 'menu_open' ); ?>><?php msl_the( $msl_nav, 'menu_open' ); ?></span>
 				</button>

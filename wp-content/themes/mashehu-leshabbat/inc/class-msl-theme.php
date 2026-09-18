@@ -240,6 +240,10 @@ final class MSL_Theme {
 			'label'  => 'סקשן השיתוף',
 			'anchor' => 'msl-referral',
 		),
+		'verses'   => array(
+			'label'  => 'פסוקים ומאמרי חכמים',
+			'anchor' => 'msl-verses',
+		),
 		'home'     => array(
 			'label' => 'עמוד הקמפיין',
 			'page'  => 'home',

@@ -3696,7 +3696,8 @@ html.msl-a11y-scaled .msl-panel__title {
 #msl-zmanim,
 #msl-stats,
 #msl-map,
-#msl-referral {
+#msl-referral,
+#msl-verses {
 	scroll-margin-block-start: 96px;
 }
 
@@ -3705,7 +3706,8 @@ html.msl-a11y-scaled .msl-panel__title {
 	#msl-zmanim,
 	#msl-stats,
 	#msl-map,
-	#msl-referral {
+	#msl-referral,
+	#msl-verses {
 		scroll-margin-block-start: 150px;
 	}
 }
@@ -3987,5 +3989,113 @@ html.msl-a11y-scaled .msl-panel__title {
 	}
 	.msl-placepick__select {
 		min-inline-size: 0;
+	}
+}
+
+/* ------------------------------------------------------------------
+ * Verses and sayings
+ *
+ * The page's one quiet section. Everything else on it moves — candles light,
+ * a counter climbs, a marquee scrolls — so this one deliberately does not: the
+ * words are the whole of it, and the only ornament is the light the site has
+ * used as its mark since the hero.
+ *
+ * Built from the pieces already in the design rather than a new idea: the
+ * section header is the same `.msl-heading` / `.msl-subheading` pair as the map
+ * and the share section, the cards carry the same radius, warm sheet and
+ * hairline as every other card, and the source line repeats the treatment the
+ * about page gives a citation.
+ * --------------------------------------------------------------- */
+
+.msl-verses {
+	padding-block-start: 90px;
+}
+.msl-verses__head {
+	max-inline-size: 640px;
+	margin-block-end: 34px;
+}
+.msl-verses .msl-subheading {
+	margin-block: 10px 0;
+}
+.msl-page .msl-verses__list {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 16px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+.msl-quote {
+	position: relative;
+	display: flex;
+	padding: 40px 26px 26px;
+	border-radius: 26px;
+	background: var(--msl-sheet);
+	border: 1px solid var(--msl-border);
+	transition: transform var(--msl-t-card) var(--msl-ease), box-shadow var(--msl-t-card) ease;
+}
+.msl-quote:hover {
+	transform: translateY(-4px);
+	box-shadow: var(--msl-shadow-card);
+}
+/* The same light as the hero eyebrow and the about page's verse, at the size a
+   card can carry: a point, a halo, and nothing else. */
+.msl-quote__light {
+	position: absolute;
+	inset-block-start: 20px;
+	inset-inline-start: 26px;
+	inline-size: 16px;
+	block-size: 16px;
+	border-radius: 50%;
+	background: radial-gradient(
+		circle,
+		oklch(0.985 0.04 92) 0%,
+		oklch(0.90 0.15 82) 42%,
+		oklch(0.78 0.17 52 / 0.5) 68%,
+		transparent 78%
+	);
+	box-shadow: 0 0 16px oklch(0.88 0.15 76 / 0.5);
+}
+.msl-page .msl-quote__figure {
+	margin: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+}
+.msl-page .msl-quote__text {
+	margin: 0;
+	font-family: var(--msl-font-display);
+	font-weight: 700;
+	font-size: calc(19px * var(--msl-scale, 1));
+	line-height: 1.75;
+	color: var(--msl-ink);
+	text-wrap: pretty;
+}
+.msl-quote__source {
+	margin-block-start: auto;
+	color: var(--msl-muted-3);
+	font-size: calc(13.5px * var(--msl-scale, 1));
+	letter-spacing: 0.04em;
+}
+
+@media (max-width: 1000px) {
+	.msl-page .msl-verses__list {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}
+
+@media (max-width: 640px) {
+	.msl-verses {
+		padding-block-start: 62px;
+	}
+	.msl-page .msl-verses__list {
+		grid-template-columns: minmax(0, 1fr);
+		gap: 12px;
+	}
+	.msl-quote {
+		padding: 36px 22px 22px;
+	}
+	.msl-page .msl-quote__text {
+		font-size: calc(18px * var(--msl-scale, 1));
 	}
 }

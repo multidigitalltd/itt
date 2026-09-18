@@ -3737,3 +3737,108 @@ html.msl-a11y-scaled .msl-panel__title {
 	clip-path: inset(50%);
 	white-space: nowrap;
 }
+
+/*
+ * The Shabbat times card.
+ *
+ * Four facts read off a calendar, so it is laid out as one: a row of columns on
+ * a wide screen, a two-column grid on a phone, and a pair of rules between them
+ * rather than four separate cards — these values belong to each other, and four
+ * boxes would say they do not.
+ *
+ * Every margin here repeats `.msl-page` for the reason recorded above the
+ * remediation block: the element reset outranks a bare class.
+ */
+.msl-zmanim {
+	margin-block-start: 60px;
+	padding: 26px 30px;
+	border-radius: 26px;
+	background: var(--msl-surface);
+	border: 1px solid var(--msl-border);
+	box-shadow: var(--msl-shadow-card);
+}
+.msl-page .msl-zmanim__title {
+	margin: 0 0 18px;
+	font-family: var(--msl-font-display);
+	font-weight: 800;
+	font-size: calc(19px * var(--msl-scale, 1));
+	letter-spacing: -0.02em;
+	color: var(--msl-ink);
+}
+.msl-zmanim__list {
+	display: grid;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+	gap: 14px 20px;
+	margin: 0;
+}
+.msl-zmanim__row {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	min-inline-size: 0;
+	padding-inline-start: 16px;
+	border-inline-start: 2px solid var(--msl-warm);
+}
+.msl-page .msl-zmanim__label {
+	margin: 0;
+	font-size: calc(13.5px * var(--msl-scale, 1));
+	font-weight: 500;
+	color: var(--msl-muted);
+}
+.msl-page .msl-zmanim__value {
+	margin: 0;
+	font-family: var(--msl-font-display);
+	font-weight: 800;
+	font-size: calc(clamp(18px, 2vw, 22px) * var(--msl-scale, 1));
+	line-height: 1.25;
+	color: var(--msl-ink);
+	/*
+	 * The two times are compared with each other at a glance, so their digits
+	 * have to sit in the same columns.
+	 */
+	font-variant-numeric: tabular-nums;
+	text-wrap: balance;
+}
+.msl-page .msl-zmanim__holiday {
+	margin: 16px 0 0;
+	padding: 7px 14px;
+	border-radius: 999px;
+	display: inline-block;
+	background: var(--msl-gold-soft);
+	color: var(--msl-ink);
+	font-size: calc(14px * var(--msl-scale, 1));
+	font-weight: 600;
+}
+.msl-page .msl-zmanim__note {
+	margin: 14px 0 0;
+	font-size: calc(13.5px * var(--msl-scale, 1));
+	line-height: 1.5;
+	color: var(--msl-muted-2);
+}
+
+/*
+ * Values that come from an API rather than from a content field. The language
+ * toggle has no dictionary entry to swap them with, so both are rendered and
+ * the page class decides which one is seen.
+ */
+.msl-page--he [data-msl-only="en"],
+.msl-page--en [data-msl-only="he"] {
+	display: none;
+}
+
+@media (max-width: 860px) {
+	.msl-zmanim {
+		margin-block-start: 44px;
+		padding: 22px;
+		border-radius: 22px;
+	}
+	.msl-zmanim__list {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}
+
+@media (max-width: 380px) {
+	.msl-zmanim__list {
+		grid-template-columns: minmax(0, 1fr);
+	}
+}

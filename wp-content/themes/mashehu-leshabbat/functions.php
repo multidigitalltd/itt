@@ -33,6 +33,7 @@ define( 'MSL_VERSION', ( static function (): string {
 define( 'MSL_URI', trailingslashit( get_template_directory_uri() ) );
 
 require_once MSL_DIR . 'inc/class-msl-content.php';
+require_once MSL_DIR . 'inc/class-msl-zmanim.php';
 require_once MSL_DIR . 'inc/class-msl-fields.php';
 require_once MSL_DIR . 'inc/class-msl-meta.php';
 require_once MSL_DIR . 'inc/class-msl-metabox.php';

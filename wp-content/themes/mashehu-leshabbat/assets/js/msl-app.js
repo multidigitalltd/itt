@@ -325,10 +325,19 @@
 
 		var remaining = Math.max(0, config.campaign.candleLighting - Math.floor(Date.now() / 1000));
 		var days = Math.floor(remaining / 86400);
-		var parsha = t('campaign.parsha');
+		/* The fetched name when the site is pulling times, the content field
+		   when it is not. The server rendered the same choice into the HTML. */
+		var auto = config.campaign.parsha || {};
+		var parsha = auto[state.lang] || t('campaign.parsha');
 
-		if (days > 0) {
+		if (days > 2) {
 			node.textContent = format(t('chrome.countdown_days'), [parsha, num(days)]);
+			return;
+		}
+
+		/* One, two, many: Hebrew counts them with different words. */
+		if (days === 2 || days === 1) {
+			node.textContent = format(t(days === 2 ? 'chrome.countdown_2days' : 'chrome.countdown_day'), [parsha]);
 			return;
 		}
 

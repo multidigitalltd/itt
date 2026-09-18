@@ -325,6 +325,25 @@ final class MSL_Fields {
 		);
 	}
 
+	/**
+	 * The place list, as select options.
+	 *
+	 * The names live with the code that calls Hebcal rather than here, because
+	 * a name and the id it stands for have to be changed in one movement — a
+	 * list that says "Jerusalem" against Haifa's id is worse than no list.
+	 *
+	 * @return array<string, string>
+	 */
+	private static function place_options(): array {
+		$options = array();
+
+		foreach ( MSL_Zmanim::PLACES as $id => $names ) {
+			$options[ (string) $id ] = $names['he'] . ' · ' . $names['en'];
+		}
+
+		return $options;
+	}
+
 	/* ---------------------------------------------------------------------
 	 * The schema
 	 * ------------------------------------------------------------------ */
@@ -346,6 +365,8 @@ final class MSL_Fields {
 					self::text( 'lang_btn_he', 'תווית מתג השפה כשהאתר בעברית', 'הכפתור מציג את השפה שאליה עוברים.' ),
 					self::text( 'lang_btn_en', 'תווית מתג השפה כשהאתר באנגלית' ),
 					self::bi( 'text', 'countdown_days', 'ספירה לאחור — ימים', 3, 'המחרוזת %1$s מוחלפת בשם הפרשה ו-%2$d במספר הימים.' ),
+					self::bi( 'text', 'countdown_day', 'ספירה לאחור — יום אחד', 3, '%s מוחלף בשם הפרשה. עברית מבדילה בין יום, יומיים ושלושה ימים, ולכן יש שלוש שורות.' ),
+					self::bi( 'text', 'countdown_2days', 'ספירה לאחור — יומיים', 3, '%s מוחלף בשם הפרשה.' ),
 					self::bi( 'text', 'countdown_clock', 'ספירה לאחור — פחות מיממה', 3, '%1$s = שם הפרשה, %2$s = שעון HH:MM:SS.' ),
 					self::text( 'credit_text', 'קרדיט בפוטר', 'ריק = לא יוצג.' ),
 					self::url( 'credit_url', 'קישור הקרדיט' ),
@@ -391,6 +412,27 @@ final class MSL_Fields {
 					self::number( 'countries', 'מספר מדינות', 0, 300, 'מוצג בסקשן "השבת הזאת" ובכותרת המפה.' ),
 					self::number( 'cities', 'מספר ערים', 0, 100000 ),
 					self::checkbox( 'closed', 'הקמפיין נסגר — לא ניתן להצטרף' ),
+				)
+			),
+			'zmanim'   => self::section(
+				'01א · זמני שבת ותאריך עברי',
+				'home',
+				array(
+					self::checkbox(
+						'auto',
+						'למשוך את זמני השבת מהרשת (Hebcal)',
+						'כשהאפשרות פעילה, כניסת השבת, צאת השבת, שם הפרשה והתאריך העברי נמשכים אוטומטית מ-hebcal.com ומתעדכנים מדי שבוע בלי נגיעה. המשיכה נעשית מהשרת ונשמרת במטמון לשש שעות — הדפדפן של הגולש אינו פונה לשום אתר חיצוני. אם השירות אינו זמין, האתר חוזר ליום ולשעה שהוגדרו ידנית בסעיף 01.'
+					),
+					self::select( 'place', 'המיקום שלפיו נחשבים הזמנים', self::place_options(), 'בירושלים הדלקת הנרות היא ארבעים דקות לפני השקיעה ובחיפה שלושים — הזמנים כבר יודעים את המנהג של כל עיר.' ),
+					self::number( 'place_id', 'מיקום אחר (מזהה GeoNames)', 0, 99999999, 'רק אם העיר הדרושה אינה ברשימה. המספר נמצא בכתובת של העיר באתר geonames.org, למשל 281184 לירושלים. אפס = משתמשים בעיר שנבחרה למעלה.' ),
+					self::number( 'havdalah', 'צאת השבת — דקות אחרי השקיעה', 0, 120, 'אפס = צאת הכוכבים לפי החישוב הרגיל של Hebcal. מי שנוהג בזמן אחר יכול לכתוב כאן מספר דקות, למשל 42 או 72.' ),
+					self::checkbox( 'show', 'להציג את לוח הזמנים בעמוד', 'כיבוי משאיר את הזמנים פעילים לספירה לאחור ולשם הפרשה, בלי להציג את הלוח עצמו.' ),
+					self::bi( 'text', 'title', 'כותרת הלוח' ),
+					self::bi( 'text', 'label_hdate', 'תווית התאריך העברי' ),
+					self::bi( 'text', 'label_parsha', 'תווית פרשת השבוע' ),
+					self::bi( 'text', 'label_candles', 'תווית כניסת השבת' ),
+					self::bi( 'text', 'label_havdalah', 'תווית צאת השבת' ),
+					self::bi( 'text', 'note', 'שורת המיקום מתחת ללוח', 3, 'המחרוזת %s מוחלפת בשם המקום.' ),
 				)
 			),
 			'hero'     => self::section(

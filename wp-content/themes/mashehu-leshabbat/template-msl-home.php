@@ -25,7 +25,7 @@ msl_section( 'chrome' );
 <main id="msl-main" class="msl-main">
 	<div class="msl-shell">
 		<?php
-		foreach ( array( 'hero', 'stage', 'marquee', 'stats', 'navcards', 'map', 'referral', 'closing' ) as $msl_key ) {
+		foreach ( array( 'hero', 'zmanim', 'stage', 'marquee', 'stats', 'navcards', 'map', 'referral', 'closing' ) as $msl_key ) {
 			msl_section( $msl_key );
 		}
 		?>

@@ -329,6 +329,7 @@ final class MSL_Panel {
 		}
 
 		self::render_login_notice();
+		self::render_zmanim_notice();
 
 		$inputs = self::input_count( $page_id );
 		$limit  = (int) ini_get( 'max_input_vars' );
@@ -395,6 +396,61 @@ final class MSL_Panel {
 			esc_html__( 'ב-Google Cloud › APIs & Services › Credentials יש ליצור OAuth 2.0 Client ID מסוג Web application, ולהוסיף תחת Authorized redirect URIs בדיוק את הכתובת הזאת:', 'mashehu-leshabbat' ),
 			esc_html( MSL_Auth::redirect_uri() ),
 			esc_html__( 'אחר כך להדביק את שני המפתחות בחלק "12 · התחברות וחשבונות" ולסמן את תיבת ההפעלה.', 'mashehu-leshabbat' )
+		);
+	}
+
+	/**
+	 * Say whether the Shabbat times are actually arriving.
+	 *
+	 * The same reasoning as the sign-in notice, and a sharper need: this feature
+	 * fails silently by design. When hebcal.com cannot be reached the site falls
+	 * back to the hand-set day and time and looks completely normal, which is
+	 * right for the visitor and useless for whoever has to notice. So the panel
+	 * prints the times it actually holds — if the hour on this screen is the
+	 * hour on the calendar, the feature is working.
+	 */
+	private static function render_zmanim_notice(): void {
+		$zmanim = MSL_Meta::get( 'zmanim', MSL_Importer::page_id() );
+
+		if ( ! MSL_Zmanim::enabled( $zmanim ) ) {
+			printf(
+				'<div class="notice notice-info"><p><strong>%s</strong> %s</p></div>',
+				esc_html__( 'זמני השבת נלקחים מההגדרה הידנית.', 'mashehu-leshabbat' ),
+				esc_html__( 'בחלק "01א · זמני שבת ותאריך עברי" אפשר לסמן את המשיכה האוטומטית, ואז כניסת השבת, צאת השבת, שם הפרשה והתאריך העברי יתעדכנו מעצמם מדי שבוע.', 'mashehu-leshabbat' )
+			);
+
+			return;
+		}
+
+		$week = MSL_Zmanim::week( $zmanim );
+
+		if ( null === $week ) {
+			printf(
+				'<div class="notice notice-warning"><p><strong>%s</strong> %s</p></div>',
+				esc_html__( 'המשיכה האוטומטית של זמני השבת פעילה, אבל לא התקבלה תשובה מ-hebcal.com.', 'mashehu-leshabbat' ),
+				esc_html__( 'האתר ממשיך לעבוד לפי היום והשעה שבחלק 01, והניסיון יחזור מעצמו בעוד כמה דקות. אם זה חוזר על עצמו — כנראה שהשרת חוסם פניות החוצה.', 'mashehu-leshabbat' )
+			);
+
+			return;
+		}
+
+		$zone = MSL_Zmanim::zone( $zmanim );
+		$date = MSL_Zmanim::hebrew_date( $zmanim );
+
+		printf(
+			'<div class="notice notice-success"><p><strong>%s</strong> %s</p></div>',
+			esc_html__( 'זמני השבת מתעדכנים מהרשת.', 'mashehu-leshabbat' ),
+			esc_html(
+				sprintf(
+					/* translators: 1: place name, 2: parashah, 3: candle lighting time, 4: havdalah time, 5: Hebrew date. */
+					__( 'לפי %1$s: פרשת %2$s, כניסת השבת %3$s, צאת השבת %4$s. היום %5$s.', 'mashehu-leshabbat' ),
+					MSL_Zmanim::place_name( $zmanim, $week ),
+					(string) $week['parsha_he'],
+					(string) wp_date( 'H:i', (int) $week['candles'], $zone ),
+					(int) $week['havdalah'] > 0 ? (string) wp_date( 'H:i', (int) $week['havdalah'], $zone ) : '—',
+					null !== $date ? $date['he'] : '—'
+				)
+			)
 		);
 	}
 

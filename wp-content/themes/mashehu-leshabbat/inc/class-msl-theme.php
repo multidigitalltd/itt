@@ -240,10 +240,26 @@ final class MSL_Theme {
 	/**
 	 * The moment this week's artwork closes, as a UTC timestamp.
 	 *
+	 * Hebcal answers this when it is switched on, and it answers it better than
+	 * a fixed weekly time can: the hour moves with the season, and around a
+	 * festival the week does not always end where the calendar says.
+	 *
+	 * The contract is that the value is always in the future — the countdown,
+	 * the urgency line and the weekly artwork rotation all read it that way —
+	 * so a fetched time that has already passed (we are inside Shabbat, and the
+	 * cache has not yet rolled over to the next one) hands back to the manual
+	 * setting, which rolls itself forward by a week.
+	 *
 	 * @param array<string, mixed> $campaign Resolved campaign section.
 	 * @return int
 	 */
 	public static function candle_lighting( array $campaign ): int {
+		$week = MSL_Zmanim::week( MSL_Meta::get( 'zmanim' ) );
+
+		if ( null !== $week && (int) $week['candles'] > time() ) {
+			return (int) $week['candles'];
+		}
+
 		$weekday = (int) $campaign['candle_day'];
 		$time    = (string) $campaign['candle_time'];
 		$parts   = explode( ':', $time );
@@ -263,6 +279,28 @@ final class MSL_Theme {
 		}
 
 		return $target->getTimestamp();
+	}
+
+	/**
+	 * This week's portion in both languages, when it was fetched.
+	 *
+	 * Empty when the times are switched off or the fetch failed, which is the
+	 * browser's signal to fall back to the content field exactly as the server
+	 * already has.
+	 *
+	 * @return array<string, string>
+	 */
+	private static function parsha_pair(): array {
+		$week = MSL_Zmanim::week( MSL_Meta::get( 'zmanim' ) );
+
+		if ( null === $week || '' === (string) $week['parsha_he'] ) {
+			return array();
+		}
+
+		return array(
+			'he' => (string) $week['parsha_he'],
+			'en' => (string) $week['parsha_en'],
+		);
 	}
 
 	/**
@@ -321,6 +359,13 @@ final class MSL_Theme {
 				'closed'         => 1 === (int) $campaign['closed'],
 				'maxThings'      => MSL_Joins::MAX_THINGS,
 				'demoNames'      => 1 === (int) ( $stage['demo_names'] ?? 0 ),
+				/*
+				 * The fetched portion name, in both languages. The countdown is
+				 * re-rendered every second by the browser, so without this the
+				 * header would show the live name from the server for one tick
+				 * and then quietly replace it with the hand-typed one.
+				 */
+				'parsha'         => self::parsha_pair(),
 				'lights'         => max( 0, min( 80, (int) ( $hero['light_count'] ?? 0 ) ) ),
 			),
 			'stats'     => array(

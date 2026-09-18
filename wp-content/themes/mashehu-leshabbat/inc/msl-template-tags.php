@@ -224,6 +224,24 @@ function msl_urgency( array $closing, array $campaign ): string {
 }
 
 /**
+ * The name of this week's portion.
+ *
+ * Fetched when the times are switched on, which is the whole point of switching
+ * them on: nobody has to remember to retype a portion name every Thursday. The
+ * hand-typed field stays as the fallback, and as the answer for a campaign that
+ * would rather not call out at all.
+ *
+ * @param array<string, mixed> $campaign Resolved campaign section.
+ * @return string
+ */
+function msl_parsha( array $campaign ): string {
+	$week = MSL_Zmanim::week( MSL_Meta::get( 'zmanim' ) );
+	$auto = null !== $week ? (string) $week[ 'parsha_' . MSL_I18N::lang() ] : '';
+
+	return '' !== $auto ? $auto : msl_t( $campaign, 'parsha' );
+}
+
+/**
  * The countdown chip text, rendered server-side so the header never flashes empty.
  *
  * @param array<string, mixed> $chrome   Resolved chrome section.
@@ -231,12 +249,22 @@ function msl_urgency( array $closing, array $campaign ): string {
  * @return string
  */
 function msl_countdown( array $chrome, array $campaign ): string {
-	$parsha    = msl_t( $campaign, 'parsha' );
+	$parsha    = msl_parsha( $campaign );
 	$remaining = max( 0, MSL_Theme::candle_lighting( $campaign ) - time() );
 	$days      = (int) floor( $remaining / DAY_IN_SECONDS );
 
-	if ( $days > 0 ) {
+	if ( $days > 2 ) {
 		return sprintf( msl_t( $chrome, 'countdown_days' ), $parsha, $days );
+	}
+
+	// Hebrew counts one, two and many differently, and "בעוד 1 ימים" in the
+	// header of a Hebrew site is the kind of small wrongness people notice.
+	if ( 2 === $days ) {
+		return sprintf( msl_t( $chrome, 'countdown_2days' ), $parsha );
+	}
+
+	if ( 1 === $days ) {
+		return sprintf( msl_t( $chrome, 'countdown_day' ), $parsha );
 	}
 
 	$clock = sprintf(

@@ -141,10 +141,7 @@ final class MSL_Panel {
 	 *
 	 * @var array<string, string>
 	 */
-	private const TEMPLATES = array(
-		'template-msl-home.php'  => 'home',
-		'template-msl-about.php' => 'about',
-	);
+
 
 	/**
 	 * Every page the panel can edit, as page id => section template key.
@@ -172,15 +169,15 @@ final class MSL_Panel {
 				'fields'                 => 'ids',
 				'meta_key'               => '_wp_page_template', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
 				'meta_compare'           => 'IN',
-				'meta_value'             => array_keys( self::TEMPLATES ), // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
+				'meta_value'             => array_keys( MSL_Theme::SECTION_SETS ), // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value
 				'no_found_rows'          => true,
 				'update_post_term_cache' => false,
 			)
 		) as $id ) {
 			$slug = (string) get_page_template_slug( (int) $id );
 
-			if ( isset( self::TEMPLATES[ $slug ] ) ) {
-				$memo[ (int) $id ] = self::TEMPLATES[ $slug ];
+			if ( isset( MSL_Theme::SECTION_SETS[ $slug ] ) ) {
+				$memo[ (int) $id ] = MSL_Theme::SECTION_SETS[ $slug ];
 			}
 		}
 

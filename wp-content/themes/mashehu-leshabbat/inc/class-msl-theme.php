@@ -20,16 +20,33 @@ final class MSL_Theme {
 	public const TEMPLATE = 'template-msl-home.php';
 
 	/**
-	 * The template of the "about the project" page.
+	 * The theme's other pages: the story, and the group campaigns.
 	 */
-	public const TEMPLATE_ABOUT = 'template-msl-about.php';
+	public const TEMPLATE_ABOUT  = 'template-msl-about.php';
+	public const TEMPLATE_GROUPS = 'template-msl-groups.php';
 
 	/**
 	 * Every template that is part of the design and needs the design's assets.
 	 *
 	 * @var array<int, string>
 	 */
-	public const TEMPLATES = array( self::TEMPLATE, self::TEMPLATE_ABOUT );
+	public const TEMPLATES = array( self::TEMPLATE, self::TEMPLATE_ABOUT, self::TEMPLATE_GROUPS );
+
+	/**
+	 * Each template against the set of content sections it carries.
+	 *
+	 * One map, read by the template tag that answers "which page is this?" and
+	 * by the content panel that decides which boxes to show. It used to be two
+	 * maps in two files, which is a pair that drifts: a template added to one
+	 * and forgotten in the other is a page the panel cannot edit.
+	 *
+	 * @var array<string, string>
+	 */
+	public const SECTION_SETS = array(
+		self::TEMPLATE        => 'home',
+		self::TEMPLATE_ABOUT  => 'about',
+		self::TEMPLATE_GROUPS => 'groups',
+	);
 
 	/**
 	 * Font files shipped in assets/fonts/, keyed by family and weight.
@@ -252,6 +269,10 @@ final class MSL_Theme {
 			'label' => 'עמוד "על המיזם"',
 			'page'  => 'about',
 		),
+		'groups'   => array(
+			'label' => 'עמוד הקבוצות',
+			'page'  => 'groups',
+		),
 		'join'     => array(
 			'label'  => 'פתיחת חלון ההצטרפות',
 			'action' => 'join',
@@ -345,6 +366,44 @@ final class MSL_Theme {
 		}
 
 		return $target->getTimestamp();
+	}
+
+	/**
+	 * The group this request is looking at, or null.
+	 *
+	 * The campaign's own numbers stay exactly where they are in the payload —
+	 * the header counter on a group page still counts everybody. This is the
+	 * separate set the group's artwork and progress bar read, so neither number
+	 * is ever asked to be the other.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private static function group_data(): ?array {
+		if ( ! class_exists( 'MSL_Groups' ) ) {
+			return null;
+		}
+
+		$code  = MSL_Groups::requested_code();
+		$group = '' !== $code ? MSL_Groups::by_code( $code ) : null;
+
+		if ( null === $group ) {
+			return null;
+		}
+
+		return array(
+			'code'    => (string) $group['code'],
+			'target'  => max( 1, (int) $group['target'] ),
+			'count'   => MSL_Groups::count_for( (int) $group['id'] ),
+			'artwork' => self::artwork_kind(
+				array(
+					'artwork'     => (string) $group['artwork'],
+					'candle_day'  => '5',
+					'candle_time' => '19:12',
+				)
+			),
+			'accent'  => self::accent( (string) $group['accent'] ),
+			'live'    => MSL_Groups::LIVE === $group['status'],
+		);
 	}
 
 	/**
@@ -443,6 +502,7 @@ final class MSL_Theme {
 				'pct'          => $stats['pct'],
 				'last10'       => $stats['last10'],
 			),
+			'group'     => self::group_data(),
 			'options'   => $options,
 			'lang'      => MSL_I18N::lang(),
 			'langs'     => MSL_I18N::LANGS,

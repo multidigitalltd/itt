@@ -4099,3 +4099,427 @@ html.msl-a11y-scaled .msl-panel__title {
 		font-size: calc(18px * var(--msl-scale, 1));
 	}
 }
+
+/* ------------------------------------------------------------------
+ * Group campaigns
+ *
+ * A group is a campaign inside the campaign, so its page is built from the
+ * campaign page's own parts: the same heading pair, the same card radius and
+ * warm sheet, the same progress track, the same form controls. Nothing here is
+ * a new idea about how the site looks — it is the site, applied to a smaller
+ * subject.
+ * --------------------------------------------------------------- */
+
+.msl-main--page .msl-ghead {
+	max-inline-size: 720px;
+	padding-block-start: 48px;
+}
+.msl-ghead__eyebrow {
+	margin-block-end: 10px;
+	color: var(--msl-eyebrow);
+	font-size: calc(14px * var(--msl-scale, 1));
+	font-weight: 600;
+	letter-spacing: 0.06em;
+}
+.msl-page .msl-ghead .msl-subheading {
+	margin-block: 14px 0;
+}
+.msl-page .msl-ghead__actions {
+	margin-block-start: 26px;
+}
+
+/* A line of plain prose that is telling the reader something about state. */
+.msl-page .msl-gnote {
+	margin: 18px 0 0;
+	padding: 14px 18px;
+	border-radius: 16px;
+	background: var(--msl-gold-soft);
+	color: var(--msl-ink);
+	font-size: calc(15px * var(--msl-scale, 1));
+	line-height: 1.55;
+}
+.msl-page .msl-gnote--bad {
+	background: var(--msl-surface);
+	border: 1.5px solid var(--msl-danger);
+}
+
+/* What the opener sees the moment the group exists. */
+.msl-gdone {
+	margin-block-start: 28px;
+	padding: 28px;
+	border-radius: 26px;
+	background: var(--msl-sheet);
+	border: 1px solid var(--msl-border);
+}
+.msl-page .msl-gdone__title {
+	margin: 0 0 8px;
+	font-family: var(--msl-font-display);
+	font-weight: 800;
+	font-size: calc(24px * var(--msl-scale, 1));
+	color: var(--msl-ink);
+}
+.msl-page .msl-gdone__body {
+	margin: 0;
+	color: var(--msl-body);
+	line-height: 1.6;
+}
+.msl-page .msl-gdone__label {
+	margin: 20px 0 6px;
+	font-size: calc(13.5px * var(--msl-scale, 1));
+	font-weight: 600;
+	color: var(--msl-muted);
+}
+.msl-page .msl-gdone__link {
+	margin: 0;
+	border-radius: 14px;
+	background: var(--msl-surface);
+	border: 1px solid var(--msl-border);
+	/* An address is left-to-right in both languages, and it must be able to
+	   break: these are long, and a family reads them off a phone. */
+	direction: ltr;
+	text-align: start;
+	overflow-wrap: anywhere;
+	font-size: calc(14px * var(--msl-scale, 1));
+}
+.msl-page .msl-gdone__link--key {
+	border-style: dashed;
+}
+/*
+ * The anchor fills its padded box rather than hugging its own text. A link
+ * whose text is sixteen pixels tall is a sixteen-pixel target, and a link this
+ * important is read off a phone by somebody's grandmother.
+ */
+.msl-page .msl-gdone__link a {
+	display: block;
+	/* The padding lives on the anchor and not on the box around it, so the
+	   whole card is the target rather than the one line of text inside it. */
+	padding: 12px 16px;
+	color: inherit;
+}
+
+/* The archive */
+.msl-garchive {
+	padding-block-start: 62px;
+}
+.msl-page .msl-garchive__title {
+	margin: 0 0 22px;
+	font-family: var(--msl-font-display);
+	font-weight: 800;
+	font-size: calc(26px * var(--msl-scale, 1));
+	color: var(--msl-ink);
+}
+.msl-page .msl-garchive__empty {
+	margin: 0;
+	padding: 26px;
+	border-radius: 22px;
+	background: var(--msl-sheet);
+	border: 1px dashed var(--msl-border);
+	color: var(--msl-body);
+}
+.msl-page .msl-garchive__list {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 16px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+.msl-gcard {
+	min-inline-size: 0;
+}
+.msl-page .msl-gcard__link {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	block-size: 100%;
+	padding: 34px 24px 24px;
+	border-radius: 26px;
+	background: var(--msl-surface);
+	border: 1px solid var(--msl-border);
+	color: inherit;
+	text-decoration: none;
+	transition: transform var(--msl-t-card) var(--msl-ease), box-shadow var(--msl-t-card) ease;
+}
+.msl-page .msl-gcard__link:hover {
+	transform: translateY(-4px);
+	box-shadow: var(--msl-shadow-card);
+}
+.msl-gcard__light {
+	position: absolute;
+	inset-block-start: 18px;
+	inset-inline-start: 24px;
+	inline-size: 13px;
+	block-size: 13px;
+	border-radius: 50%;
+	background: radial-gradient(
+		circle,
+		oklch(0.985 0.04 92) 0%,
+		oklch(0.90 0.15 82) 42%,
+		oklch(0.78 0.17 52 / 0.5) 68%,
+		transparent 78%
+	);
+	box-shadow: 0 0 14px oklch(0.88 0.15 76 / 0.5);
+}
+.msl-gcard__title {
+	font-family: var(--msl-font-display);
+	font-weight: 800;
+	font-size: calc(18px * var(--msl-scale, 1));
+	line-height: 1.35;
+	color: var(--msl-ink);
+	text-wrap: pretty;
+}
+.msl-gcard__ded {
+	font-size: calc(14px * var(--msl-scale, 1));
+	color: var(--msl-muted-3);
+}
+.msl-gcard__bar {
+	margin-block-start: auto;
+	display: block;
+	block-size: 8px;
+	border-radius: 999px;
+	background: var(--msl-warm);
+	overflow: hidden;
+}
+.msl-gcard__fill {
+	display: block;
+	block-size: 100%;
+	border-radius: 999px;
+	background: var(--msl-orange-bg);
+}
+.msl-gcard__meta {
+	font-size: calc(14px * var(--msl-scale, 1));
+	font-variant-numeric: tabular-nums;
+	color: var(--msl-body);
+}
+.msl-gcard__cta {
+	font-size: calc(14px * var(--msl-scale, 1));
+	font-weight: 700;
+	color: var(--msl-accent-text);
+}
+
+/* The form */
+.msl-gform {
+	margin-block-start: 62px;
+	padding: 32px;
+	border-radius: 28px;
+	background: var(--msl-sheet);
+	border: 1px solid var(--msl-border);
+	scroll-margin-block-start: 96px;
+}
+.msl-page .msl-gform__title {
+	margin: 0 0 8px;
+	font-family: var(--msl-font-display);
+	font-weight: 800;
+	font-size: calc(26px * var(--msl-scale, 1));
+	color: var(--msl-ink);
+}
+.msl-page .msl-gform__lead {
+	margin: 0;
+	color: var(--msl-body);
+	line-height: 1.6;
+}
+.msl-gform__row {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 0 16px;
+}
+.msl-field__help {
+	display: block;
+	margin-block-start: 6px;
+	font-size: calc(13px * var(--msl-scale, 1));
+	line-height: 1.5;
+	color: var(--msl-muted-2);
+}
+.msl-page .msl-gform__actions {
+	margin-block-start: 26px;
+}
+/*
+ * A select the browser did not draw. The chevron is an inline SVG rather than a
+ * pair of rotated gradients: gradients have to be positioned from a fixed top
+ * offset, which drifts the moment the accessibility widget scales the text, and
+ * they came out pointing up as often as down.
+ *
+ * The position is physical (`left`) on purpose — the control's text starts on
+ * the right in Hebrew and on the left in English, but the value is never long
+ * enough to reach the chevron in either, and a logical offset would put it on
+ * top of the first word in English.
+ */
+select.msl-input {
+	appearance: none;
+	padding-inline-end: 42px;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23715F53' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+	background-size: 12px 8px;
+	background-repeat: no-repeat;
+	background-position: left 16px center;
+}
+
+/* One group's page */
+.msl-group {
+	padding-block-start: 40px;
+}
+.msl-group__head {
+	max-inline-size: 720px;
+}
+.msl-group__ded {
+	margin-block-end: 10px;
+	color: var(--msl-eyebrow);
+	font-size: calc(15px * var(--msl-scale, 1));
+	font-weight: 600;
+}
+.msl-page .msl-group__story {
+	margin-block-start: 16px;
+	color: var(--msl-body);
+	line-height: 1.75;
+}
+.msl-page .msl-group__story p {
+	margin-block-end: 12px;
+}
+.msl-page .msl-group__by {
+	margin-block-start: 16px;
+	color: var(--msl-muted-3);
+	font-size: calc(14.5px * var(--msl-scale, 1));
+}
+.msl-group__stage {
+	position: relative;
+	margin-block-start: 30px;
+	padding: 28px;
+	border-radius: 30px;
+	background: var(--msl-ink-panel);
+	color: var(--msl-on-dark);
+	text-align: center;
+}
+.msl-group__canvas {
+	inline-size: 100%;
+	block-size: clamp(240px, 42vw, 420px);
+	display: block;
+}
+.msl-group__figures {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	justify-content: center;
+	gap: 8px 36px;
+	margin-block-start: 18px;
+}
+.msl-page .msl-group__count,
+.msl-page .msl-group__target {
+	margin: 0;
+	display: flex;
+	align-items: baseline;
+	gap: 8px;
+}
+.msl-group__value {
+	font-family: var(--msl-font-display);
+	font-weight: 900;
+	font-size: calc(clamp(28px, 4vw, 42px) * var(--msl-scale, 1));
+	line-height: 1;
+	font-variant-numeric: tabular-nums;
+}
+.msl-group__label {
+	font-size: calc(14.5px * var(--msl-scale, 1));
+	opacity: .75;
+}
+.msl-group__track {
+	margin-block-start: 18px;
+	block-size: 10px;
+	border-radius: 999px;
+	background: oklch(1 0 0 / 0.16);
+	overflow: hidden;
+}
+.msl-group__fill {
+	display: block;
+	block-size: 100%;
+	border-radius: 999px;
+	background: var(--msl-gold-bg);
+	transition: width var(--msl-t-card) var(--msl-ease);
+}
+.msl-group__actions {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: 12px;
+	margin-block-start: 24px;
+}
+/*
+ * The share button is full-width where it lives on the campaign page, inside a
+ * narrow card with nothing beside it. Here it stands next to the join button
+ * and has to be its own size, or it pushes the pair into a stack and takes the
+ * whole panel as a green bar.
+ */
+.msl-page .msl-group__actions .msl-btn--whatsapp {
+	inline-size: auto;
+	padding-inline: 26px;
+}
+.msl-page .msl-group__also {
+	margin: 18px auto 0;
+	max-inline-size: 460px;
+	font-size: calc(14px * var(--msl-scale, 1));
+	line-height: 1.55;
+	opacity: .78;
+}
+.msl-gowner {
+	margin-block-start: 26px;
+	padding: 22px 26px;
+	border-radius: 24px;
+	background: var(--msl-sheet);
+	border: 1px dashed var(--msl-border);
+}
+.msl-page .msl-group__back,
+.msl-page .msl-gmissing__actions {
+	margin-block-start: 30px;
+}
+/* Standalone links, not links inside a sentence, so they carry their own
+   target rather than borrowing the line's. */
+.msl-page .msl-group__back a {
+	display: inline-block;
+	padding: 6px 2px;
+	min-block-size: 24px;
+	color: var(--msl-accent-text);
+	font-weight: 600;
+}
+.msl-gmissing {
+	padding-block: 60px 20px;
+	max-inline-size: 640px;
+}
+
+@media (max-width: 1000px) {
+	.msl-page .msl-garchive__list {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}
+
+@media (max-width: 640px) {
+	.msl-main--page .msl-ghead {
+		padding-block-start: 30px;
+	}
+	.msl-page .msl-garchive__list {
+		grid-template-columns: minmax(0, 1fr);
+	}
+	.msl-garchive,
+	.msl-gform {
+		margin-block-start: 0;
+		padding-block-start: 44px;
+	}
+	.msl-gform {
+		padding: 24px 20px;
+		margin-block-start: 44px;
+	}
+	.msl-gform__row {
+		grid-template-columns: minmax(0, 1fr);
+	}
+	.msl-group__stage {
+		padding: 20px 16px;
+		border-radius: 26px;
+	}
+	.msl-group__actions {
+		flex-direction: column;
+	}
+	.msl-page .msl-group__actions .msl-btn,
+	.msl-page .msl-group__actions .msl-btn--whatsapp {
+		inline-size: 100%;
+	}
+	.msl-gdone {
+		padding: 22px 20px;
+	}
+}

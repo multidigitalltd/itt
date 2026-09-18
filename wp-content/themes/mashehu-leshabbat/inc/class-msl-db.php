@@ -24,7 +24,7 @@ final class MSL_DB {
 	/**
 	 * Bumped whenever the schema below changes.
 	 */
-	private const SCHEMA_VERSION = '4';
+	private const SCHEMA_VERSION = '5';
 
 	/**
 	 * Option holding the installed schema version.
@@ -106,6 +106,23 @@ final class MSL_DB {
 	}
 
 	/**
+	 * Group campaigns: one row per group someone opened.
+	 *
+	 * A group is a campaign inside the campaign — a person collects acceptances
+	 * from the people they know, in honour of someone. It is a table of its own
+	 * rather than a flag on the joins, because a group exists before anyone has
+	 * joined it and carries things a join has no room for: a target, a story, a
+	 * moderation state and an owner.
+	 *
+	 * @return string
+	 */
+	public static function groups_table(): string {
+		global $wpdb;
+
+		return $wpdb->prefix . 'msl_groups';
+	}
+
+	/**
 	 * Whether the tables exist and are current.
 	 *
 	 * @return bool
@@ -137,6 +154,7 @@ final class MSL_DB {
 		$deds    = self::dedications_table();
 		$people  = self::people_table();
 		$remind  = self::reminders_table();
+		$groups  = self::groups_table();
 
 		// Note the deliberate omissions: no full name, no address, no free-text
 		// beyond the dedication, and no raw phone/email/IP — only salted hashes,
@@ -169,6 +187,7 @@ final class MSL_DB {
 				reminder_optin TINYINT(1) NOT NULL DEFAULT 0,
 				reminder_phone VARCHAR(255) NULL,
 				reminder_email VARCHAR(255) NULL,
+				group_id BIGINT UNSIGNED NOT NULL DEFAULT 0,
 				created_at DATETIME NOT NULL,
 				PRIMARY KEY  (id),
 				UNIQUE KEY uuid (uuid),
@@ -180,7 +199,8 @@ final class MSL_DB {
 				KEY page_city (page_id, city(40)),
 				KEY dedup_ip (page_id, ip_hash, created_at),
 				KEY dedup_email (page_id, email_hash),
-				KEY dedup_phone (page_id, phone_hash)
+				KEY dedup_phone (page_id, phone_hash),
+				KEY group_created (group_id, created_at)
 			) {$charset};",
 			"CREATE TABLE {$things} (
 				join_id BIGINT UNSIGNED NOT NULL,
@@ -220,6 +240,36 @@ final class MSL_DB {
 				PRIMARY KEY  (id),
 				UNIQUE KEY page_email (page_id, email_hash),
 				KEY page_created (page_id, created_at)
+			) {$charset};",
+			"CREATE TABLE {$groups} (
+				id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+				uuid CHAR(36) NOT NULL,
+				page_id BIGINT UNSIGNED NOT NULL,
+				code CHAR(12) NOT NULL,
+				owner_token CHAR(32) NOT NULL,
+				title VARCHAR(120) NOT NULL DEFAULT '',
+				occasion SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+				honouree VARCHAR(120) NOT NULL DEFAULT '',
+				story VARCHAR(600) NOT NULL DEFAULT '',
+				target INT UNSIGNED NOT NULL DEFAULT 0,
+				artwork VARCHAR(16) NOT NULL DEFAULT 'rotate',
+				accent CHAR(7) NOT NULL DEFAULT '',
+				owner_name VARCHAR(80) NOT NULL DEFAULT '',
+				owner_email VARCHAR(255) NULL,
+				owner_email_hash CHAR(64) NOT NULL DEFAULT '',
+				ip_hash CHAR(64) NOT NULL DEFAULT '',
+				person_id BIGINT UNSIGNED NOT NULL DEFAULT 0,
+				status VARCHAR(12) NOT NULL DEFAULT 'pending',
+				reviewed_by BIGINT UNSIGNED NULL,
+				reviewed_at DATETIME NULL,
+				created_at DATETIME NOT NULL,
+				PRIMARY KEY  (id),
+				UNIQUE KEY uuid (uuid),
+				UNIQUE KEY code (code),
+				KEY page_status (page_id, status, created_at),
+				KEY owner_email_hash (owner_email_hash),
+				KEY person_id (person_id),
+				KEY opener_rate (ip_hash, created_at)
 			) {$charset};",
 			"CREATE TABLE {$deds} (
 				id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,

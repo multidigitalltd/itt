@@ -31,7 +31,7 @@ final class MSL_Importer {
 	/**
 	 * Bumped whenever a blueprint is added, so an existing install gets it.
 	 */
-	private const VERSION = '2';
+	private const VERSION = '3';
 
 	/**
 	 * Page blueprints.
@@ -47,6 +47,12 @@ final class MSL_Importer {
 			'title'    => 'על המיזם',
 			'slug'     => 'about',
 			'template' => 'template-msl-about.php',
+			'front'    => false,
+		),
+		'groups'        => array(
+			'title'    => 'קבוצות לשבת',
+			'slug'     => 'kvutzot',
+			'template' => 'template-msl-groups.php',
 			'front'    => false,
 		),
 		'accessibility' => array(

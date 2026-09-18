@@ -29,6 +29,10 @@
 		step: 1,
 		lang: config.lang,
 		participants: config.stats.participants,
+		/* A group page's own tally. Separate from `participants` on purpose:
+		   the two are different truths about the same candles, and merging
+		   them would make one of the numbers on screen a lie. */
+		groupCount: config.group ? config.group.count : 0,
 		pct: config.stats.pct,
 		rate: 0,
 		lastPoll: 0,
@@ -151,6 +155,35 @@
 	 * Counters
 	 * --------------------------------------------------------------- */
 
+	/* ------------------------------------------------------------------
+	 * Groups
+	 *
+	 * On a group's page the artwork is the group's: its shape, its accent, its
+	 * count against its target. The campaign's own numbers are untouched — the
+	 * header still counts everybody, because a light lit in a group is a light
+	 * in the main artwork too and saying otherwise on the same screen would be
+	 * a contradiction the visitor has to resolve.
+	 * --------------------------------------------------------------- */
+
+	function artCount() {
+		return config.group ? state.groupCount : state.participants;
+	}
+
+	function renderGroup() {
+		if (!config.group) { return; }
+
+		var target = Math.max(1, config.group.target);
+		var pct = Math.min(100, Math.floor(state.groupCount * 100 / target));
+
+		$$('[data-msl-group-count]').forEach(function (node) { node.textContent = num(state.groupCount); });
+
+		$$('[data-msl-group-progress]').forEach(function (node) {
+			node.setAttribute('aria-valuenow', String(pct));
+			var fill = node.firstElementChild;
+			if (fill) { fill.style.width = pct + '%'; }
+		});
+	}
+
 	function renderCounters() {
 		$$('[data-msl-counter]').forEach(function (node) { node.textContent = num(state.participants); });
 		$$('[data-msl-counter-minus-one]').forEach(function (node) { node.textContent = num(Math.max(0, state.participants - 1)); });
@@ -168,7 +201,8 @@
 			summary.textContent = format(t('screens.art_summary'), [num(state.participants), state.pct]);
 		}
 
-		canvasEngine.setState({ count: state.participants });
+		canvasEngine.setState({ count: artCount() });
+		renderGroup();
 	}
 
 	function renderTemplates() {
@@ -1880,6 +1914,10 @@
 			dedication_body: $('#msl-dedication-body').value.trim(),
 			lang: state.lang,
 			referred_by: readCookie(config.cookies.ref),
+			/* Empty everywhere but a group's own page. The server resolves the
+			   code itself and ignores one that names a group not taking joins,
+			   so this is a hint and never an instruction. */
+			group: config.group ? config.group.code : '',
 			hp: $('#msl-hp').value,
 			elapsed: (Date.now() - state.openedAt) / 1000,
 			nonce: nonce
@@ -1963,13 +2001,26 @@
 		closeJoin();
 		renderReferral();
 		renderResult();
+
+		if (config.group) {
+			/* A group's page has no wall and no full-screen artwork to pull the
+			   camera back from, so it does not borrow the campaign's flourish.
+			   The group's own number moves, its artwork gains a light, and the
+			   share card comes up — which is the whole point of joining here. */
+			state.groupCount += 1;
+			renderCounters();
+			goto('result');
+
+			return;
+		}
+
 		goto('wow');
 
-		canvasEngine.setState({ count: result.participants - 1 });
+		canvasEngine.setState({ count: artCount() - 1 });
 		canvasEngine.startWow({
 			count: function () {
 				state.participants = result.participants;
-				canvasEngine.setState({ count: result.participants });
+				canvasEngine.setState({ count: artCount() });
 				renderCounters();
 
 				var counter = $('[data-msl-wow-count]');
@@ -2202,10 +2253,10 @@
 		}
 
 		canvasEngine.init({
-			target: config.campaign.target,
-			count: state.participants,
-			accent: config.campaign.accent,
-			artwork: config.campaign.artwork,
+			target: config.group ? config.group.target : config.campaign.target,
+			count: artCount(),
+			accent: config.group ? config.group.accent : config.campaign.accent,
+			artwork: config.group ? config.group.artwork : config.campaign.artwork,
 			motes: config.campaign.lights,
 			mapData: config.mapData,
 			mapPoints: config.mapPoints,

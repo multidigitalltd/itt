@@ -518,7 +518,29 @@ final class MSL_REST {
 			'referred_by'     => sanitize_key( (string) $request->get_param( 'referred_by' ) ),
 			'dedication'      => $dedication_kind,
 			'dedication_body' => mb_substr( sanitize_textarea_field( (string) $request->get_param( 'dedication_body' ) ), 0, 280 ),
+			'group_id'        => self::group_id( (string) $request->get_param( 'group' ) ),
 		);
+	}
+
+	/**
+	 * The group a join belongs to, if it names one that is open.
+	 *
+	 * Resolved from the code rather than trusted as an id, and only for a group
+	 * that is actually taking joins — a code for a group still awaiting approval
+	 * or already closed counts for the main artwork and for nothing else, which
+	 * is the honest outcome: the person did light a candle.
+	 *
+	 * @param string $code Submitted group code.
+	 * @return int
+	 */
+	private static function group_id( string $code ): int {
+		if ( '' === $code ) {
+			return 0;
+		}
+
+		$group = MSL_Groups::by_code( sanitize_key( $code ) );
+
+		return null !== $group && MSL_Groups::LIVE === $group['status'] ? (int) $group['id'] : 0;
 	}
 
 	/**

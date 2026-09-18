@@ -36,6 +36,7 @@ final class MSL_Admin {
 	public static function init(): void {
 		add_action( 'admin_menu', array( self::class, 'menu' ) );
 		add_action( 'admin_post_msl_moderate', array( self::class, 'handle_moderation' ) );
+		add_action( 'admin_post_msl_group_decision', array( self::class, 'handle_group_decision' ) );
 		add_action( 'admin_post_msl_export', array( self::class, 'handle_export' ) );
 	}
 
@@ -78,6 +79,34 @@ final class MSL_Admin {
 			self::CAP,
 			'msl-moderation',
 			array( self::class, 'render_moderation' )
+		);
+
+		add_submenu_page(
+			'msl-overview',
+			__( 'קבוצות', 'mashehu-leshabbat' ),
+			self::groups_label(),
+			self::CAP,
+			'msl-groups',
+			array( self::class, 'render_groups' )
+		);
+	}
+
+	/**
+	 * The groups menu label, carrying the waiting count as a bubble.
+	 *
+	 * @return string
+	 */
+	private static function groups_label(): string {
+		$pending = MSL_Groups::pending_count( MSL_Importer::page_id() );
+
+		if ( 0 === $pending ) {
+			return __( 'קבוצות', 'mashehu-leshabbat' );
+		}
+
+		return sprintf(
+			/* translators: %d: groups awaiting a decision. */
+			__( 'קבוצות %s', 'mashehu-leshabbat' ),
+			'<span class="awaiting-mod"><span class="pending-count">' . absint( $pending ) . '</span></span>'
 		);
 	}
 
@@ -431,6 +460,133 @@ final class MSL_Admin {
 			<?php endif; ?>
 		</div>
 		<?php
+	}
+
+	/**
+	 * The groups screen: everything someone opened, and what to do about it.
+	 *
+	 * A group's text is written by a stranger and published under the project's
+	 * name, so this is the screen that decides whether it is. Closing a group
+	 * that is already public is kept separate from rejecting one: the candles
+	 * lit in it stay in the artwork either way, and the difference is only
+	 * whether the page still invites more.
+	 */
+	public static function render_groups(): void {
+		self::guard();
+
+		$page_id = MSL_Importer::page_id();
+		$states  = array(
+			MSL_Groups::PENDING  => __( 'ממתינה', 'mashehu-leshabbat' ),
+			MSL_Groups::LIVE     => __( 'באוויר', 'mashehu-leshabbat' ),
+			MSL_Groups::CLOSED   => __( 'סגורה', 'mashehu-leshabbat' ),
+			MSL_Groups::REJECTED => __( 'נדחתה', 'mashehu-leshabbat' ),
+		);
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- a read-only filter on a capability-gated screen.
+		$filter = isset( $_GET['status'] ) ? sanitize_key( wp_unslash( $_GET['status'] ) ) : MSL_Groups::PENDING;
+		$filter = isset( $states[ $filter ] ) ? $filter : MSL_Groups::PENDING;
+		$rows   = MSL_Groups::archive( $page_id, self::PER_PAGE, 0, $filter );
+		$copy   = MSL_Meta::get( 'groups', MSL_Importer::page_id( 'groups' ) );
+		?>
+		<div class="wrap msl-admin">
+			<h1><?php esc_html_e( 'קבוצות', 'mashehu-leshabbat' ); ?></h1>
+
+			<p><?php esc_html_e( 'קבוצה נפתחת בידי גולש והטקסט שבה מוצג תחת השם של המיזם. כל עוד היא ממתינה, רואה אותה רק מי שפתח אותה. הנרות שנדלקו בקבוצה נספרים ליצירה הכללית בכל מצב — אישור או דחייה אינם משנים את המונה.', 'mashehu-leshabbat' ); ?></p>
+
+			<ul class="subsubsub">
+				<?php foreach ( $states as $msl_key => $msl_label ) : ?>
+					<li>
+						<a href="<?php echo esc_url( admin_url( 'admin.php?page=msl-groups&status=' . $msl_key ) ); ?>"
+							<?php echo $msl_key === $filter ? 'class="current"' : ''; ?>>
+							<?php echo esc_html( $msl_label ); ?>
+							<span class="count">(<?php echo absint( MSL_Groups::total( $page_id, $msl_key ) ); ?>)</span>
+						</a>
+					</li>
+				<?php endforeach; ?>
+			</ul>
+
+			<?php if ( array() === $rows ) : ?>
+				<p><strong><?php esc_html_e( 'אין קבוצות במצב הזה.', 'mashehu-leshabbat' ); ?></strong></p>
+			<?php else : ?>
+				<table class="widefat striped">
+					<thead>
+					<tr>
+						<th><?php esc_html_e( 'הקבוצה', 'mashehu-leshabbat' ); ?></th>
+						<th><?php esc_html_e( 'הקדשה', 'mashehu-leshabbat' ); ?></th>
+						<th><?php esc_html_e( 'נרות', 'mashehu-leshabbat' ); ?></th>
+						<th><?php esc_html_e( 'מי פתח', 'mashehu-leshabbat' ); ?></th>
+						<th><?php esc_html_e( 'מועד', 'mashehu-leshabbat' ); ?></th>
+						<th><?php esc_html_e( 'פעולה', 'mashehu-leshabbat' ); ?></th>
+					</tr>
+					</thead>
+					<tbody>
+					<?php foreach ( $rows as $row ) : ?>
+						<tr>
+							<td>
+								<strong><a href="<?php echo esc_url( MSL_Groups::url( (string) $row['code'] ) ); ?>" target="_blank" rel="noopener"><?php echo esc_html( (string) $row['title'] ); ?></a></strong>
+								<?php if ( '' !== trim( (string) $row['story'] ) ) : ?>
+									<p class="description"><?php echo esc_html( wp_trim_words( (string) $row['story'], 30 ) ); ?></p>
+								<?php endif; ?>
+							</td>
+							<td><?php echo esc_html( msl_group_dedication( $row, $copy ) ?: '—' ); ?></td>
+							<td><?php echo esc_html( msl_num( (int) $row['count'] ) . ' / ' . msl_num( (int) $row['target'] ) ); ?></td>
+							<td>
+								<?php echo esc_html( '' !== $row['owner_name'] ? (string) $row['owner_name'] : '—' ); ?>
+								<?php
+								$msl_mail = MSL_Groups::owner_email( (int) $row['id'] );
+
+								if ( '' !== $msl_mail ) :
+									?>
+									<br><span class="description"><?php echo esc_html( $msl_mail ); ?></span>
+								<?php endif; ?>
+							</td>
+							<td><?php echo esc_html( (string) $row['created_at'] ); ?></td>
+							<td>
+								<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="display:inline">
+									<?php wp_nonce_field( 'msl_group_decision' ); ?>
+									<input type="hidden" name="action" value="msl_group_decision">
+									<input type="hidden" name="id" value="<?php echo absint( $row['id'] ); ?>">
+									<input type="hidden" name="status" value="<?php echo esc_attr( $filter ); ?>">
+
+									<?php if ( MSL_Groups::LIVE !== $row['status'] ) : ?>
+										<button type="submit" name="decision" value="<?php echo esc_attr( MSL_Groups::LIVE ); ?>" class="button button-primary"><?php esc_html_e( 'אישור', 'mashehu-leshabbat' ); ?></button>
+									<?php endif; ?>
+
+									<?php if ( MSL_Groups::LIVE === $row['status'] ) : ?>
+										<button type="submit" name="decision" value="<?php echo esc_attr( MSL_Groups::CLOSED ); ?>" class="button"><?php esc_html_e( 'סגירה', 'mashehu-leshabbat' ); ?></button>
+									<?php endif; ?>
+
+									<?php if ( MSL_Groups::REJECTED !== $row['status'] ) : ?>
+										<button type="submit" name="decision" value="<?php echo esc_attr( MSL_Groups::REJECTED ); ?>" class="button"><?php esc_html_e( 'דחייה', 'mashehu-leshabbat' ); ?></button>
+									<?php endif; ?>
+								</form>
+							</td>
+						</tr>
+					<?php endforeach; ?>
+					</tbody>
+				</table>
+			<?php endif; ?>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Record a decision about a group.
+	 */
+	public static function handle_group_decision(): void {
+		self::guard();
+		check_admin_referer( 'msl_group_decision' );
+
+		$id       = absint( $_POST['id'] ?? 0 );
+		$decision = sanitize_key( wp_unslash( (string) ( $_POST['decision'] ?? '' ) ) );
+		$back     = sanitize_key( wp_unslash( (string) ( $_POST['status'] ?? MSL_Groups::PENDING ) ) );
+
+		if ( $id > 0 ) {
+			MSL_Groups::set_status( $id, $decision );
+		}
+
+		wp_safe_redirect( admin_url( 'admin.php?page=msl-groups&status=' . $back ) );
+		exit;
 	}
 
 	/**

@@ -253,9 +253,17 @@ final class MSL_Joins {
 					'reminder_optin' => $reminder ? 1 : 0,
 					'reminder_phone' => '' !== (string) $data['phone'] ? self::protect( (string) $data['phone'] ) : null,
 					'reminder_email' => '' !== (string) $data['email'] ? self::protect( (string) $data['email'] ) : null,
+					/*
+					 * A light lit inside a group is a light in the main artwork
+					 * too. That is this one column: the row is an ordinary join
+					 * that the main counter, the map and the wall all pick up
+					 * without knowing groups exist, and the group's own count is
+					 * these same rows filtered by it.
+					 */
+					'group_id'       => (int) ( $data['group_id'] ?? 0 ),
 					'created_at'     => current_time( 'mysql', true ),
 				),
-				array( '%s', '%d', '%d', '%s', '%s', '%s', '%f', '%f', '%d', '%s', '%s', '%s', '%s', '%s', '%s', '%d', '%s', '%s', '%s' )
+				array( '%s', '%d', '%d', '%s', '%s', '%s', '%f', '%f', '%d', '%s', '%s', '%s', '%s', '%s', '%s', '%d', '%s', '%s', '%d', '%s' )
 			);
 
 			$wpdb->suppress_errors( $suppress );
@@ -271,6 +279,7 @@ final class MSL_Joins {
 		self::store_dedication( $join_id, $page_id, $data['dedication'], (string) $data['dedication_body'] );
 
 		MSL_Stats::flush( $page_id );
+		MSL_Groups::flush( (int) ( $data['group_id'] ?? 0 ) );
 
 		return array(
 			'uuid'           => $uuid,
@@ -847,7 +856,7 @@ final class MSL_Joins {
 	 * @param string $value Raw destination.
 	 * @return string|null
 	 */
-	private static function protect( string $value ): ?string {
+	public static function protect( string $value ): ?string {
 		if ( ! function_exists( 'sodium_crypto_secretbox' ) ) {
 			return null;
 		}

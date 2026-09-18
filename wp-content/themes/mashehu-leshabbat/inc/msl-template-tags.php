@@ -642,9 +642,42 @@ function msl_hero_candles( int $count ): void {
  * @return string Template key, or an empty string for a page outside the theme.
  */
 function msl_page_template_key( int $post_id ): string {
-	return match ( (string) get_page_template_slug( $post_id ) ) {
-		MSL_Theme::TEMPLATE       => 'home',
-		MSL_Theme::TEMPLATE_ABOUT => 'about',
-		default                   => '',
-	};
+	return MSL_Theme::SECTION_SETS[ (string) get_page_template_slug( $post_id ) ] ?? '';
+}
+
+/**
+ * How far a group has come, as a whole percent.
+ *
+ * Capped at a hundred. A group that passed its target has not "achieved 140%" —
+ * it finished, and the bar should say so rather than run off its own track.
+ *
+ * @param array<string, mixed> $group Group row carrying count and target.
+ * @return int
+ */
+function msl_group_pct( array $group ): int {
+	$target = max( 1, (int) $group['target'] );
+
+	return (int) min( 100, floor( (int) $group['count'] * 100 / $target ) );
+}
+
+/**
+ * A group's dedication line: "in the merit of" and the name.
+ *
+ * Empty when the group has no dedication or nobody was named — the two halves
+ * only mean something together, and "in the merit of" on its own is worse than
+ * a card with one line fewer.
+ *
+ * @param array<string, mixed> $group Group row.
+ * @param array<string, mixed> $copy  Resolved groups section.
+ * @return string
+ */
+function msl_group_dedication( array $group, array $copy ): string {
+	$key  = MSL_Groups::OCCASIONS[ (int) $group['occasion' ] ] ?? '';
+	$name = trim( (string) $group['honouree'] );
+
+	if ( '' === $key || '' === $name ) {
+		return '';
+	}
+
+	return trim( msl_t( $copy, 'occ_' . $key ) . ' ' . $name );
 }

@@ -25,17 +25,7 @@ if ( 1 !== (int) ( $msl_groups['open_on'] ?? 0 ) ) {
 }
 
 $msl_campaign = MSL_Meta::get( 'campaign' );
-$msl_shapes   = array(
-	'rotate'    => 'סבב שבועי',
-	'candles'   => 'נרות שבת',
-	'star'      => 'מגן דוד',
-	'menorah'   => 'מנורה',
-	'tablets'   => 'לוחות הברית',
-	'kiddush'   => 'כוס קידוש',
-	'jerusalem' => 'ירושלים',
-	'israel'    => 'מפת ישראל',
-	'light'     => 'נקודת אור',
-);
+$msl_shapes   = MSL_Theme::ARTWORK_LABELS;
 ?>
 <section class="msl-gform" id="msl-open" aria-labelledby="msl-gform-title" data-msl-rise>
 	<h2 class="msl-gform__title" id="msl-gform-title"<?php msl_i18n( 'groups', 'form_title' ); ?>><?php msl_the( $msl_groups, 'form_title' ); ?></h2>

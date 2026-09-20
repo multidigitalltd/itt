@@ -29,6 +29,96 @@ final class MSL_Content {
 	private static ?array $content = null;
 
 	/**
+	 * Option holding the copy revision a site has been brought up to.
+	 */
+	private const REVISION_OPTION = 'msl_copy_revision';
+
+	/**
+	 * The current copy revision.
+	 */
+	private const REVISION = 1;
+
+	/**
+	 * Hook the one-time copy migration.
+	 */
+	public static function init(): void {
+		add_action( 'init', array( self::class, 'maybe_migrate' ), 98 );
+	}
+
+	/**
+	 * Bring stored copy up to the current revision, once per site.
+	 *
+	 * A default that changes reaches a page that has never been saved for free,
+	 * because unsaved keys fall through to this file. A page that *has* been
+	 * saved holds every key, so it keeps the old wording for ever — and when
+	 * the change is not cosmetic that is a page left quietly broken by an
+	 * update it accepted.
+	 *
+	 * Revision 1 took the word "parashat" out of the four countdown sentences,
+	 * because the name that fills them now carries it and some weeks have no
+	 * portion to put there at all. A page still holding the old sentence would
+	 * read "Shabbat Parashat Parashat Mishpatim", and through Tishrei "Shabbat
+	 * Parashat Sukkot I".
+	 *
+	 * Only a value that still matches the old default exactly is rewritten.
+	 * Anything the campaign has edited is theirs, and is left alone even though
+	 * that means it keeps the doubled word; overwriting somebody's own sentence
+	 * to fix our own is the worse of the two.
+	 */
+	public static function maybe_migrate(): void {
+		if ( (int) get_option( self::REVISION_OPTION, 0 ) >= self::REVISION ) {
+			return;
+		}
+
+		$replacements = array(
+			'countdown_days_he'  => array( 'השבת פרשת %1$s בעוד %2$d ימים', 'השבת %1$s בעוד %2$d ימים' ),
+			'countdown_days_en'  => array( 'Shabbat Parashat %1$s in %2$d days', 'Shabbat %1$s in %2$d days' ),
+			'countdown_day_he'   => array( 'השבת פרשת %s בעוד יום', 'השבת %s בעוד יום' ),
+			'countdown_day_en'   => array( 'Shabbat Parashat %s tomorrow', 'Shabbat %s tomorrow' ),
+			'countdown_2days_he' => array( 'השבת פרשת %s בעוד יומיים', 'השבת %s בעוד יומיים' ),
+			'countdown_2days_en' => array( 'Shabbat Parashat %s in two days', 'Shabbat %s in two days' ),
+			'countdown_clock_he' => array( 'השבת פרשת %1$s בעוד %2$s', 'השבת %1$s בעוד %2$s' ),
+			'countdown_clock_en' => array( 'Shabbat Parashat %1$s in %2$s', 'Shabbat %1$s in %2$s' ),
+		);
+
+		$key = MSL_Meta::key( 'chrome' );
+
+		$pages = get_posts(
+			array(
+				'post_type'        => 'page',
+				'post_status'      => 'any',
+				'numberposts'      => 200,
+				'fields'           => 'ids',
+				'meta_key'         => $key, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+				'suppress_filters' => false,
+			)
+		);
+
+		foreach ( $pages as $page_id ) {
+			$stored = get_post_meta( (int) $page_id, $key, true );
+
+			if ( ! is_array( $stored ) ) {
+				continue;
+			}
+
+			$changed = false;
+
+			foreach ( $replacements as $field => $pair ) {
+				if ( isset( $stored[ $field ] ) && $pair[0] === $stored[ $field ] ) {
+					$stored[ $field ] = $pair[1];
+					$changed          = true;
+				}
+			}
+
+			if ( $changed ) {
+				update_post_meta( (int) $page_id, $key, $stored );
+			}
+		}
+
+		update_option( self::REVISION_OPTION, self::REVISION, false );
+	}
+
+	/**
 	 * Defaults for one section.
 	 *
 	 * @param string $section Section key.
@@ -55,14 +145,14 @@ final class MSL_Content {
 				'cta_en'            => 'I’m adding my light too',
 				'lang_btn_he'       => 'EN',
 				'lang_btn_en'       => 'עב',
-				'countdown_days_he' => 'השבת פרשת %1$s בעוד %2$d ימים',
-				'countdown_days_en' => 'Shabbat Parashat %1$s in %2$d days',
-				'countdown_day_he'  => 'השבת פרשת %s בעוד יום',
-				'countdown_day_en'  => 'Shabbat Parashat %s tomorrow',
-				'countdown_2days_he' => 'השבת פרשת %s בעוד יומיים',
-				'countdown_2days_en' => 'Shabbat Parashat %s in two days',
-				'countdown_clock_he' => 'השבת פרשת %1$s בעוד %2$s',
-				'countdown_clock_en' => 'Shabbat Parashat %1$s in %2$s',
+				'countdown_days_he' => 'השבת %1$s בעוד %2$d ימים',
+				'countdown_days_en' => 'Shabbat %1$s in %2$d days',
+				'countdown_day_he'  => 'השבת %s בעוד יום',
+				'countdown_day_en'  => 'Shabbat %s tomorrow',
+				'countdown_2days_he' => 'השבת %s בעוד יומיים',
+				'countdown_2days_en' => 'Shabbat %s in two days',
+				'countdown_clock_he' => 'השבת %1$s בעוד %2$s',
+				'countdown_clock_en' => 'Shabbat %1$s in %2$s',
 				'credit_text'       => 'uxui & dev by multi digital',
 				'credit_url'        => 'https://m-d.co.il/',
 				'accessibility_url' => '',
@@ -95,6 +185,8 @@ final class MSL_Content {
 				'label_hdate_en'    => 'Hebrew date',
 				'label_parsha_he'   => 'פרשת השבוע',
 				'label_parsha_en'   => 'Weekly portion',
+				'label_holiday_he'  => 'שבת של חג',
+				'label_holiday_en'  => 'Festival Shabbat',
 				'label_candles_he'  => 'כניסת השבת',
 				'label_candles_en'  => 'Candle lighting',
 				'label_havdalah_he' => 'צאת השבת',
@@ -362,6 +454,33 @@ final class MSL_Content {
 				'sending_he'         => 'שולח…',
 				'sending_en'         => 'Sending…',
 			),
+			'groupcta'          => array(
+				'show'          => 1,
+				'eyebrow_he'    => 'קבוצות לשבת',
+				'eyebrow_en'    => 'Shabbat groups',
+				'title_he'      => 'לפתוח קבוצה לכבוד מישהו',
+				'title_en'      => 'Open a group in someone’s honour',
+				'lead_he'       => 'אפשר לפתוח קבוצה משלכם, לקבוע יעד של קבלות ולאסוף אותן מהמשפחה ומהחברים. לקבוצה יש יצירה משלה, עמוד משלה וכתובת לשיתוף.',
+				'lead_en'       => 'Open a group of your own, set a target of acceptances and gather them from family and friends. A group has its own artwork, its own page and its own link to share.',
+				'chips_label_he' => 'לכבוד מה',
+				'chips_label_en' => 'What it is for',
+				'chip_refua_he' => 'לרפואה',
+				'chip_refua_en' => 'A recovery',
+				'chip_zechut_he' => 'לזכות',
+				'chip_zechut_en' => 'A merit',
+				'chip_iluy_he'  => 'לעילוי נשמה',
+				'chip_iluy_en'  => 'A memory',
+				'chip_kavod_he' => 'לכבוד שמחה',
+				'chip_kavod_en' => 'A celebration',
+				'chip_zivug_he' => 'לזיווג',
+				'chip_zivug_en' => 'A match',
+				'note_he'       => 'כל נר שנדלק בקבוצה נספר גם ביצירה הכללית.',
+				'note_en'       => 'Every candle lit in a group counts in the main artwork too.',
+				'cta_he'        => 'לפתיחת קבוצה',
+				'cta_en'        => 'Open a group',
+				'cta_all_he'    => 'לכל הקבוצות',
+				'cta_all_en'    => 'See all the groups',
+			),
 			'verses'            => array(
 				'title_he' => 'על מעלת השבת',
 				'title_en' => 'In praise of Shabbat',
@@ -480,6 +599,8 @@ final class MSL_Content {
 				'occ_iluy_en'      => 'In memory of',
 				'occ_kavod_he'     => 'לכבוד',
 				'occ_kavod_en'     => 'In honour of',
+				'occ_zivug_he'     => 'לזיווג',
+				'occ_zivug_en'     => 'For a match for',
 
 				'done_title_he'    => 'הקבוצה נפתחה',
 				'done_title_en'    => 'The group is open',

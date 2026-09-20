@@ -446,6 +446,7 @@ final class MSL_Fields {
 					self::bi( 'text', 'title', 'כותרת הלוח' ),
 					self::bi( 'text', 'label_hdate', 'תווית התאריך העברי' ),
 					self::bi( 'text', 'label_parsha', 'תווית פרשת השבוע' ),
+					self::bi( 'text', 'label_holiday', 'תווית שבת של חג', 3, 'בשבתות של חג אין פרשה, ובמקומה מוצג שם החג — והתווית מתחלפת לזו.' ),
 					self::bi( 'text', 'label_candles', 'תווית כניסת השבת' ),
 					self::bi( 'text', 'label_havdalah', 'תווית צאת השבת' ),
 					self::bi( 'text', 'note', 'שורת המיקום מתחת ללוח', 3, 'המחרוזת %s מוחלפת בשם המקום.' ),
@@ -638,6 +639,25 @@ final class MSL_Fields {
 					self::bi( 'text', 'sending', 'הודעת שליחה' ),
 				)
 			),
+			'groupcta' => self::section(
+				'12א · הזמנה לפתוח קבוצה',
+				'home',
+				array(
+					self::checkbox( 'show', 'להציג את הסקשן בעמוד הקמפיין', 'הסקשן מוסתר גם כשעמוד הקבוצות אינו קיים או שפתיחת קבוצה כבויה — אין טעם להזמין לטופס שלא ניתן להגיע אליו.' ),
+					self::bi( 'text', 'eyebrow', 'שורת פתיחה קטנה' ),
+					self::bi( 'text', 'title', 'כותרת הסקשן' ),
+					self::bi( 'textarea', 'lead', 'פסקת ההסבר', 3 ),
+					self::bi( 'text', 'chips_label', 'הכותרת מעל רשימת הסיבות' ),
+					self::bi( 'text', 'chip_refua', 'סיבה — רפואה' ),
+					self::bi( 'text', 'chip_zechut', 'סיבה — זכות' ),
+					self::bi( 'text', 'chip_iluy', 'סיבה — עילוי נשמה' ),
+					self::bi( 'text', 'chip_kavod', 'סיבה — שמחה' ),
+					self::bi( 'text', 'chip_zivug', 'סיבה — זיווג' ),
+					self::bi( 'text', 'note', 'המשפט על היצירה הכללית' ),
+					self::bi( 'text', 'cta', 'הכפתור הראשי' ),
+					self::bi( 'text', 'cta_all', 'הקישור לארכיון הקבוצות' ),
+				)
+			),
 			'verses'   => self::section(
 				'14 · פסוקים ומאמרי חכמים על השבת',
 				'home',
@@ -713,6 +733,7 @@ final class MSL_Fields {
 					self::bi( 'text', 'occ_zechut', 'לכבוד מה — לזכות' ),
 					self::bi( 'text', 'occ_iluy', 'לכבוד מה — לעילוי נשמת' ),
 					self::bi( 'text', 'occ_kavod', 'לכבוד מה — לכבוד' ),
+					self::bi( 'text', 'occ_zivug', 'לכבוד מה — לזיווג' ),
 
 					self::bi( 'text', 'done_title', 'אחרי הפתיחה — כותרת' ),
 					self::bi( 'textarea', 'done_body', 'אחרי הפתיחה — טקסט', 3 ),

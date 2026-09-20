@@ -218,6 +218,29 @@ final class MSL_Theme {
 	public const ARTWORKS = array( 'candles', 'star', 'menorah', 'tablets', 'kiddush', 'jerusalem', 'israel', 'light' );
 
 	/**
+	 * The shapes as a person picks them, the weekly rotation included.
+	 *
+	 * ARTWORKS is the list of shapes that can be drawn; this is the list of
+	 * answers to "which artwork", and "a different one every week" is one of
+	 * them. Two menus offering the same choice — the form a visitor fills in
+	 * and the one in the dashboard — read it from here so they cannot end up
+	 * offering different sets.
+	 *
+	 * @var array<string, string>
+	 */
+	public const ARTWORK_LABELS = array(
+		'rotate'    => 'סבב שבועי',
+		'candles'   => 'נרות שבת',
+		'star'      => 'מגן דוד',
+		'menorah'   => 'מנורה',
+		'tablets'   => 'לוחות הברית',
+		'kiddush'   => 'כוס קידוש',
+		'jerusalem' => 'ירושלים',
+		'israel'    => 'מפת ישראל',
+		'light'     => 'נקודת אור',
+	);
+
+	/**
 	 * Where a menu item can point.
 	 *
 	 * The menu used to take a typed address, and that is why it led nowhere. A
@@ -260,6 +283,10 @@ final class MSL_Theme {
 		'verses'   => array(
 			'label'  => 'פסוקים ומאמרי חכמים',
 			'anchor' => 'msl-verses',
+		),
+		'groupcta' => array(
+			'label'  => 'ההזמנה לפתוח קבוצה',
+			'anchor' => 'msl-groupcta',
 		),
 		'home'     => array(
 			'label' => 'עמוד הקמפיין',
@@ -393,7 +420,7 @@ final class MSL_Theme {
 		return array(
 			'code'    => (string) $group['code'],
 			'target'  => max( 1, (int) $group['target'] ),
-			'count'   => MSL_Groups::count_for( (int) $group['id'] ),
+			'count'   => MSL_Groups::lights( $group ),
 			'artwork' => self::artwork_kind(
 				array(
 					'artwork'     => (string) $group['artwork'],
@@ -407,7 +434,13 @@ final class MSL_Theme {
 	}
 
 	/**
-	 * This week's portion in both languages, when it was fetched.
+	 * What this Shabbat is called, in both languages, when it was fetched.
+	 *
+	 * Whole names, the word "parashat" included, for the reason msl_parsha()
+	 * gives: a Shabbat inside a festival has no portion, and the countdown has
+	 * to be able to say "Sukkot I" in the same slot that usually says "Parashat
+	 * Mishpatim". The browser builds the same sentence the server does, so it
+	 * has to be handed the same piece.
 	 *
 	 * Empty when the times are switched off or the fetch failed, which is the
 	 * browser's signal to fall back to the content field exactly as the server
@@ -418,14 +451,24 @@ final class MSL_Theme {
 	private static function parsha_pair(): array {
 		$week = MSL_Zmanim::week( MSL_Meta::get( 'zmanim' ) );
 
-		if ( null === $week || '' === (string) $week['parsha_he'] ) {
+		if ( null === $week ) {
 			return array();
 		}
 
-		return array(
-			'he' => (string) $week['parsha_he'],
-			'en' => (string) $week['parsha_en'],
-		);
+		$pair = array();
+
+		foreach ( array( 'he', 'en' ) as $lang ) {
+			$portion = (string) $week[ 'parsha_' . $lang ];
+			$holiday = (string) $week[ 'holiday_' . $lang ];
+
+			if ( '' !== $portion ) {
+				$pair[ $lang ] = msl_parsha_prefix( $lang ) . $portion;
+			} elseif ( '' !== $holiday ) {
+				$pair[ $lang ] = $holiday;
+			}
+		}
+
+		return 2 === count( $pair ) ? $pair : array();
 	}
 
 	/**

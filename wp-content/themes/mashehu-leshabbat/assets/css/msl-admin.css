@@ -350,3 +350,18 @@
 	direction: ltr;
 	text-align: start;
 }
+
+/* A group the campaign put up itself, told apart at a glance from the ones
+   strangers opened — the whole point of the mark is that it is noticed before
+   launch rather than after. */
+.msl-admin__badge {
+	display: inline-block;
+	margin-inline-start: 6px;
+	padding: 1px 8px;
+	border-radius: 999px;
+	background: #F3E4CB;
+	color: #6B4A22;
+	font-size: 11px;
+	font-weight: 600;
+	vertical-align: middle;
+}

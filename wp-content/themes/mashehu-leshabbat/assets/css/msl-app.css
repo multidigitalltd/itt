@@ -256,6 +256,8 @@
 	--msl-link-label: oklch(0.72 0.04 78);
 	--msl-link-value: #FFE8BE;
 	--msl-link-value: oklch(0.94 0.06 82);
+	--msl-link-lip: #453022;
+	--msl-link-lip: oklch(0.33 0.035 52);
 	--msl-track: #EFE7D9;
 	--msl-track: oklch(0.93 0.02 78);
 	--msl-track-soft: #F3EADD;
@@ -264,6 +266,8 @@
 	--msl-backdrop: oklch(0.30 0.05 50);
 	--msl-sheet: #FEF7EC;
 	--msl-sheet: oklch(0.978 0.016 80);
+	--msl-chip-bg: #FBF1E2;
+	--msl-chip-bg: oklch(0.962 0.022 80);
 	--msl-close-bg: #EFE7D9;
 	--msl-close-bg: oklch(0.93 0.02 78);
 	--msl-close-fg: #4A392E;
@@ -1354,20 +1358,68 @@
 	grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 	gap: 16px;
 }
+/*
+ * The personal-link card.
+ *
+ * The one dark surface in the middle of a cream page, so it has to carry its
+ * own light rather than sit there as a brown rectangle: a warm glow banked into
+ * the top corner, a hairline lip to lift the edge off the background, and a
+ * flame beside the label so the card belongs to the same family as the hero and
+ * the wall. The glow is drawn on a pseudo-element under the content and clipped
+ * by the card's own radius, which is why the card owns a stacking context.
+ */
 .msl-linkcard {
-	padding: 36px 34px;
+	position: relative;
+	isolation: isolate;
+	overflow: hidden;
+	padding: 34px 32px 32px;
 	border-radius: 32px;
 	background: var(--msl-ink);
+	box-shadow: inset 0 0 0 1px var(--msl-link-lip), var(--msl-shadow-card);
 	color: var(--msl-on-dark);
 	display: flex;
 	flex-direction: column;
-	gap: 22px;
+	/* The grid stretches this card to the height of the milestones beside it,
+	   and before anyone has a link there are three short things in it. Centred,
+	   the leftover space reads as breathing room instead of as a card that
+	   stopped halfway. */
+	justify-content: center;
+	gap: 20px;
+}
+.msl-linkcard::before {
+	content: "";
+	position: absolute;
+	inset-block-start: -120px;
+	inset-inline-end: -80px;
+	inline-size: 320px;
+	block-size: 320px;
+	background: radial-gradient(
+		circle at 50% 50%,
+		oklch(0.90 0.12 78 / 0.28) 0%,
+		oklch(0.88 0.10 70 / 0.12) 46%,
+		transparent 72%
+	);
+	pointer-events: none;
+	z-index: -1;
 }
 .msl-linkcard__label {
+	display: flex;
+	align-items: center;
+	gap: 9px;
 	font-size: calc((12.5px) * var(--msl-scale, 1));
 	letter-spacing: 0.08em;
 	color: var(--msl-link-label);
 	font-weight: 600;
+}
+/* The flame the rest of the page is made of, at the size of a bullet. */
+.msl-linkcard__label::before {
+	content: "";
+	flex: none;
+	inline-size: 7px;
+	block-size: 7px;
+	border-radius: 50%;
+	background: var(--msl-amber);
+	box-shadow: 0 0 10px 2px oklch(0.90 0.13 78 / 0.55);
 }
 /* The link stays left-to-right in both languages — a URL read right-to-left is
    not a URL — but it still aligns to the start of the line. */
@@ -2949,10 +3001,26 @@ html.msl-a11y-scaled .msl-panel__title {
 .msl-invite__dismiss {
 	inline-size: 100%;
 }
-.msl-linkcard__locked {
-	margin: 0 0 14px;
-	color: var(--msl-muted-2);
-	line-height: 1.5;
+/*
+ * The line that explains why a personal link is worth having.
+ *
+ * It used to be painted in --msl-muted-2, which is the muted grey for text on
+ * the cream page. On this card it sat on --msl-ink at about 2.2:1 — readable if
+ * you already knew what it said. The muted tone that belongs on a dark surface
+ * is --msl-on-dark-sub, which clears 10:1 here, and the line is the card's only
+ * piece of persuasion so it is set at reading size rather than fine print.
+ */
+.msl-page .msl-linkcard__locked {
+	margin: 0;
+	max-inline-size: 42ch;
+	color: var(--msl-on-dark-sub);
+	font-size: calc((15.5px) * var(--msl-scale, 1));
+	line-height: 1.6;
+}
+.msl-linkcard__get {
+	display: flex;
+	flex-direction: column;
+	gap: 18px;
 }
 /* ------------------------------------------------------------------
  * The site menu
@@ -4006,6 +4074,142 @@ html.msl-a11y-scaled .msl-panel__title {
  * hairline as every other card, and the source line repeats the treatment the
  * about page gives a citation.
  * --------------------------------------------------------------- */
+
+/* ------------------------------------------------------------------
+ * The invitation to open a group
+ * --------------------------------------------------------------- */
+
+/*
+ * A single wide panel rather than the two-column cards around it, because it
+ * is one offer and not a comparison. Cream on cream with a hairline and a lit
+ * corner: the page has enough dark surfaces by this point, and this one has to
+ * read as an invitation rather than another announcement.
+ */
+.msl-gcta {
+	position: relative;
+	padding-block-start: 90px;
+}
+.msl-gcta__inner {
+	position: relative;
+	isolation: isolate;
+	overflow: hidden;
+	padding: 44px 44px 40px;
+	border-radius: 34px;
+	background: var(--msl-surface);
+	border: 1px solid var(--msl-border);
+	transition: border-color var(--msl-t-card) ease, box-shadow var(--msl-t-card) ease;
+}
+.msl-gcta__inner:hover {
+	border-color: var(--msl-border-hover);
+	box-shadow: var(--msl-shadow-card);
+}
+.msl-gcta__inner::before {
+	content: "";
+	position: absolute;
+	inset-block-start: -140px;
+	inset-inline-start: -100px;
+	inline-size: 420px;
+	block-size: 360px;
+	background: radial-gradient(
+		ellipse at 50% 50%,
+		oklch(0.90 0.11 78 / 0.22) 0%,
+		oklch(0.92 0.07 82 / 0.10) 44%,
+		transparent 72%
+	);
+	pointer-events: none;
+	z-index: -1;
+}
+.msl-page .msl-gcta__eyebrow {
+	margin: 0 0 10px;
+	font-size: calc((12.5px) * var(--msl-scale, 1));
+	letter-spacing: 0.08em;
+	font-weight: 600;
+	color: var(--msl-muted);
+}
+.msl-page .msl-gcta__title {
+	margin: 0;
+}
+.msl-page .msl-gcta__lead {
+	margin: 14px 0 0;
+	max-inline-size: 56ch;
+	font-size: calc((17px) * var(--msl-scale, 1));
+	line-height: 1.65;
+	color: var(--msl-muted);
+}
+.msl-page .msl-gcta__chips-label {
+	margin: 26px 0 12px;
+	font-family: var(--msl-font-text);
+	font-size: calc((12.5px) * var(--msl-scale, 1));
+	letter-spacing: 0.08em;
+	font-weight: 600;
+	color: var(--msl-muted);
+}
+.msl-page .msl-gcta__chips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+/* Words, not controls: nothing here is clickable, so nothing here is styled to
+   look as though it were. */
+.msl-gcta__chip {
+	padding: 8px 15px;
+	border-radius: 999px;
+	background: var(--msl-chip-bg);
+	border: 1px solid var(--msl-border);
+	font-size: calc((14.5px) * var(--msl-scale, 1));
+	font-weight: 600;
+	color: var(--msl-ink);
+}
+.msl-page .msl-gcta__actions {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px 14px;
+	margin: 30px 0 0;
+}
+.msl-gcta__all {
+	padding-inline: 4px;
+}
+.msl-page .msl-gcta__note {
+	margin: 18px 0 0;
+	font-size: calc((14.5px) * var(--msl-scale, 1));
+	line-height: 1.6;
+	color: var(--msl-muted);
+}
+/* The flame sits in the far corner of the panel, cropped by its radius. */
+.msl-gcta__flame {
+	position: absolute;
+	inset-block-end: 44px;
+	inset-inline-end: 46px;
+	inline-size: 46px;
+	pointer-events: none;
+	opacity: 0.9;
+}
+.msl-gcta__flame svg {
+	inline-size: 100%;
+	block-size: auto;
+	display: block;
+}
+
+@media (max-width: 720px) {
+	.msl-gcta {
+		padding-block-start: 64px;
+	}
+	.msl-gcta__inner {
+		padding: 32px 22px 28px;
+		border-radius: 26px;
+	}
+	/* The flame would sit under the buttons at this width, so it goes. */
+	.msl-gcta__flame {
+		display: none;
+	}
+	.msl-page .msl-gcta__actions .msl-btn {
+		inline-size: 100%;
+	}
+}
 
 .msl-verses {
 	padding-block-start: 90px;

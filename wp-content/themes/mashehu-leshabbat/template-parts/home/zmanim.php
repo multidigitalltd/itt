@@ -71,7 +71,7 @@ $msl_row = static function ( string $key, $value, string $slot ) use ( $msl, $ms
 	}
 	?>
 	<div class="msl-zmanim__row">
-		<dt class="msl-zmanim__label"<?php msl_i18n( 'zmanim', $key ); ?>><?php msl_the( $msl, $key ); ?></dt>
+		<dt class="msl-zmanim__label" data-msl-zmanim-label="<?php echo esc_attr( $slot ); ?>"<?php msl_i18n( 'zmanim', $key ); ?>><?php msl_the( $msl, $key ); ?></dt>
 		<dd class="msl-zmanim__value" data-msl-zmanim="<?php echo esc_attr( $slot ); ?>">
 			<?php
 			if ( is_array( $value ) ) {
@@ -149,7 +149,15 @@ $msl_row = static function ( string $key, $value, string $slot ) use ( $msl, $ms
 			$msl_row( 'label_hdate', $msl_card['hdate'], 'hdate' );
 		}
 
-		$msl_row( 'label_parsha', $msl_card['parsha'], 'parsha' );
+		/*
+		 * A Shabbat inside a festival has no portion, so this row carries the
+		 * festival's name and takes the label that goes with it. Which of the
+		 * two it is depends on the place as well as the week — the second day
+		 * of a festival is a festival outside Israel and an ordinary Shabbat
+		 * inside it — so the script swaps the label too when a visitor picks a
+		 * different city.
+		 */
+		$msl_row( $msl_card['festival'] ? 'label_holiday' : 'label_parsha', $msl_card['parsha'], 'parsha' );
 		$msl_row( 'label_candles', (string) $msl_card['candles'], 'candles' );
 		$msl_row( 'label_havdalah', (string) $msl_card['havdalah'], 'havdalah' );
 		?>

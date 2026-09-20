@@ -434,15 +434,20 @@ final class MSL_Panel {
 		$zone = MSL_Zmanim::zone( $zmanim );
 		$date = MSL_Zmanim::hebrew_date( $zmanim );
 
+		// The name of the coming Shabbat exactly as the page will print it, so
+		// this notice cannot quietly disagree with the site it is describing.
+		$portion = (string) $week['parsha_he'];
+		$named   = '' !== $portion ? 'פרשת ' . $portion : (string) $week['holiday_he'];
+
 		printf(
 			'<div class="notice notice-success"><p><strong>%s</strong> %s</p></div>',
 			esc_html__( 'זמני השבת מתעדכנים מהרשת.', 'mashehu-leshabbat' ),
 			esc_html(
 				sprintf(
-					/* translators: 1: place name, 2: parashah, 3: candle lighting time, 4: havdalah time, 5: Hebrew date. */
-					__( 'לפי %1$s: פרשת %2$s, כניסת השבת %3$s, צאת השבת %4$s. היום %5$s.', 'mashehu-leshabbat' ),
+					/* translators: 1: place name, 2: the coming Shabbat's name, 3: candle lighting time, 4: havdalah time, 5: Hebrew date. */
+					__( 'לפי %1$s: %2$s, כניסת השבת %3$s, צאת השבת %4$s. היום %5$s.', 'mashehu-leshabbat' ),
 					MSL_Zmanim::place_name( $zmanim, $week ),
-					(string) $week['parsha_he'],
+					'' !== $named ? $named : '—',
 					(string) wp_date( 'H:i', (int) $week['candles'], $zone ),
 					(int) $week['havdalah'] > 0 ? (string) wp_date( 'H:i', (int) $week['havdalah'], $zone ) : '—',
 					null !== $date ? $date['he'] : '—'

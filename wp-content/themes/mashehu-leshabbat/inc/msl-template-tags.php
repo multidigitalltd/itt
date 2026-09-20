@@ -224,21 +224,53 @@ function msl_urgency( array $closing, array $campaign ): string {
 }
 
 /**
- * The name of this week's portion.
+ * What this Shabbat is called, ready to drop into a sentence.
  *
  * Fetched when the times are switched on, which is the whole point of switching
  * them on: nobody has to remember to retype a portion name every Thursday. The
  * hand-typed field stays as the fallback, and as the answer for a campaign that
  * would rather not call out at all.
  *
+ * The word "parashat" belongs to the name and not to the sentence around it,
+ * because some Shabbatot have no portion. Through Tishrei the coming Shabbat is
+ * Sukkot or Simchat Torah, and a countdown built out of "Shabbat Parashat %s"
+ * can only either print "Shabbat Parashat Sukkot" or go back to whatever was
+ * typed by hand in February. So the name arrives whole — "פרשת משפטים" one week
+ * and "סוכות א׳" the next — and the sentence just places it.
+ *
  * @param array<string, mixed> $campaign Resolved campaign section.
  * @return string
  */
 function msl_parsha( array $campaign ): string {
-	$week = MSL_Zmanim::week( MSL_Meta::get( 'zmanim' ) );
-	$auto = null !== $week ? (string) $week[ 'parsha_' . MSL_I18N::lang() ] : '';
+	$lang    = MSL_I18N::lang();
+	$week    = MSL_Zmanim::week( MSL_Meta::get( 'zmanim' ) );
+	$portion = null !== $week ? (string) $week[ 'parsha_' . $lang ] : '';
 
-	return '' !== $auto ? $auto : msl_t( $campaign, 'parsha' );
+	if ( '' !== $portion ) {
+		return msl_parsha_prefix( $lang ) . $portion;
+	}
+
+	$holiday = null !== $week ? (string) $week[ 'holiday_' . $lang ] : '';
+
+	if ( '' !== $holiday ) {
+		return $holiday;
+	}
+
+	return msl_parsha_prefix( $lang ) . msl_t( $campaign, 'parsha' );
+}
+
+/**
+ * The word that introduces a portion's name, with its trailing space.
+ *
+ * Not a content field. It is a fixed word in each language, it is the same word
+ * every week, and a campaign that edited it to something else would break the
+ * only sentence it appears in.
+ *
+ * @param string $lang Language code.
+ * @return string
+ */
+function msl_parsha_prefix( string $lang ): string {
+	return 'he' === $lang ? 'פרשת ' : 'Parashat ';
 }
 
 /**
@@ -466,6 +498,30 @@ function msl_campaign_anchor( string $id ): string {
 	$base     = $campaign > 0 ? (string) get_permalink( $campaign ) : home_url( '/' );
 
 	return $base . '#' . $id;
+}
+
+/**
+ * The groups page, with an optional anchor on it.
+ *
+ * Empty when there is no groups page in this install, which is the signal to
+ * every caller to render nothing at all rather than a link into the void. The
+ * address is built from the page WordPress actually holds, for the reason the
+ * menu learned the hard way: a typed "/kvutzot/" is wrong the moment the site
+ * lives in a subdirectory, and wrong silently.
+ *
+ * @param string $anchor Fragment id, without the hash.
+ * @return string
+ */
+function msl_groups_url( string $anchor = '' ): string {
+	$page = MSL_Importer::page_id( 'groups' );
+
+	if ( $page < 1 ) {
+		return '';
+	}
+
+	$url = (string) get_permalink( $page );
+
+	return '' !== $anchor ? $url . '#' . $anchor : $url;
 }
 
 /**

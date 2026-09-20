@@ -18,7 +18,7 @@ declare( strict_types = 1 );
 
 defined( 'ABSPATH' ) || exit;
 
-$msl_group['count'] = MSL_Groups::count_for( (int) $msl_group['id'] );
+$msl_group['count'] = MSL_Groups::lights( $msl_group );
 
 $msl_pct    = msl_group_pct( $msl_group );
 $msl_ded    = msl_group_dedication( $msl_group, $msl_groups );

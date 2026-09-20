@@ -58,6 +58,11 @@ final class MSL_Groups {
 	private const REWRITE_OPTION = 'msl_rewrite_version';
 
 	/**
+	 * Option recording that the demo groups have been put up.
+	 */
+	private const SEED_OPTION = 'msl_groups_seeded';
+
+	/**
 	 * Statuses a group can be in.
 	 */
 	public const PENDING  = 'pending';
@@ -93,6 +98,7 @@ final class MSL_Groups {
 		2 => 'zechut',
 		3 => 'iluy',
 		4 => 'kavod',
+		5 => 'zivug',
 	);
 
 	/**
@@ -107,6 +113,7 @@ final class MSL_Groups {
 		add_action( 'parse_request', array( self::class, 'route' ) );
 		add_filter( 'redirect_canonical', array( self::class, 'keep_url' ) );
 		add_action( 'after_switch_theme', array( self::class, 'flush_rewrite' ), 20 );
+		add_action( 'admin_init', array( self::class, 'maybe_seed' ), 20 );
 	}
 
 	/* ---------------------------------------------------------------------
@@ -375,6 +382,27 @@ final class MSL_Groups {
 	}
 
 	/**
+	 * The number of lights a group shows.
+	 *
+	 * The real joins plus the opening count the campaign set for it. A brand
+	 * new campaign has an archive of groups at zero, and a group at zero reads
+	 * as one nobody joined rather than one nobody has found yet — the same
+	 * reason the main counter has an opening figure of its own.
+	 *
+	 * The two numbers are kept apart rather than added into the joins table: an
+	 * opening figure is a display decision that can be changed or taken back,
+	 * and a join is a person. Nothing about a group's opening count reaches the
+	 * main counter, the artwork or the map, all of which count rows — so a
+	 * figure set here can never be mistaken for a participant.
+	 *
+	 * @param array<string, mixed> $group Shaped group.
+	 * @return int
+	 */
+	public static function lights( array $group ): int {
+		return max( 0, (int) ( $group['seed_count'] ?? 0 ) ) + self::count_for( (int) $group['id'] );
+	}
+
+	/**
 	 * Forget a group's cached count.
 	 *
 	 * @param int $group_id Group row id.
@@ -421,7 +449,7 @@ final class MSL_Groups {
 
 		foreach ( (array) $rows as $row ) {
 			$group          = self::shape( (array) $row );
-			$group['count'] = self::count_for( (int) $group['id'] );
+			$group['count'] = self::lights( $group );
 			$out[]          = $group;
 		}
 
@@ -662,6 +690,279 @@ final class MSL_Groups {
 			'accent'      => MSL_Theme::accent( (string) ( $post['accent'] ?? '' ) ),
 			'owner_name'  => trim( mb_substr( sanitize_text_field( (string) ( $post['owner_name'] ?? '' ) ), 0, 80 ) ),
 			'owner_email' => $email,
+			// Only the dashboard ever submits this; the public form has no such
+			// field, and a value smuggled into that request lands on nothing
+			// because create() does not read the key.
+			'seed_count'  => max( 0, min( self::MAX_TARGET, (int) ( $post['seed_count'] ?? 0 ) ) ),
+		);
+	}
+
+	/* ---------------------------------------------------------------------
+	 * The campaign's own hand on the groups
+	 * ------------------------------------------------------------------ */
+
+	/**
+	 * Every group on a campaign, whatever its status, newest first.
+	 *
+	 * For the admin screen only. The public archive asks for one status at a
+	 * time on purpose, because a rejected group is not content and a pending
+	 * one is not public yet.
+	 *
+	 * @param int $page_id Campaign page.
+	 * @param int $limit   Rows to return.
+	 * @return array<int, array<string, mixed>>
+	 */
+	public static function every( int $page_id, int $limit = 200 ): array {
+		global $wpdb;
+
+		if ( ! MSL_DB::ready() ) {
+			return array();
+		}
+
+		$table = MSL_DB::groups_table();
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$rows = $wpdb->get_results(
+			$wpdb->prepare( "SELECT * FROM {$table} WHERE page_id = %d ORDER BY created_at DESC LIMIT %d", $page_id, max( 1, min( 500, $limit ) ) ),
+			ARRAY_A
+		);
+
+		$out = array();
+
+		foreach ( (array) $rows as $row ) {
+			$group          = self::shape( (array) $row );
+			$group['count'] = self::lights( $group );
+			$out[]          = $group;
+		}
+
+		return $out;
+	}
+
+	/**
+	 * Open a group from the dashboard.
+	 *
+	 * The same row as one a visitor opens, with three differences that follow
+	 * from who is doing it: there is no rate limit, because the limit exists to
+	 * stop a script and not the person who owns the site; no owner address is
+	 * stored, because nobody needs a private link to a group the campaign runs
+	 * from the dashboard; and it goes straight to live, because approval is the
+	 * campaign reading a stranger's text and this text is its own.
+	 *
+	 * @param int                  $page_id Campaign page.
+	 * @param array<string, mixed> $data    Validated fields.
+	 * @param bool                 $demo    Whether to mark it a demo group.
+	 * @return array<string, mixed>|WP_Error
+	 */
+	public static function admin_create( int $page_id, array $data, bool $demo = false ): array|WP_Error {
+		global $wpdb;
+
+		if ( ! MSL_DB::ready() ) {
+			MSL_DB::install();
+		}
+
+		$code  = self::generate_code();
+		$token = bin2hex( random_bytes( 16 ) );
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery -- purpose-built table; see MSL_DB.
+		$inserted = $wpdb->insert(
+			MSL_DB::groups_table(),
+			array(
+				'uuid'        => wp_generate_uuid4(),
+				'page_id'     => $page_id,
+				'code'        => $code,
+				'owner_token' => $token,
+				'title'       => (string) $data['title'],
+				'occasion'    => (int) $data['occasion'],
+				'honouree'    => (string) $data['honouree'],
+				'story'       => (string) $data['story'],
+				'target'      => (int) $data['target'],
+				'artwork'     => (string) $data['artwork'],
+				'accent'      => (string) $data['accent'],
+				'owner_name'  => (string) $data['owner_name'],
+				// Written out rather than left to the column defaults: a group
+				// opened from the dashboard has no opener to rate-limit and no
+				// signed-in person behind it, and saying so is clearer than a
+				// row whose shape depends on what the schema happens to default.
+				'ip_hash'     => '',
+				'person_id'   => 0,
+				'seed_count'  => max( 0, (int) ( $data['seed_count'] ?? 0 ) ),
+				'is_demo'     => $demo ? 1 : 0,
+				'status'      => self::LIVE,
+				'created_at'  => current_time( 'mysql', true ),
+			),
+			array( '%s', '%d', '%s', '%s', '%s', '%d', '%s', '%s', '%d', '%s', '%s', '%s', '%s', '%d', '%d', '%d', '%s', '%s' )
+		);
+
+		if ( ! $inserted ) {
+			return new WP_Error( 'msl_insert_failed', 'generic' );
+		}
+
+		return array(
+			'id'     => (int) $wpdb->insert_id,
+			'code'   => $code,
+			'url'    => self::url( $code ),
+			'status' => self::LIVE,
+		);
+	}
+
+	/**
+	 * Rewrite a group's editable fields from the dashboard.
+	 *
+	 * The code, the owner token, the opener's address and the created date are
+	 * not in the list: they are the group's identity and its provenance, not
+	 * its content, and an edit screen that could change them would be a way to
+	 * quietly turn one person's group into another's.
+	 *
+	 * @param int                  $id   Group row id.
+	 * @param array<string, mixed> $data Validated fields.
+	 * @return bool
+	 */
+	public static function admin_save( int $id, array $data ): bool {
+		global $wpdb;
+
+		if ( $id <= 0 || ! MSL_DB::ready() ) {
+			return false;
+		}
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery -- purpose-built table; see MSL_DB.
+		$updated = $wpdb->update(
+			MSL_DB::groups_table(),
+			array(
+				'title'      => (string) $data['title'],
+				'occasion'   => (int) $data['occasion'],
+				'honouree'   => (string) $data['honouree'],
+				'story'      => (string) $data['story'],
+				'target'     => (int) $data['target'],
+				'artwork'    => (string) $data['artwork'],
+				'accent'     => (string) $data['accent'],
+				'owner_name' => (string) $data['owner_name'],
+				'seed_count' => max( 0, (int) ( $data['seed_count'] ?? 0 ) ),
+			),
+			array( 'id' => $id ),
+			array( '%s', '%d', '%s', '%s', '%d', '%s', '%s', '%s', '%d' ),
+			array( '%d' )
+		);
+
+		self::flush( $id );
+
+		return false !== $updated;
+	}
+
+	/**
+	 * Remove a group's row.
+	 *
+	 * Offered only for a demo group. A group a real person opened is closed or
+	 * rejected, never deleted: its joins are still rows in the joins table and
+	 * still lights in the main artwork, and dropping the row they point at
+	 * would leave them counted but homeless.
+	 *
+	 * @param int $id Group row id.
+	 * @return bool
+	 */
+	public static function delete_demo( int $id ): bool {
+		global $wpdb;
+
+		$group = self::by_id( $id );
+
+		if ( null === $group || true !== $group['is_demo'] ) {
+			return false;
+		}
+
+		if ( self::count_for( $id ) > 0 ) {
+			return false;
+		}
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery -- purpose-built table; see MSL_DB.
+		$deleted = $wpdb->delete( MSL_DB::groups_table(), array( 'id' => $id ), array( '%d' ) );
+
+		self::flush( $id );
+
+		return false !== $deleted;
+	}
+
+	/**
+	 * Put a handful of groups on the page, once, so the archive is not empty.
+	 *
+	 * A campaign about people joining something opens with an archive that says
+	 * "no groups yet", which is the least persuasive sentence on the site. These
+	 * three are real rows, editable and deletable from the groups screen like
+	 * any other, marked as demos so the campaign can tell at a glance which are
+	 * hers and which came from strangers.
+	 *
+	 * Seeded once, by an option, and never re-seeded: a campaign that deletes
+	 * them meant to.
+	 */
+	public static function maybe_seed(): void {
+		if ( '' !== (string) get_option( self::SEED_OPTION, '' ) ) {
+			return;
+		}
+
+		$page_id = MSL_Importer::page_id();
+
+		if ( $page_id < 1 || ! MSL_DB::ready() ) {
+			return;
+		}
+
+		// Never seed onto a campaign that already has groups of its own.
+		if ( self::total( $page_id, self::LIVE ) > 0 || self::total( $page_id, self::PENDING ) > 0 ) {
+			update_option( self::SEED_OPTION, 'skipped', false );
+
+			return;
+		}
+
+		foreach ( self::demo_rows() as $row ) {
+			self::admin_create( $page_id, $row, true );
+		}
+
+		update_option( self::SEED_OPTION, 'done', false );
+	}
+
+	/**
+	 * The groups the seeder puts up.
+	 *
+	 * Deliberately unremarkable: a recovery, a wedding and a memory, the three
+	 * reasons a family actually opens one of these. No real names — "משפחת לוי"
+	 * is the Hebrew equivalent of a placeholder surname — because a demo group
+	 * carrying a real person's name is a thing somebody would have to notice
+	 * before launch, and they would notice it last.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private static function demo_rows(): array {
+		return array(
+			array(
+				'title'      => 'קבוצת משפחת לוי',
+				'occasion'   => 1,
+				'honouree'   => 'שרה בת רחל',
+				'story'      => 'פתחנו את הקבוצה הזאת כדי לאסוף קבלות לשבת לרפואתה השלמה. כל קבלה, קטנה ככל שתהיה, היא נר נוסף.',
+				'target'     => 180,
+				'artwork'    => 'candles',
+				'accent'     => '#FFB25C',
+				'owner_name' => 'משפחת לוי',
+				'seed_count' => 64,
+			),
+			array(
+				'title'      => 'לכבוד החתונה',
+				'occasion'   => 4,
+				'honouree'   => 'דני ומיכל',
+				'story'      => 'במקום עוד מתנה — קבלה אחת לשבת. שיהיה להם בית של אור.',
+				'target'     => 120,
+				'artwork'    => 'star',
+				'accent'     => '#FFD374',
+				'owner_name' => 'החברים',
+				'seed_count' => 41,
+			),
+			array(
+				'title'      => 'לעילוי נשמת סבא',
+				'occasion'   => 3,
+				'honouree'   => 'יוסף בן אברהם',
+				'story'      => 'סבא הדליק נרות כל חייו. אספנו את המשפחה כדי שימשיכו להידלק.',
+				'target'     => 250,
+				'artwork'    => 'menorah',
+				'accent'     => '#E8A05C',
+				'owner_name' => 'הנכדים',
+				'seed_count' => 96,
+			),
 		);
 	}
 
@@ -716,6 +1017,8 @@ final class MSL_Groups {
 			'accent'      => (string) $row['accent'],
 			'owner_name'  => (string) $row['owner_name'],
 			'person_id'   => (int) $row['person_id'],
+			'seed_count'  => (int) ( $row['seed_count'] ?? 0 ),
+			'is_demo'     => 1 === (int) ( $row['is_demo'] ?? 0 ),
 			'status'      => (string) $row['status'],
 			'created_at'  => (string) $row['created_at'],
 		);

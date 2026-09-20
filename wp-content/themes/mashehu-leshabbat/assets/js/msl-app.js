@@ -360,6 +360,11 @@
 		return String(n).padStart(2, '0');
 	}
 
+	/* Fixed in each language, not a content field: see msl_parsha_prefix(). */
+	function parshaPrefix() {
+		return state.lang === 'en' ? 'Parashat ' : 'פרשת ';
+	}
+
 	function renderCountdown() {
 		var node = $('[data-msl-countdown]');
 
@@ -368,9 +373,12 @@
 		var remaining = Math.max(0, config.campaign.candleLighting - Math.floor(Date.now() / 1000));
 		var days = Math.floor(remaining / 86400);
 		/* The fetched name when the site is pulling times, the content field
-		   when it is not. The server rendered the same choice into the HTML. */
+		   when it is not. The server rendered the same choice into the HTML.
+		   Whole names either way — the fetched one already carries "parashat"
+		   or is a festival that must not be given it, and the typed field is a
+		   portion, so it is the one that needs the word put back. */
 		var auto = config.campaign.parsha || {};
-		var parsha = auto[state.lang] || t('campaign.parsha');
+		var parsha = auto[state.lang] || (parshaPrefix() + t('campaign.parsha'));
 
 		if (days > 2) {
 			node.textContent = format(t('chrome.countdown_days'), [parsha, num(days)]);
@@ -1357,6 +1365,18 @@
 
 		setPair(slot(card, 'hdate'), data.hdate || { he: '', en: '' });
 		setPair(slot(card, 'parsha'), data.parsha);
+
+		/* The second day of a festival is a festival abroad and an ordinary
+		   Shabbat in Israel, so the portion row's own label belongs to the
+		   place and has to move with it. */
+		var parshaLabel = card.querySelector('[data-msl-zmanim-label="parsha"]');
+
+		if (parshaLabel) {
+			var labelKey = data.festival ? 'zmanim.label_holiday' : 'zmanim.label_parsha';
+
+			parshaLabel.setAttribute('data-msl-i18n', labelKey);
+			parshaLabel.textContent = t(labelKey);
+		}
 
 		var candles = slot(card, 'candles');
 		var havdalah = slot(card, 'havdalah');

@@ -512,14 +512,24 @@ final class MSL_Zmanim {
 	 * Pull the coming Shabbat out of Hebcal's week.
 	 *
 	 * The response covers the next several days, which around a festival holds
-	 * more than one candle-lighting: the week of Yom Kippur carries Friday's
-	 * and the eve of the fast, and taking "the next one" would put the fast's
-	 * time under a heading that says Shabbat.
+	 * more than one candle-lighting: the week of Yom Kippur carries Friday's and
+	 * the eve of the fast, and taking "the next one" would put the fast's time
+	 * under a heading that says Shabbat.
 	 *
-	 * So the Shabbat is identified first — it is the day the weekly portion is
-	 * read — and its candle-lighting is the one on the day before it. Only when
-	 * there is no portion at all (a Shabbat swallowed by a festival) does this
-	 * fall back to the next lighting of any kind.
+	 * This used to identify the Shabbat as the day the weekly portion is read,
+	 * which is true of most weeks and false of exactly the weeks that matter
+	 * here. Through Tishrei the response carries no portion at all — checked
+	 * against the live endpoint, the week of 20 September 2026 in Jerusalem
+	 * returns Erev Yom Kippur, Yom Kippur, Erev Sukkot and Sukkot I and nothing
+	 * else — so the old reading fell through to "the next lighting of any kind",
+	 * printed the eve of the fast as Shabbat's, and left the portion empty, which
+	 * sent the page back to the name last typed by hand. A site that goes quiet
+	 * for the whole festival month is the opposite of what fetching this is for.
+	 *
+	 * So the Shabbat is found on the calendar: it is the Saturday the response
+	 * covers. Everything else hangs off that day — the lighting on its eve, the
+	 * havdalah and the portion on the day itself — and a Shabbat that carries a
+	 * festival instead of a portion is a normal answer rather than a failure.
 	 *
 	 * @param array<string, mixed> $body Decoded response.
 	 * @return array<string, mixed>|null
@@ -547,38 +557,56 @@ final class MSL_Zmanim {
 			);
 		}
 
-		$portion = null;
+		$shabbat = self::coming_shabbat(
+			$items,
+			self::their_clock(
+				(string) ( $body['location']['tzid'] ?? '' ),
+				(string) ( $body['date'] ?? '' )
+			)
+		);
 
-		foreach ( $items as $item ) {
-			if ( 'parashat' === $item['category'] ) {
-				$portion = $item;
-				break;
-			}
+		if ( '' === $shabbat ) {
+			return null;
 		}
 
-		$shabbat = null !== $portion ? $portion['day'] : '';
-		$eve     = '' !== $shabbat ? gmdate( 'Y-m-d', (int) strtotime( $shabbat . ' -1 day' ) ) : '';
+		$eve = gmdate( 'Y-m-d', (int) strtotime( $shabbat . ' -1 day' ) );
 
 		$candles  = null;
 		$havdalah = null;
 		$holiday  = null;
+		$portion  = null;
 
 		foreach ( $items as $item ) {
-			if ( 'candles' === $item['category'] && null === $candles
-				&& ( '' === $eve || $item['day'] === $eve ) ) {
+			if ( 'candles' === $item['category'] && null === $candles && $item['day'] === $eve ) {
 				$candles = $item;
 			}
 
-			if ( 'havdalah' === $item['category'] && null === $havdalah
-				&& ( '' === $shabbat ? null !== $candles && $item['stamp'] > $candles['stamp'] : $item['day'] === $shabbat ) ) {
+			if ( 'havdalah' === $item['category'] && null === $havdalah && $item['day'] === $shabbat ) {
 				$havdalah = $item;
 			}
 
-			// Only a holiday falling on the Shabbat itself belongs on the card:
+			if ( 'parashat' === $item['category'] && null === $portion && $item['day'] === $shabbat ) {
+				$portion = $item;
+			}
+
+			// Only a festival falling on the Shabbat itself belongs on the card:
 			// "Shabbat Shuva" does, the eve of the fast three days later does not.
-			if ( 'holiday' === $item['category'] && null === $holiday
-				&& '' !== $shabbat && $item['day'] === $shabbat ) {
+			if ( 'holiday' === $item['category'] && null === $holiday && $item['day'] === $shabbat ) {
 				$holiday = $item;
+			}
+		}
+
+		/*
+		 * Asked on the Shabbat itself, some windows open after Friday evening and
+		 * the eve's lighting is no longer in them. The last lighting up to and
+		 * including the Shabbat is that one, and it is still the right time to
+		 * print; anything later belongs to a week this answer is not about.
+		 */
+		if ( null === $candles ) {
+			foreach ( $items as $item ) {
+				if ( 'candles' === $item['category'] && $item['day'] <= $shabbat ) {
+					$candles = $item;
+				}
 			}
 		}
 
@@ -596,6 +624,84 @@ final class MSL_Zmanim {
 			'place'      => (string) ( $body['location']['title'] ?? '' ),
 			'tzid'       => (string) ( $body['location']['tzid'] ?? '' ),
 		);
+	}
+
+	/**
+	 * The Saturday this response is about.
+	 *
+	 * Read off the days the response actually carries rather than counted out
+	 * from today, so a window that runs past one Saturday into the next still
+	 * answers with the one Hebcal built it around. Only if nothing in it falls
+	 * on a Saturday — which would mean a shape this code has never seen — is the
+	 * day worked out from the calendar instead.
+	 *
+	 * @param array<int, array<string, mixed>> $items Normalised items.
+	 * @param DateTimeImmutable                $now   Now, where the times are for.
+	 * @return string Y-m-d, or an empty string.
+	 */
+	private static function coming_shabbat( array $items, DateTimeImmutable $now ): string {
+		$today     = $now->format( 'Y-m-d' );
+		$saturdays = array();
+
+		foreach ( $items as $item ) {
+			$day = (string) $item['day'];
+
+			if ( '' !== $day && 6 === self::weekday( $day ) ) {
+				$saturdays[ $day ] = true;
+			}
+		}
+
+		$saturdays = array_keys( $saturdays );
+		sort( $saturdays );
+
+		foreach ( $saturdays as $day ) {
+			if ( $day >= $today ) {
+				return (string) $day;
+			}
+		}
+
+		if ( array() !== $saturdays ) {
+			return (string) end( $saturdays );
+		}
+
+		return $now->modify( '+' . ( ( 6 - (int) $now->format( 'w' ) + 7 ) % 7 ) . ' days' )->format( 'Y-m-d' );
+	}
+
+	/**
+	 * The weekday of a plain date, Sunday being zero.
+	 *
+	 * @param string $day Y-m-d.
+	 * @return int Weekday, or -1 if the string is not a date.
+	 */
+	private static function weekday( string $day ): int {
+		$date = DateTimeImmutable::createFromFormat( '!Y-m-d', $day, new DateTimeZone( 'UTC' ) );
+
+		return false !== $date ? (int) $date->format( 'w' ) : -1;
+	}
+
+	/**
+	 * Now, on the clock of the place the times are for.
+	 *
+	 * Hebcal stamps the response with the moment it built the window, and that
+	 * is the instant to reason from: the server's own clock can be minutes or a
+	 * whole timezone away, and either is enough to pick the wrong Saturday in
+	 * the hours around midnight.
+	 *
+	 * @param string $tzid  Timezone from the response.
+	 * @param string $stamp The response's own timestamp.
+	 * @return DateTimeImmutable
+	 */
+	private static function their_clock( string $tzid, string $stamp ): DateTimeImmutable {
+		try {
+			$zone = new DateTimeZone( '' !== $tzid ? $tzid : 'UTC' );
+		} catch ( Exception $e ) {
+			$zone = new DateTimeZone( 'UTC' );
+		}
+
+		$when = '' !== $stamp ? strtotime( $stamp ) : false;
+		$now  = new DateTimeImmutable( false !== $when ? '@' . $when : 'now' );
+
+		return $now->setTimezone( $zone );
 	}
 
 	/**
@@ -620,18 +726,39 @@ final class MSL_Zmanim {
 		$zone = self::zone( $zmanim, $override );
 		$date = self::hebrew_date( $zmanim, $override );
 
+		/*
+		 * A Shabbat inside a festival has no weekly portion, and the row that
+		 * would have carried one is the right place for the festival's name:
+		 * the card is answering "which Shabbat is this", and on Sukkot the
+		 * answer is Sukkot. The separate festival line then has nothing left to
+		 * add, so it only appears on a week that has both — Shabbat Shuva, read
+		 * with its portion.
+		 */
+		$festival = '' === (string) $week['parsha_he'];
+
 		return array(
 			'place'    => self::place( $zmanim, $override ),
 			'names'    => self::place_names( $zmanim, $week, $override ),
 			'hdate'    => $date,
-			'parsha'   => array(
-				'he' => (string) $week['parsha_he'],
-				'en' => (string) $week['parsha_en'],
-			),
-			'holiday'  => array(
-				'he' => (string) $week['holiday_he'],
-				'en' => (string) $week['holiday_en'],
-			),
+			'festival' => $festival,
+			'parsha'   => $festival
+				? array(
+					'he' => (string) $week['holiday_he'],
+					'en' => (string) $week['holiday_en'],
+				)
+				: array(
+					'he' => (string) $week['parsha_he'],
+					'en' => (string) $week['parsha_en'],
+				),
+			'holiday'  => $festival
+				? array(
+					'he' => '',
+					'en' => '',
+				)
+				: array(
+					'he' => (string) $week['holiday_he'],
+					'en' => (string) $week['holiday_en'],
+				),
 			'candles'  => (string) wp_date( 'H:i', (int) $week['candles'], $zone ),
 			'havdalah' => (int) $week['havdalah'] > 0 ? (string) wp_date( 'H:i', (int) $week['havdalah'], $zone ) : '',
 		);

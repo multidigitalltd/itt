@@ -51,6 +51,7 @@ require_once MSL_DIR . 'inc/msl-template-tags.php';
 require_once MSL_DIR . 'inc/class-msl-theme.php';
 
 MSL_Theme::init();
+MSL_Content::init();
 MSL_Meta::init();
 MSL_Metabox::init();
 MSL_Importer::init();

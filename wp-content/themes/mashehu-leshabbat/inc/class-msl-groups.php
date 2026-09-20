@@ -410,6 +410,88 @@ final class MSL_Groups {
 	}
 
 	/**
+	 * The marker that makes a listed participant anonymous.
+	 *
+	 * A single hyphen where the name would be. It reads as a blank in the
+	 * field, it is one keystroke, and it cannot collide with a real name the
+	 * way a word like "anonymous" could.
+	 */
+	public const ANON = '-';
+
+	/**
+	 * The people a group lists, from the campaign's own list.
+	 *
+	 * Display only, and kept in a column rather than as rows in the joins
+	 * table, for the same reason the opening count is: a name typed here is a
+	 * presentation decision that can be changed or taken back, and a join is a
+	 * person. Nothing here reaches the main counter, the artwork, the wall or
+	 * the map — all of which count rows.
+	 *
+	 * One per line. `שם | עיר`, or just a name, and a line whose name is a
+	 * single hyphen is somebody who asked not to be named.
+	 *
+	 * @param array<string, mixed> $group Shaped group.
+	 * @return array<int, array{name: string, city: string, anon: bool}>
+	 */
+	public static function seed_people( array $group ): array {
+		$raw  = trim( (string) ( $group['seed_names'] ?? '' ) );
+		$out  = array();
+
+		if ( '' === $raw ) {
+			return $out;
+		}
+
+		foreach ( preg_split( '/\r\n|\r|\n/', $raw ) as $line ) {
+			$line = trim( (string) $line );
+
+			if ( '' === $line ) {
+				continue;
+			}
+
+			$parts = array_map( 'trim', explode( '|', $line, 2 ) );
+			$name  = $parts[0];
+			$city  = $parts[1] ?? '';
+
+			$out[] = array(
+				'name' => self::ANON === $name ? '' : $name,
+				'city' => $city,
+				'anon' => self::ANON === $name || '' === $name,
+			);
+		}
+
+		return $out;
+	}
+
+	/**
+	 * Tidy a submitted list of display names.
+	 *
+	 * Blank lines go, every line is trimmed, tags are stripped, and the whole
+	 * thing is capped — a list nobody will scroll past is not worth storing,
+	 * and this column is written by the campaign rather than by a stranger so
+	 * the cap is generosity and not defence.
+	 *
+	 * @param string $raw Submitted text.
+	 * @return string
+	 */
+	private static function clean_seed_names( string $raw ): string {
+		$lines = array();
+
+		foreach ( preg_split( '/\r\n|\r|\n/', $raw ) as $line ) {
+			$line = trim( sanitize_text_field( (string) $line ) );
+
+			if ( '' !== $line ) {
+				$lines[] = mb_substr( $line, 0, 160 );
+			}
+
+			if ( count( $lines ) >= 200 ) {
+				break;
+			}
+		}
+
+		return implode( "\n", $lines );
+	}
+
+	/**
 	 * The number of lights a group shows.
 	 *
 	 * The real joins plus the opening count the campaign set for it. A brand
@@ -719,10 +801,11 @@ final class MSL_Groups {
 			'accent'      => MSL_Theme::accent( (string) ( $post['accent'] ?? '' ) ),
 			'owner_name'  => trim( mb_substr( sanitize_text_field( (string) ( $post['owner_name'] ?? '' ) ), 0, 80 ) ),
 			'owner_email' => $email,
-			// Only the dashboard ever submits this; the public form has no such
-			// field, and a value smuggled into that request lands on nothing
-			// because create() does not read the key.
+			// Only the dashboard ever submits these; the public form has no such
+			// fields, and a value smuggled into that request lands on nothing
+			// because create() and owner_save() do not read the keys.
 			'seed_count'  => max( 0, min( self::MAX_TARGET, (int) ( $post['seed_count'] ?? 0 ) ) ),
+			'seed_names'  => self::clean_seed_names( (string) ( $post['seed_names'] ?? '' ) ),
 		);
 	}
 
@@ -979,11 +1062,12 @@ final class MSL_Groups {
 				'ip_hash'     => '',
 				'person_id'   => 0,
 				'seed_count'  => max( 0, (int) ( $data['seed_count'] ?? 0 ) ),
+				'seed_names'  => (string) ( $data['seed_names'] ?? '' ),
 				'is_demo'     => $demo ? 1 : 0,
 				'status'      => self::LIVE,
 				'created_at'  => current_time( 'mysql', true ),
 			),
-			array( '%s', '%d', '%s', '%s', '%s', '%d', '%s', '%s', '%d', '%s', '%s', '%s', '%s', '%d', '%d', '%d', '%s', '%s' )
+			array( '%s', '%d', '%s', '%s', '%s', '%d', '%s', '%s', '%d', '%s', '%s', '%s', '%s', '%d', '%d', '%s', '%d', '%s', '%s' )
 		);
 
 		if ( ! $inserted ) {
@@ -1030,9 +1114,10 @@ final class MSL_Groups {
 				'accent'     => (string) $data['accent'],
 				'owner_name' => (string) $data['owner_name'],
 				'seed_count' => max( 0, (int) ( $data['seed_count'] ?? 0 ) ),
+				'seed_names' => (string) ( $data['seed_names'] ?? '' ),
 			),
 			array( 'id' => $id ),
-			array( '%s', '%d', '%s', '%s', '%d', '%s', '%s', '%s', '%d' ),
+			array( '%s', '%d', '%s', '%s', '%d', '%s', '%s', '%s', '%d', '%s' ),
 			array( '%d' )
 		);
 
@@ -1133,6 +1218,7 @@ final class MSL_Groups {
 				'accent'     => '#FFB25C',
 				'owner_name' => 'משפחת לוי',
 				'seed_count' => 64,
+				'seed_names' => "רחל | ירושלים\nמשה | בני ברק\n-\nתמר | פתח תקווה\nאליהו | חיפה\n- | תל אביב\nנעמי | מודיעין עילית\nיוסף | בית שמש\nשירה\n-\nאברהם | אשדוד\nחנה | נתניה",
 			),
 			array(
 				'title'      => 'לכבוד החתונה',
@@ -1144,6 +1230,7 @@ final class MSL_Groups {
 				'accent'     => '#FFD374',
 				'owner_name' => 'החברים',
 				'seed_count' => 41,
+				'seed_names' => "דוד | תל אביב\nמיכל | רעננה\n-\nאיתי | גבעתיים\nנועה | חיפה\nיעל\n- | ירושלים\nאורי | כפר סבא\nטליה | רמת גן",
 			),
 			array(
 				'title'      => 'לעילוי נשמת סבא',
@@ -1155,6 +1242,7 @@ final class MSL_Groups {
 				'accent'     => '#E8A05C',
 				'owner_name' => 'הנכדים',
 				'seed_count' => 96,
+				'seed_names' => "שמואל | ירושלים\n-\nלאה | בני ברק\nיצחק | בית שמש\nמרים | אלעד\n- | מודיעין עילית\nדוב | ירושלים\nאסתר\nפנחס | אשדוד\n-\nרבקה | פתח תקווה",
 			),
 		);
 	}
@@ -1211,6 +1299,7 @@ final class MSL_Groups {
 			'owner_name'  => (string) $row['owner_name'],
 			'person_id'   => (int) $row['person_id'],
 			'seed_count'  => (int) ( $row['seed_count'] ?? 0 ),
+			'seed_names'  => (string) ( $row['seed_names'] ?? '' ),
 			'is_demo'     => 1 === (int) ( $row['is_demo'] ?? 0 ),
 			'status'      => (string) $row['status'],
 			'created_at'  => (string) $row['created_at'],

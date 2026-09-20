@@ -22,9 +22,19 @@ $msl_has_nav  = array() !== msl_nav_rows( $msl_nav );
 ?>
 <header class="msl-header">
 	<div class="msl-header__inner">
-		<a class="msl-brand" href="<?php echo esc_url( home_url( '/' ) ); ?>">
+		<?php
+		/*
+		 * The name beside the mark, until the campaign uploads a logo of its
+		 * own — at which point the logo already says it, and printing it again
+		 * puts the same two words on screen twice. It stays in the markup as
+		 * the link's accessible name, because "a link to the home page" that a
+		 * screen reader announces as an image filename is not a name.
+		 */
+		$msl_logo_set = msl_has_logo( $msl );
+		?>
+		<a class="msl-brand<?php echo $msl_logo_set ? ' msl-brand--logo' : ''; ?>" href="<?php echo esc_url( home_url( '/' ) ); ?>">
 			<?php msl_logo( $msl ); ?>
-			<span class="msl-brand__word"<?php msl_i18n( 'chrome', 'brand' ); ?>><?php msl_the( $msl, 'brand' ); ?></span>
+			<span class="msl-brand__word<?php echo $msl_logo_set ? ' msl-a11y-only' : ''; ?>"<?php msl_i18n( 'chrome', 'brand' ); ?>><?php msl_the( $msl, 'brand' ); ?></span>
 		</a>
 
 		<?php if ( $msl_has_nav ) : ?>

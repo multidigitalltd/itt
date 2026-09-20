@@ -108,6 +108,16 @@ function msl_candle_svg( float $glow_duration, float $flame_duration, float $del
 }
 
 /**
+ * Whether the campaign has uploaded a logo of its own.
+ *
+ * @param array<string, mixed> $chrome Resolved chrome section.
+ * @return bool
+ */
+function msl_has_logo( array $chrome ): bool {
+	return (int) ( $chrome['logo'] ?? 0 ) > 0;
+}
+
+/**
  * The brand mark: the configured logo, or the theme's own light-dot glyph.
  *
  * @param array<string, mixed> $chrome Resolved chrome section.
@@ -123,7 +133,15 @@ function msl_logo( array $chrome, int $size = 28 ): void {
 			false,
 			array(
 				'class'    => 'msl-logo__image',
-				'alt'      => msl_t( $chrome, 'brand' ),
+				/*
+				 * Decorative, deliberately. The only place this is printed is
+				 * inside the link to the home page, which carries the site's
+				 * name as text beside it — visible, or hidden from the screen
+				 * once the logo says it. An alt repeating that name makes a
+				 * screen reader announce it twice, which is what axe's
+				 * image-redundant-alt rule is for.
+				 */
+				'alt'      => '',
 				'loading'  => 'eager',
 				'decoding' => 'async',
 			)

@@ -40,7 +40,23 @@ $msl_open  = MSL_Groups::accepts_joins( $msl_group );
 $msl_wait  = MSL_Groups::PENDING === $msl_group['status'];
 $msl_share = MSL_Groups::url( (string) $msl_group['code'] );
 $msl_wa    = sprintf( msl_t( $msl_groups, 'wa_message' ), $msl_share );
-$msl_feed  = MSL_Joins::group_feed( (int) $msl_group['id'] );
+/*
+ * Who is listed: the people who really joined, and after them the names the
+ * campaign listed itself. Real joins come first because they are real; the
+ * listed names fill in behind them, which is what makes a group that has just
+ * opened look like a group rather than like an error.
+ */
+$msl_feed = array_merge(
+	array_map(
+		static fn( array $row ): array => array(
+			'name' => $row['name'],
+			'city' => $row['city'],
+			'anon' => false,
+		),
+		MSL_Joins::group_feed( (int) $msl_group['id'] )
+	),
+	MSL_Groups::seed_people( $msl_group )
+);
 $msl_state = array(
 	MSL_Groups::PENDING  => 'state_pending',
 	MSL_Groups::CLOSED   => 'state_closed',
@@ -137,9 +153,15 @@ $msl_state = array(
 		<?php else : ?>
 			<ul class="msl-gfund__list">
 				<?php foreach ( $msl_feed as $msl_person ) : ?>
-					<li class="msl-gfund__person">
+					<li class="msl-gfund__person<?php echo $msl_person['anon'] ? ' msl-gfund__person--anon' : ''; ?>">
 						<span class="msl-gfund__spark" aria-hidden="true"></span>
-						<span class="msl-gfund__name"><?php echo esc_html( $msl_person['name'] ); ?></span>
+
+						<?php if ( $msl_person['anon'] ) : ?>
+							<span class="msl-gfund__name"<?php msl_i18n( 'groups', 'single_anon' ); ?>><?php msl_the( $msl_groups, 'single_anon' ); ?></span>
+						<?php else : ?>
+							<span class="msl-gfund__name"><?php echo esc_html( $msl_person['name'] ); ?></span>
+						<?php endif; ?>
+
 						<?php if ( '' !== $msl_person['city'] ) : ?>
 							<span class="msl-gfund__city"><?php echo esc_html( $msl_person['city'] ); ?></span>
 						<?php endif; ?>

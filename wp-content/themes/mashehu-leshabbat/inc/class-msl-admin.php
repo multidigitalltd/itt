@@ -712,6 +712,19 @@ final class MSL_Admin {
 						</td>
 					</tr>
 					<tr>
+						<th scope="row"><label for="msl-ge-names"><?php esc_html_e( 'המצטרפים שמוצגים', 'mashehu-leshabbat' ); ?></label></th>
+						<td>
+							<textarea class="large-text code" rows="8" id="msl-ge-names" name="seed_names"
+								dir="rtl"><?php echo esc_textarea( (string) $value( 'seed_names' ) ); ?></textarea>
+							<p class="description">
+								<?php esc_html_e( 'שורה לכל אדם. אפשר לכתוב רק שם, או "שם | עיר". שורה שבה יש מקף אחד במקום השם — למשל "-" או "- | חיפה" — מוצגת כמי שביקש שלא להופיע בשם.', 'mashehu-leshabbat' ); ?>
+							</p>
+							<p class="description">
+								<?php esc_html_e( 'הרשימה הזאת היא תצוגה בלבד, בדיוק כמו מספר הפתיחה: היא מופיעה רק ברשימה שבעמוד הקבוצה, ואינה נספרת במונה הראשי, ביצירה, בקיר הנרות או במפה. מי שבאמת מצטרף מופיע לפניה.', 'mashehu-leshabbat' ); ?>
+							</p>
+						</td>
+					</tr>
+					<tr>
 						<th scope="row"><label for="msl-ge-artwork"><?php esc_html_e( 'צורת היצירה', 'mashehu-leshabbat' ); ?></label></th>
 						<td>
 							<select id="msl-ge-artwork" name="artwork">

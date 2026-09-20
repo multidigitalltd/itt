@@ -741,6 +741,8 @@ final class MSL_Content {
 				'single_lights_en' => 'candles in the group',
 				'single_pct_he'    => 'מהיעד',
 				'single_pct_en'    => 'of the goal',
+				'single_anon_he'   => 'בעילום שם',
+				'single_anon_en'   => 'Anonymous',
 				'single_supporters_he' => 'מי כבר הדליק',
 				'single_supporters_en' => 'Who has already lit one',
 				'single_first_he'  => 'עוד אף אחד לא הדליק כאן נר. אפשר להיות הראשונים.',

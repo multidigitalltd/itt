@@ -24,7 +24,7 @@ final class MSL_DB {
 	/**
 	 * Bumped whenever the schema below changes.
 	 */
-	private const SCHEMA_VERSION = '7';
+	private const SCHEMA_VERSION = '8';
 
 	/**
 	 * Option holding the installed schema version.
@@ -266,6 +266,7 @@ final class MSL_DB {
 				ip_hash CHAR(64) NOT NULL DEFAULT '',
 				person_id BIGINT UNSIGNED NOT NULL DEFAULT 0,
 				seed_count INT UNSIGNED NOT NULL DEFAULT 0,
+				seed_names TEXT NULL,
 				is_demo TINYINT(1) NOT NULL DEFAULT 0,
 				status VARCHAR(12) NOT NULL DEFAULT 'pending',
 				reviewed_by BIGINT UNSIGNED NULL,

@@ -36,7 +36,12 @@ final class MSL_Content {
 	/**
 	 * The current copy revision.
 	 */
-	private const REVISION = 1;
+	private const REVISION = 2;
+
+	/**
+	 * The display pace this theme ships with.
+	 */
+	public const DEMO_RATE = 150;
 
 	/**
 	 * Hook the one-time copy migration.
@@ -66,10 +71,27 @@ final class MSL_Content {
 	 * to fix our own is the worse of the two.
 	 */
 	public static function maybe_migrate(): void {
-		if ( (int) get_option( self::REVISION_OPTION, 0 ) >= self::REVISION ) {
+		$done = (int) get_option( self::REVISION_OPTION, 0 );
+
+		if ( $done >= self::REVISION ) {
 			return;
 		}
 
+		if ( $done < 1 ) {
+			self::retire_parashat_wording();
+		}
+
+		if ( $done < 2 ) {
+			self::retire_silent_pace();
+		}
+
+		update_option( self::REVISION_OPTION, self::REVISION, false );
+	}
+
+	/**
+	 * Revision 1 — the doubled word in the countdown.
+	 */
+	private static function retire_parashat_wording(): void {
 		$replacements = array(
 			'countdown_days_he'  => array( 'השבת פרשת %1$s בעוד %2$d ימים', 'השבת %1$s בעוד %2$d ימים' ),
 			'countdown_days_en'  => array( 'Shabbat Parashat %1$s in %2$d days', 'Shabbat %1$s in %2$d days' ),
@@ -116,8 +138,53 @@ final class MSL_Content {
 				update_post_meta( (int) $page_id, $key, $stored );
 			}
 		}
+	}
 
-		update_option( self::REVISION_OPTION, self::REVISION, false );
+	/**
+	 * Revision 2 — the display pace that shipped switched off.
+	 *
+	 * The pace arrived in 1.21.0 defaulting to zero, on the reasoning that a
+	 * display figure should be asked for rather than assumed. That was the
+	 * wrong call: the campaign that asked for it opened the page, read "0
+	 * people joined in the last ten minutes", and had no way to know that the
+	 * fix was a field in section 01. A number whose whole purpose is to stop
+	 * the page reading as broken has to arrive working.
+	 *
+	 * Only a stored zero is rewritten, and only once. A zero can only have been
+	 * written by a page saved during the few hours that release was current,
+	 * where it is this file's old default and not a decision; and a campaign
+	 * that switches the pace off after this runs keeps it off, because the
+	 * revision has already been recorded.
+	 */
+	private static function retire_silent_pace(): void {
+		$key = MSL_Meta::key( 'campaign' );
+
+		$pages = get_posts(
+			array(
+				'post_type'        => 'page',
+				'post_status'      => 'any',
+				'numberposts'      => 200,
+				'fields'           => 'ids',
+				'meta_key'         => $key, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+				'suppress_filters' => false,
+			)
+		);
+
+		foreach ( $pages as $page_id ) {
+			$stored = get_post_meta( (int) $page_id, $key, true );
+
+			if ( ! is_array( $stored ) || ! isset( $stored['demo_rate'] ) ) {
+				continue;
+			}
+
+			if ( 0 !== (int) $stored['demo_rate'] ) {
+				continue;
+			}
+
+			$stored['demo_rate'] = self::DEMO_RATE;
+
+			update_post_meta( (int) $page_id, $key, $stored );
+		}
 	}
 
 	/**
@@ -174,7 +241,7 @@ final class MSL_Content {
 				'parsha_en'   => 'Mishpatim',
 				'target'      => 172000,
 				'seed_count'  => 127438,
-				'demo_rate'   => 0,
+				'demo_rate'   => self::DEMO_RATE,
 				'demo_from'   => '',
 				'artwork'     => 'rotate',
 				'accent'      => '#FFB25C',

@@ -124,7 +124,23 @@ final class MSL_Stats {
 
 		$elapsed = time() - self::demo_start( $campaign );
 
-		return $elapsed <= 0 ? 0 : (int) floor( $elapsed / HOUR_IN_SECONDS * $rate );
+		if ( $elapsed <= 0 ) {
+			return 0;
+		}
+
+		$accrued = (int) floor( $elapsed / HOUR_IN_SECONDS * $rate );
+
+		/*
+		 * The pace stops at the target.
+		 *
+		 * Left to run it would eventually show a campaign at four times its
+		 * own goal, which is both absurd and the one thing a display figure
+		 * must never be: unbelievable. Real joins are not capped — a campaign
+		 * that passes its goal has passed it.
+		 */
+		$room = max( 0, (int) $campaign['target'] - (int) $campaign['seed_count'] );
+
+		return min( $accrued, $room );
 	}
 
 	/**

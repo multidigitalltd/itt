@@ -62,11 +62,21 @@ $msl_has_nav  = array() !== msl_nav_rows( $msl_nav );
 				<span class="msl-countdown__text" data-msl-countdown><?php echo esc_html( msl_countdown( $msl, $msl_campaign ) ); ?></span>
 			</p>
 
-			<?php if ( MSL_Auth::enabled() ) : ?>
+			<?php if ( MSL_Auth::enabled() || MSL_Account::available() ) : ?>
 				<?php if ( null !== $msl_person ) : ?>
 					<div class="msl-account" data-msl-account>
+						<?php
+						/*
+						 * The name beside the avatar is the button's label on a
+						 * wide screen and display:none below 720px, which left
+						 * the button with an empty avatar and nothing to read —
+						 * caught by axe at 390px. The label is carried in an
+						 * attribute so it is there at every width.
+						 */
+						?>
 						<button type="button" class="msl-account__btn" data-msl-account-toggle
-							aria-expanded="false" aria-controls="msl-account-menu">
+							aria-expanded="false" aria-controls="msl-account-menu"
+							aria-label="<?php echo esc_attr( trim( msl_t( $msl_auth, 'signed_in_as' ) . ' ' . (string) $msl_person['display_name'] ) ); ?>">
 							<?php if ( '' !== (string) $msl_person['avatar_url'] ) : ?>
 								<img class="msl-account__avatar" src="<?php echo esc_url( (string) $msl_person['avatar_url'] ); ?>"
 									alt="" width="28" height="28" loading="lazy" referrerpolicy="no-referrer">
@@ -83,12 +93,24 @@ $msl_has_nav  = array() !== msl_nav_rows( $msl_nav );
 							</p>
 							<button type="button" class="msl-account__item" data-msl-open-invite
 								<?php msl_i18n( 'auth', 'invite_cta' ); ?>><?php msl_the( $msl_auth, 'invite_cta' ); ?></button>
+							<?php if ( MSL_Account::available() ) : ?>
+								<a class="msl-account__item" href="<?php echo esc_url( MSL_Account::page_url() ); ?>"
+									<?php msl_i18n( 'auth', 'area_cta' ); ?>><?php msl_the( $msl_auth, 'area_cta' ); ?></a>
+							<?php endif; ?>
 							<a class="msl-account__item" href="<?php echo esc_url( MSL_Auth::sign_out_url() ); ?>"
 								<?php msl_i18n( 'auth', 'sign_out' ); ?>><?php msl_the( $msl_auth, 'sign_out' ); ?></a>
 						</div>
 					</div>
 				<?php else : ?>
-					<a class="msl-btn msl-btn--quiet msl-header__signin" href="<?php echo esc_url( MSL_Auth::sign_in_url() ); ?>"
+					<?php
+					/*
+					 * The personal area when there is one, because that page
+					 * offers every door this install actually has — a password,
+					 * and Google beside it when it is configured. Straight to
+					 * Google only when there is no personal area to offer.
+					 */
+					?>
+					<a class="msl-btn msl-btn--quiet msl-header__signin" href="<?php echo esc_url( MSL_Account::available() ? MSL_Account::page_url() : MSL_Auth::sign_in_url() ); ?>"
 						<?php msl_i18n( 'auth', 'sign_in' ); ?>><?php msl_the( $msl_auth, 'sign_in' ); ?></a>
 				<?php endif; ?>
 			<?php endif; ?>

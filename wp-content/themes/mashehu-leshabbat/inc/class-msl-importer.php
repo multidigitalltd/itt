@@ -55,6 +55,12 @@ final class MSL_Importer {
 			'template' => 'template-msl-groups.php',
 			'front'    => false,
 		),
+		'account'       => array(
+			'title'    => 'האיזור האישי',
+			'slug'     => 'ezor-ishi',
+			'template' => 'template-msl-account.php',
+			'front'    => false,
+		),
 		'accessibility' => array(
 			'title'    => 'הצהרת נגישות',
 			'slug'     => 'hatsharat-negishut',

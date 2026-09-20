@@ -23,14 +23,15 @@ final class MSL_Theme {
 	 * The theme's other pages: the story, and the group campaigns.
 	 */
 	public const TEMPLATE_ABOUT  = 'template-msl-about.php';
-	public const TEMPLATE_GROUPS = 'template-msl-groups.php';
+	public const TEMPLATE_GROUPS  = 'template-msl-groups.php';
+	public const TEMPLATE_ACCOUNT = 'template-msl-account.php';
 
 	/**
 	 * Every template that is part of the design and needs the design's assets.
 	 *
 	 * @var array<int, string>
 	 */
-	public const TEMPLATES = array( self::TEMPLATE, self::TEMPLATE_ABOUT, self::TEMPLATE_GROUPS );
+	public const TEMPLATES = array( self::TEMPLATE, self::TEMPLATE_ABOUT, self::TEMPLATE_GROUPS, self::TEMPLATE_ACCOUNT );
 
 	/**
 	 * Each template against the set of content sections it carries.
@@ -45,7 +46,8 @@ final class MSL_Theme {
 	public const SECTION_SETS = array(
 		self::TEMPLATE        => 'home',
 		self::TEMPLATE_ABOUT  => 'about',
-		self::TEMPLATE_GROUPS => 'groups',
+		self::TEMPLATE_GROUPS  => 'groups',
+		self::TEMPLATE_ACCOUNT => 'account',
 	);
 
 	/**
@@ -299,6 +301,10 @@ final class MSL_Theme {
 		'groups'   => array(
 			'label' => 'עמוד הקבוצות',
 			'page'  => 'groups',
+		),
+		'account'  => array(
+			'label' => 'האיזור האישי',
+			'page'  => 'account',
 		),
 		'join'     => array(
 			'label'  => 'פתיחת חלון ההצטרפות',

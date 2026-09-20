@@ -257,7 +257,7 @@ final class MSL_Auth {
 			self::bounce( $back, 'failed' );
 		}
 
-		self::set_session( (int) $person['id'] );
+		self::sign_in( (int) $person['id'] );
 		self::bounce( $back, '' );
 	}
 
@@ -410,7 +410,7 @@ final class MSL_Auth {
 	 *
 	 * @return string
 	 */
-	private static function adoptable_code(): string {
+	public static function adoptable_code(): string {
 		global $wpdb;
 
 		$mine = isset( $_COOKIE[ MSL_Joins::MINE_COOKIE ] )
@@ -439,11 +439,17 @@ final class MSL_Auth {
 	 * so it can be verified without a session table and cannot be edited into
 	 * somebody else's id.
 	 *
+	 * The signature also covers a secret stored on the person's own row. That
+	 * is what makes "change my password" mean something: without it a cookie
+	 * that leaked stays valid for its full sixty days no matter what the person
+	 * does about it afterwards, and there is no session table to delete from.
+	 * Rotating the row's key invalidates every cookie ever issued for them.
+	 *
 	 * @param int $person_id Person row id.
 	 */
-	private static function set_session( int $person_id ): void {
+	public static function sign_in( int $person_id ): void {
 		$expires = time() + self::LIFETIME;
-		$value   = $person_id . '|' . $expires . '|' . self::signature( $person_id, $expires );
+		$value   = $person_id . '|' . $expires . '|' . self::signature( $person_id, $expires, self::session_key( $person_id ) );
 
 		setcookie(
 			self::COOKIE,
@@ -464,12 +470,59 @@ final class MSL_Auth {
 	/**
 	 * The signature over a session.
 	 *
-	 * @param int $person_id Person row id.
-	 * @param int $expires   Expiry timestamp.
+	 * @param int    $person_id Person row id.
+	 * @param int    $expires   Expiry timestamp.
+	 * @param string $key       The person's own session key.
 	 * @return string
 	 */
-	private static function signature( int $person_id, int $expires ): string {
-		return hash_hmac( 'sha256', $person_id . '|' . $expires, MSL_DB::salt() . '|session' );
+	private static function signature( int $person_id, int $expires, string $key ): string {
+		return hash_hmac( 'sha256', $person_id . '|' . $expires . '|' . $key, MSL_DB::salt() . '|session' );
+	}
+
+	/**
+	 * The person's session key, minted on first use.
+	 *
+	 * @param int $person_id Person row id.
+	 * @return string
+	 */
+	private static function session_key( int $person_id ): string {
+		global $wpdb;
+
+		$table = MSL_DB::people_table();
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$key = (string) $wpdb->get_var( $wpdb->prepare( "SELECT session_key FROM {$table} WHERE id = %d", $person_id ) );
+
+		if ( '' !== $key ) {
+			return $key;
+		}
+
+		$key = bin2hex( random_bytes( 16 ) );
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		$wpdb->update( $table, array( 'session_key' => $key ), array( 'id' => $person_id ), array( '%s' ), array( '%d' ) );
+
+		return $key;
+	}
+
+	/**
+	 * Rotate a person's session key, ending every session they have open.
+	 *
+	 * @param int $person_id Person row id.
+	 */
+	public static function end_all_sessions( int $person_id ): void {
+		global $wpdb;
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		$wpdb->update(
+			MSL_DB::people_table(),
+			array( 'session_key' => bin2hex( random_bytes( 16 ) ) ),
+			array( 'id' => $person_id ),
+			array( '%s' ),
+			array( '%d' )
+		);
+
+		self::$person = false;
 	}
 
 	/**
@@ -523,21 +576,33 @@ final class MSL_Auth {
 		$id      = (int) $parts[0];
 		$expires = (int) $parts[1];
 
-		if ( $id < 1 || $expires < time() || ! hash_equals( self::signature( $id, $expires ), (string) $parts[2] ) ) {
-			return null;
-		}
-
-		if ( ! MSL_DB::ready() ) {
+		if ( $id < 1 || $expires < time() || ! MSL_DB::ready() ) {
 			return null;
 		}
 
 		global $wpdb;
 		$table = MSL_DB::people_table();
 
+		/*
+		 * The row is read before the signature is checked, because the key the
+		 * signature is made with lives on it. A row that does not exist and a
+		 * signature that does not match end the same way, so the reordering
+		 * tells an attacker nothing it did not already know; what it costs is
+		 * one query on a forged cookie, and what it buys is a session that a
+		 * password change can actually end.
+		 */
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$row = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$table} WHERE id = %d", $id ), ARRAY_A );
 
-		self::$person = is_array( $row ) ? $row : null;
+		if ( ! is_array( $row ) ) {
+			return null;
+		}
+
+		if ( ! hash_equals( self::signature( $id, $expires, (string) $row['session_key'] ), (string) $parts[2] ) ) {
+			return null;
+		}
+
+		self::$person = $row;
 
 		return self::$person;
 	}

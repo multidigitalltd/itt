@@ -109,6 +109,8 @@ final class MSL_Groups {
 		add_action( 'init', array( self::class, 'maybe_flush' ), 99 );
 		add_action( 'admin_post_nopriv_msl_group', array( self::class, 'handle_form' ) );
 		add_action( 'admin_post_msl_group', array( self::class, 'handle_form' ) );
+		add_action( 'admin_post_nopriv_msl_group_owner_save', array( self::class, 'handle_owner_save' ) );
+		add_action( 'admin_post_msl_group_owner_save', array( self::class, 'handle_owner_save' ) );
 		add_filter( 'query_vars', array( self::class, 'query_vars' ) );
 		add_action( 'parse_request', array( self::class, 'route' ) );
 		add_filter( 'redirect_canonical', array( self::class, 'keep_url' ) );
@@ -763,6 +765,170 @@ final class MSL_Groups {
 		}
 
 		return $out;
+	}
+
+	/**
+	 * Save an edit made by the person who opened the group.
+	 *
+	 * Ownership is proved by the session, not by the code in the form: the code
+	 * is public — it is in the address of a page anyone can open — so it says
+	 * which group and nothing more.
+	 */
+	public static function handle_owner_save(): void {
+		check_admin_referer( 'msl_group_owner_save' );
+
+		$person = MSL_Auth::current();
+		$back   = MSL_Account::page_url();
+
+		if ( null === $person ) {
+			wp_safe_redirect( $back );
+			exit;
+		}
+
+		$code  = isset( $_POST['code'] ) ? sanitize_key( wp_unslash( (string) $_POST['code'] ) ) : '';
+		$group = '' !== $code ? self::by_code( $code ) : null;
+
+		if ( null === $group || (int) $group['person_id'] !== (int) $person['id'] ) {
+			wp_safe_redirect( $back );
+			exit;
+		}
+
+		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput -- validate() sanitises every field it keeps.
+		$data = self::validate( wp_unslash( $_POST ) );
+
+		if ( is_wp_error( $data ) ) {
+			wp_safe_redirect(
+				add_query_arg(
+					array(
+						'msl_manage' => $code,
+						'msl_error'  => $data->get_error_message(),
+					),
+					$back
+				)
+			);
+			exit;
+		}
+
+		$was = (string) $group['status'];
+
+		self::owner_save( $group, $data );
+
+		$now      = self::by_code( $code );
+		$requeued = null !== $now && self::LIVE === $was && self::PENDING === (string) $now['status'];
+
+		wp_safe_redirect(
+			add_query_arg(
+				array_filter(
+					array(
+						'msl_manage'   => $code,
+						'msl_saved'    => '1',
+						'msl_requeued' => $requeued ? '1' : null,
+					)
+				),
+				$back
+			)
+		);
+		exit;
+	}
+
+	/**
+	 * The groups one person opened, newest first.
+	 *
+	 * Rejected ones are left out. A group that was refused is not a thing to
+	 * hand somebody a management screen for, and the refusal is a conversation
+	 * for the campaign to have rather than a row in a list.
+	 *
+	 * @param int $person_id Person row id.
+	 * @return array<int, array<string, mixed>>
+	 */
+	public static function for_person( int $person_id ): array {
+		global $wpdb;
+
+		if ( $person_id <= 0 || ! MSL_DB::ready() ) {
+			return array();
+		}
+
+		$table = MSL_DB::groups_table();
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$rows = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT * FROM {$table} WHERE person_id = %d AND status <> %s ORDER BY created_at DESC LIMIT 50",
+				$person_id,
+				self::REJECTED
+			),
+			ARRAY_A
+		);
+
+		$out = array();
+
+		foreach ( (array) $rows as $row ) {
+			$group          = self::shape( (array) $row );
+			$group['count'] = self::lights( $group );
+			$out[]          = $group;
+		}
+
+		return $out;
+	}
+
+	/**
+	 * Let the person who opened a group change what it says.
+	 *
+	 * Only the fields that are theirs: the name, the dedication, the few words,
+	 * the target and the look. Not the code, not the opening count, not the
+	 * status — those belong to the campaign, and an edit screen that could
+	 * reach them would be a way around every decision the campaign has made
+	 * about this group.
+	 *
+	 * **Editing the visible text sends an approved group back for approval**,
+	 * when approval is switched on. Approval exists because a stranger's words
+	 * are published under the project's name; if those words can be rewritten
+	 * freely after the reading, the reading was theatre. Changing the target or
+	 * the colour does not, because nobody needs to re-read a number.
+	 *
+	 * @param array<string, mixed> $group Group being edited, already owned.
+	 * @param array<string, mixed> $data  Validated fields.
+	 * @return bool
+	 */
+	public static function owner_save( array $group, array $data ): bool {
+		global $wpdb;
+
+		$id = (int) $group['id'];
+
+		if ( $id <= 0 || ! MSL_DB::ready() ) {
+			return false;
+		}
+
+		$fields = array(
+			'title'    => (string) $data['title'],
+			'occasion' => (int) $data['occasion'],
+			'honouree' => (string) $data['honouree'],
+			'story'    => (string) $data['story'],
+			'target'   => (int) $data['target'],
+			'artwork'  => (string) $data['artwork'],
+			'accent'   => (string) $data['accent'],
+		);
+
+		$formats = array( '%s', '%d', '%s', '%s', '%d', '%s', '%s' );
+
+		$rewrote = (string) $group['title'] !== $fields['title']
+			|| (string) $group['honouree'] !== $fields['honouree']
+			|| (string) $group['story'] !== $fields['story']
+			|| (int) $group['occasion'] !== $fields['occasion'];
+
+		$auto = 1 === (int) ( MSL_Meta::get( 'groups', (int) $group['page_id'] )['auto_approve'] ?? 0 );
+
+		if ( $rewrote && ! $auto && self::LIVE === (string) $group['status'] ) {
+			$fields['status'] = self::PENDING;
+			$formats[]        = '%s';
+		}
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		$updated = $wpdb->update( MSL_DB::groups_table(), $fields, array( 'id' => $id ), $formats, array( '%d' ) );
+
+		self::flush( $id );
+
+		return false !== $updated;
 	}
 
 	/**

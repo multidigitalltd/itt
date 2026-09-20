@@ -2113,6 +2113,10 @@
 
 	function bindShare() {
 		$$('[data-msl-copy]').forEach(function (button) {
+			/* The personal area ships this button hidden, because copying needs
+			   a script and the link itself is already on the page as selectable
+			   text. A button that silently does nothing is worse than none. */
+			button.hidden = false;
 			button.addEventListener('click', function () {
 				var url = shareUrl();
 				var label = button.textContent;

@@ -24,7 +24,7 @@ final class MSL_DB {
 	/**
 	 * Bumped whenever the schema below changes.
 	 */
-	private const SCHEMA_VERSION = '6';
+	private const SCHEMA_VERSION = '7';
 
 	/**
 	 * Option holding the installed schema version.
@@ -216,6 +216,11 @@ final class MSL_DB {
 				provider_id VARCHAR(191) NOT NULL,
 				display_name VARCHAR(120) NOT NULL DEFAULT '',
 				email_hash CHAR(64) NOT NULL DEFAULT '',
+				email VARCHAR(255) NULL,
+				password_hash VARCHAR(255) NOT NULL DEFAULT '',
+				session_key CHAR(32) NOT NULL DEFAULT '',
+				reset_hash CHAR(64) NOT NULL DEFAULT '',
+				reset_expires DATETIME NULL,
 				avatar_url VARCHAR(255) NOT NULL DEFAULT '',
 				referral_code CHAR(12) NOT NULL,
 				lang CHAR(2) NOT NULL DEFAULT 'he',
@@ -225,7 +230,8 @@ final class MSL_DB {
 				UNIQUE KEY uuid (uuid),
 				UNIQUE KEY provider_identity (provider, provider_id),
 				UNIQUE KEY referral_code (referral_code),
-				KEY email_hash (email_hash)
+				KEY email_hash (email_hash),
+				KEY reset_hash (reset_hash)
 			) {$charset};",
 			"CREATE TABLE {$remind} (
 				id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,

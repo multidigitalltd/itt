@@ -4923,3 +4923,260 @@ select.msl-input {
 		padding: 22px 20px;
 	}
 }
+
+/* ==========================================================================
+   The personal area
+   ========================================================================== */
+
+.msl-ahead {
+	max-inline-size: 720px;
+	padding-block-start: 36px;
+}
+.msl-page .msl-ahead .msl-subheading {
+	margin-block: 10px 0;
+}
+.msl-page .msl-ahead__out {
+	margin: 14px 0 0;
+	font-size: calc(14.5px * var(--msl-scale, 1));
+}
+.msl-page .msl-ahead__out a {
+	display: inline-block;
+	padding: 6px 2px;
+	color: var(--msl-muted);
+}
+.msl-agrid {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 18px;
+	margin-block-start: 28px;
+	align-items: start;
+}
+.msl-agrid--one {
+	grid-template-columns: minmax(0, 640px);
+}
+.msl-acard {
+	padding: 30px 28px;
+	border-radius: 28px;
+	background: var(--msl-surface);
+	border: 1px solid var(--msl-border);
+}
+.msl-acard--soft {
+	background: var(--msl-sheet);
+}
+/* The link card carries the one thing on the page worth looking at twice. */
+.msl-acard--link {
+	margin-block-start: 28px;
+	background: var(--msl-ink);
+	border-color: transparent;
+	color: var(--msl-on-dark);
+	box-shadow: inset 0 0 0 1px var(--msl-link-lip);
+}
+.msl-page .msl-acard__title {
+	margin: 0 0 6px;
+	font-family: var(--msl-font-display);
+	font-size: calc(21px * var(--msl-scale, 1));
+	font-weight: 900;
+}
+.msl-page .msl-acard__lead {
+	margin: 0 0 18px;
+	font-size: calc(15px * var(--msl-scale, 1));
+	line-height: 1.6;
+	color: var(--msl-muted);
+}
+.msl-page .msl-acard--link .msl-acard__lead {
+	color: var(--msl-on-dark-sub);
+}
+.msl-page .msl-alink {
+	margin: 0;
+	padding: 15px 17px;
+	border-radius: 16px;
+	background: var(--msl-raised);
+	color: var(--msl-link-value);
+	font-weight: 600;
+	direction: ltr;
+	text-align: start;
+	overflow-wrap: anywhere;
+}
+.msl-page .msl-acount {
+	display: flex;
+	align-items: baseline;
+	gap: 9px;
+	margin: 16px 0 0;
+}
+.msl-acount__value {
+	font-family: var(--msl-font-display);
+	font-weight: 900;
+	font-size: calc(30px * var(--msl-scale, 1));
+	line-height: 1;
+	color: var(--msl-amber);
+	font-variant-numeric: tabular-nums;
+}
+.msl-acount__label {
+	color: var(--msl-on-dark-sub);
+	font-size: calc(14.5px * var(--msl-scale, 1));
+}
+.msl-acard__actions {
+	margin-block-start: 18px;
+}
+.msl-aform {
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+}
+.msl-aform--inline {
+	max-inline-size: 520px;
+}
+.msl-page .msl-aform .msl-field {
+	margin: 0;
+}
+.msl-aforgot {
+	margin-block-start: 18px;
+	padding-block-start: 16px;
+	border-block-start: 1px solid var(--msl-border);
+}
+.msl-aforgot__toggle {
+	cursor: pointer;
+	font-size: calc(14.5px * var(--msl-scale, 1));
+	font-weight: 600;
+	color: var(--msl-muted);
+}
+.msl-aforgot__toggle:hover {
+	color: var(--msl-ink);
+}
+.msl-page .msl-aforgot__lead {
+	margin: 12px 0 14px;
+	font-size: calc(14.5px * var(--msl-scale, 1));
+	line-height: 1.6;
+	color: var(--msl-muted);
+}
+.msl-page .msl-aor {
+	margin: 18px 0 10px;
+	font-size: calc(13.5px * var(--msl-scale, 1));
+	color: var(--msl-muted);
+	text-align: center;
+}
+.msl-asection {
+	margin-block-start: 34px;
+}
+.msl-asection__head {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	margin-block-end: 16px;
+}
+.msl-page .msl-asection__title {
+	margin: 0;
+	font-family: var(--msl-font-display);
+	font-size: calc(23px * var(--msl-scale, 1));
+	font-weight: 900;
+	color: var(--msl-ink);
+}
+.msl-page .msl-asection__empty {
+	margin: 0;
+	color: var(--msl-muted);
+}
+.msl-page .msl-alist {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+.msl-arow {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+	padding: 20px 22px;
+	border-radius: 22px;
+	background: var(--msl-surface);
+	border: 1px solid var(--msl-border);
+}
+.msl-arow__body {
+	flex: 1 1 280px;
+	min-inline-size: 0;
+}
+.msl-page .msl-arow__title {
+	margin: 0;
+	font-weight: 700;
+	font-size: calc(16.5px * var(--msl-scale, 1));
+	color: var(--msl-ink);
+}
+.msl-page .msl-arow__ded {
+	margin: 3px 0 0;
+	font-size: calc(14px * var(--msl-scale, 1));
+	color: var(--msl-eyebrow);
+}
+.msl-page .msl-arow__figure {
+	margin: 10px 0 8px;
+	font-size: calc(14.5px * var(--msl-scale, 1));
+	font-variant-numeric: tabular-nums;
+	color: var(--msl-muted);
+}
+.msl-arow__track {
+	block-size: 8px;
+	border-radius: 999px;
+	background: var(--msl-chip-bg);
+	overflow: hidden;
+}
+.msl-arow__fill {
+	display: block;
+	block-size: 100%;
+	border-radius: 999px;
+	background: linear-gradient(90deg, oklch(0.80 0.14 62), oklch(0.90 0.13 82));
+}
+.msl-page .msl-arow__state {
+	margin: 10px 0 0;
+	font-size: calc(13.5px * var(--msl-scale, 1));
+	color: var(--msl-muted);
+}
+.msl-arow__actions {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	flex: none;
+}
+/*
+ * These were coming out as bare ovals with the word spilling past them.
+ *
+ * The button variants carry a height and a colour but no horizontal padding —
+ * everywhere else on the site they sit in a grid or a full-width column that
+ * gives them their width. Here they size to their own text, and a button that
+ * sizes to its text needs to be told what to leave around it. The `:where()`
+ * anchor reset means an <a class="msl-btn"> starts from padding: 0, so there
+ * is nothing underneath to inherit.
+ */
+.msl-page .msl-arow__actions .msl-btn,
+.msl-page .msl-asection__head .msl-btn {
+	flex: none;
+	inline-size: auto;
+	padding-inline: 22px;
+	white-space: nowrap;
+}
+.msl-page .msl-arow__actions .msl-textbtn {
+	flex: none;
+	white-space: nowrap;
+}
+
+@media (max-width: 760px) {
+	.msl-agrid {
+		grid-template-columns: minmax(0, 1fr);
+	}
+	.msl-acard {
+		padding: 24px 20px;
+		border-radius: 22px;
+	}
+	.msl-arow {
+		padding: 18px 18px;
+	}
+	.msl-arow__actions {
+		inline-size: 100%;
+	}
+	.msl-page .msl-arow__actions .msl-btn {
+		flex: 1;
+	}
+}

@@ -600,6 +600,61 @@ final class MSL_Joins {
 	}
 
 	/**
+	 * The last few people who lit a candle inside one group.
+	 *
+	 * The group's page is a page about a specific family asking a specific
+	 * favour, and the most persuasive thing on it is the list of people who
+	 * already said yes. Same rules as the campaign's feed: only a join that
+	 * gave a name and did not ask to be anonymous appears, and nothing but the
+	 * first name and the town ever leaves the table.
+	 *
+	 * @param int $group_id Group row id.
+	 * @param int $limit    How many to return.
+	 * @return array<int, array{name: string, city: string}>
+	 */
+	public static function group_feed( int $group_id, int $limit = 12 ): array {
+		global $wpdb;
+
+		if ( $group_id <= 0 || ! MSL_DB::ready() ) {
+			return array();
+		}
+
+		$key    = 'msl_gfeed_' . $group_id;
+		$cached = get_transient( $key );
+
+		if ( is_array( $cached ) ) {
+			return $cached;
+		}
+
+		$joins = MSL_DB::joins_table();
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$rows = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT first_name, city FROM {$joins}
+				 WHERE group_id = %d AND is_anonymous = 0 AND first_name <> ''
+				 ORDER BY id DESC LIMIT %d",
+				$group_id,
+				max( 1, min( 50, $limit ) )
+			),
+			ARRAY_A
+		);
+
+		$feed = array();
+
+		foreach ( (array) $rows as $row ) {
+			$feed[] = array(
+				'name' => (string) $row['first_name'],
+				'city' => (string) $row['city'],
+			);
+		}
+
+		set_transient( $key, $feed, 2 * MINUTE_IN_SECONDS );
+
+		return $feed;
+	}
+
+	/**
 	 * The public activity feed: consented joins, newest first.
 	 *
 	 * Anonymous rows never appear here, and no row carries anything beyond a

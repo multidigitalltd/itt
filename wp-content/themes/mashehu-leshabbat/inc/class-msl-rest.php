@@ -540,7 +540,10 @@ final class MSL_REST {
 
 		$group = MSL_Groups::by_code( sanitize_key( $code ) );
 
-		return null !== $group && MSL_Groups::LIVE === $group['status'] ? (int) $group['id'] : 0;
+		// Pending counts. A light lit in a group that is still waiting for its
+		// text to be read is still a light, and dropping the id here would have
+		// recorded the join against the campaign with the group silently lost.
+		return null !== $group && MSL_Groups::accepts_joins( $group ) ? (int) $group['id'] : 0;
 	}
 
 	/**

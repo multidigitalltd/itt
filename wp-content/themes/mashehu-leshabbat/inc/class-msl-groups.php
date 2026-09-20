@@ -352,6 +352,32 @@ final class MSL_Groups {
 	}
 
 	/**
+	 * Whether a group can still take a light.
+	 *
+	 * Live and pending both can, and that is the whole point of the pending
+	 * state: approval is the campaign reading a stranger's *text* before it is
+	 * published under the project's name, not a gate on whether the person's
+	 * family may light candles. A group's link works the moment it is opened —
+	 * which is the moment its opener sends it to twenty relatives — and the
+	 * lights they add are rows in the joins table either way.
+	 *
+	 * This exists because three places used to decide it separately and one of
+	 * them disagreed: the page printed the group's own join button only when
+	 * live, the template loaded the join window only when live, and the header's
+	 * join button was printed always. On a pending group that left one visible
+	 * button, in the header, wired to a window that was not on the page — so it
+	 * did nothing at all, and every group a visitor opens starts pending.
+	 *
+	 * Closed and rejected cannot: one is over and the other was refused.
+	 *
+	 * @param array<string, mixed> $group Shaped group.
+	 * @return bool
+	 */
+	public static function accepts_joins( array $group ): bool {
+		return in_array( (string) $group['status'], array( self::LIVE, self::PENDING ), true );
+	}
+
+	/**
 	 * How many lights a group has gathered.
 	 *
 	 * @param int $group_id Group row id.
@@ -410,6 +436,7 @@ final class MSL_Groups {
 	public static function flush( int $group_id ): void {
 		if ( $group_id > 0 ) {
 			delete_transient( 'msl_group_count_' . $group_id );
+			delete_transient( 'msl_gfeed_' . $group_id );
 		}
 	}
 

@@ -176,12 +176,19 @@
 		var pct = Math.min(100, Math.floor(state.groupCount * 100 / target));
 
 		$$('[data-msl-group-count]').forEach(function (node) { node.textContent = num(state.groupCount); });
+		$$('[data-msl-group-pct]').forEach(function (node) { node.textContent = num(pct); });
 
 		$$('[data-msl-group-progress]').forEach(function (node) {
 			node.setAttribute('aria-valuenow', String(pct));
 			var fill = node.firstElementChild;
 			if (fill) { fill.style.width = pct + '%'; }
 		});
+
+		/* The artwork is the same number in another form, so it moves with it
+		   rather than waiting for the next full redraw. */
+		if (canvasEngine.setState) {
+			canvasEngine.setState({ count: state.groupCount });
+		}
 	}
 
 	function renderCounters() {

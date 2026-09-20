@@ -742,6 +742,10 @@ final class MSL_Fields {
 					self::bi( 'text', 'done_manage', 'אחרי הפתיחה — תווית הקישור הפרטי לניהול' ),
 
 					self::bi( 'text', 'single_lights', 'בעמוד הקבוצה — תווית מספר הנרות' ),
+					self::bi( 'text', 'single_pct', 'בעמוד הקבוצה — תווית האחוז' ),
+					self::bi( 'text', 'single_supporters', 'בעמוד הקבוצה — כותרת רשימת המצטרפים' ),
+					self::bi( 'text', 'single_first', 'בעמוד הקבוצה — כשאף אחד עדיין לא הצטרף' ),
+					self::bi( 'text', 'single_pending_join', 'בעמוד הקבוצה — הסבר שאפשר להצטרף כבר עכשיו', 3, 'מוצג בקבוצה שממתינה לאישור. ההצטרפות פתוחה גם אז, והנרות נספרים.' ),
 					self::bi( 'text', 'single_target', 'בעמוד הקבוצה — תווית היעד' ),
 					self::bi( 'text', 'single_cta', 'בעמוד הקבוצה — כפתור ההצטרפות' ),
 					self::bi( 'text', 'single_share', 'בעמוד הקבוצה — כפתור השיתוף' ),

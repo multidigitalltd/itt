@@ -50,7 +50,7 @@ require MSL_DIR . 'template-parts/home/chrome-footer.php';
  * partial the campaign page uses, reading the same copy from the campaign page,
  * so the three steps a person walks through are identical in both places.
  */
-if ( $msl_single && MSL_Groups::LIVE === $msl_group['status'] ) {
+if ( $msl_single && MSL_Groups::accepts_joins( $msl_group ) ) {
 	msl_section( 'join' );
 
 	require MSL_DIR . 'template-parts/home/screen-result.php';

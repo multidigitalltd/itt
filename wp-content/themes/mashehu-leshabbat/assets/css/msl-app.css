@@ -4558,110 +4558,306 @@ select.msl-input {
 	background-position: left 16px center;
 }
 
-/* One group's page */
-.msl-group {
-	padding-block-start: 40px;
+/* ------------------------------------------------------------------
+ * One group's page, as a crowdfunding page
+ * --------------------------------------------------------------- */
+
+.msl-gfund {
+	padding-block-start: 36px;
+	/* Room for the sticky bar to sit over, so the last line is never under it. */
+	padding-block-end: 0;
 }
-.msl-group__head {
-	max-inline-size: 720px;
+/* The artwork and the ask, side by side. The artwork leads on a wide screen
+   because it is the thing that makes the number mean something; on a phone the
+   ask comes first, because the scroll is the scarce resource. */
+.msl-gfund__grid {
+	display: grid;
+	grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+	gap: 20px;
+	align-items: stretch;
 }
-.msl-group__ded {
-	margin-block-end: 10px;
+.msl-gfund__art {
+	position: relative;
+	padding: 20px;
+	border-radius: 30px;
+	background: var(--msl-ink-panel);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	overflow: hidden;
+}
+.msl-gfund__canvas {
+	inline-size: 100%;
+	block-size: clamp(280px, 34vw, 440px);
+	display: block;
+}
+.msl-gfund__panel {
+	padding: 32px 30px 28px;
+	border-radius: 30px;
+	background: var(--msl-surface);
+	border: 1px solid var(--msl-border);
+	display: flex;
+	flex-direction: column;
+}
+.msl-page .msl-gfund__ded {
+	margin: 0 0 8px;
 	color: var(--msl-eyebrow);
 	font-size: calc(15px * var(--msl-scale, 1));
 	font-weight: 600;
 }
-.msl-page .msl-group__story {
-	margin-block-start: 16px;
-	color: var(--msl-body);
-	line-height: 1.75;
+.msl-page .msl-gfund__title {
+	margin: 0;
+	font-size: calc(clamp(28px, 3.4vw, 44px) * var(--msl-scale, 1));
 }
-.msl-page .msl-group__story p {
-	margin-block-end: 12px;
-}
-.msl-page .msl-group__by {
-	margin-block-start: 16px;
+.msl-page .msl-gfund__by {
+	margin: 12px 0 0;
 	color: var(--msl-muted-3);
 	font-size: calc(14.5px * var(--msl-scale, 1));
 }
-.msl-group__stage {
-	position: relative;
-	margin-block-start: 30px;
-	padding: 28px;
-	border-radius: 30px;
-	background: var(--msl-ink-panel);
-	color: var(--msl-on-dark);
-	text-align: center;
-}
-.msl-group__canvas {
-	inline-size: 100%;
-	block-size: clamp(240px, 42vw, 420px);
-	display: block;
-}
-.msl-group__figures {
+/* The figure a crowdfunding page is read for, at the size that says so. */
+.msl-page .msl-gfund__raised {
+	margin: 22px 0 0;
 	display: flex;
+	align-items: baseline;
 	flex-wrap: wrap;
-	align-items: baseline;
-	justify-content: center;
-	gap: 8px 36px;
-	margin-block-start: 18px;
+	gap: 10px;
 }
-.msl-page .msl-group__count,
-.msl-page .msl-group__target {
-	margin: 0;
-	display: flex;
-	align-items: baseline;
-	gap: 8px;
-}
-.msl-group__value {
+.msl-gfund__big {
 	font-family: var(--msl-font-display);
 	font-weight: 900;
-	font-size: calc(clamp(28px, 4vw, 42px) * var(--msl-scale, 1));
+	font-size: calc(clamp(38px, 5.2vw, 62px) * var(--msl-scale, 1));
 	line-height: 1;
+	letter-spacing: -0.04em;
 	font-variant-numeric: tabular-nums;
+	color: var(--msl-accent);
 }
-.msl-group__label {
-	font-size: calc(14.5px * var(--msl-scale, 1));
-	opacity: .75;
+.msl-gfund__unit {
+	font-size: calc(16px * var(--msl-scale, 1));
+	font-weight: 600;
+	color: var(--msl-muted);
 }
-.msl-group__track {
-	margin-block-start: 18px;
-	block-size: 10px;
+.msl-gfund__track {
+	margin-block-start: 16px;
+	block-size: 12px;
 	border-radius: 999px;
-	background: oklch(1 0 0 / 0.16);
+	background: var(--msl-chip-bg);
+	border: 1px solid var(--msl-border);
 	overflow: hidden;
 }
-.msl-group__fill {
+.msl-gfund__fill {
 	display: block;
 	block-size: 100%;
 	border-radius: 999px;
-	background: var(--msl-gold-bg);
+	background: linear-gradient(90deg, oklch(0.80 0.14 62), oklch(0.90 0.13 82));
 	transition: width var(--msl-t-card) var(--msl-ease);
 }
-.msl-group__actions {
+.msl-page .msl-gfund__stats {
 	display: flex;
 	flex-wrap: wrap;
-	justify-content: center;
-	gap: 12px;
+	gap: 8px 32px;
+	margin: 14px 0 0;
+}
+.msl-gfund__stat {
+	display: flex;
+	align-items: baseline;
+	gap: 7px;
+}
+.msl-page .msl-gfund__stat dt {
+	font-size: calc(14px * var(--msl-scale, 1));
+	color: var(--msl-muted);
+}
+.msl-page .msl-gfund__stat dd {
+	margin: 0;
+	font-size: calc(15.5px * var(--msl-scale, 1));
+	font-weight: 700;
+	font-variant-numeric: tabular-nums;
+	color: var(--msl-ink);
+}
+.msl-gfund__actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
 	margin-block-start: 24px;
 }
-/*
- * The share button is full-width where it lives on the campaign page, inside a
- * narrow card with nothing beside it. Here it stands next to the join button
- * and has to be its own size, or it pushes the pair into a stack and takes the
- * whole panel as a green bar.
- */
-.msl-page .msl-group__actions .msl-btn--whatsapp {
-	inline-size: auto;
-	padding-inline: 26px;
+.msl-page .msl-gfund__join {
+	flex: 1 1 220px;
 }
-.msl-page .msl-group__also {
-	margin: 18px auto 0;
-	max-inline-size: 460px;
+/* The share button is full-width where it lives on the campaign page, inside a
+   narrow card with nothing beside it. Here it stands next to the join button
+   and has to be its own size, or it pushes the pair into a stack and takes the
+   whole panel as a green bar. */
+.msl-page .msl-gfund__actions .msl-btn--whatsapp {
+	inline-size: auto;
+	padding-inline: 24px;
+}
+.msl-page .msl-gfund__wait {
+	margin: 16px 0 0;
+	padding: 12px 15px;
+	border-radius: 14px;
+	background: var(--msl-chip-bg);
 	font-size: calc(14px * var(--msl-scale, 1));
 	line-height: 1.55;
-	opacity: .78;
+	color: var(--msl-body);
 }
+.msl-page .msl-gfund__also {
+	margin: 16px 0 0;
+	font-size: calc(14px * var(--msl-scale, 1));
+	line-height: 1.55;
+	color: var(--msl-muted);
+}
+.msl-page .msl-gfund__story {
+	margin-block-start: 26px;
+	padding: 28px 30px;
+	border-radius: 26px;
+	background: var(--msl-sheet);
+	max-inline-size: 70ch;
+	color: var(--msl-body);
+	line-height: 1.75;
+}
+.msl-page .msl-gfund__story p {
+	margin-block-end: 12px;
+}
+.msl-page .msl-gfund__story p:last-child {
+	margin-block-end: 0;
+}
+.msl-gfund__people {
+	margin-block-start: 30px;
+}
+.msl-page .msl-gfund__peoplehead {
+	margin: 0 0 14px;
+	font-family: var(--msl-font-display);
+	font-size: calc(20px * var(--msl-scale, 1));
+	font-weight: 900;
+	color: var(--msl-ink);
+}
+.msl-page .msl-gfund__empty {
+	margin: 0;
+	color: var(--msl-muted);
+}
+.msl-page .msl-gfund__list {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+.msl-gfund__person {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 8px 14px;
+	border-radius: 999px;
+	background: var(--msl-surface);
+	border: 1px solid var(--msl-border);
+	font-size: calc(14.5px * var(--msl-scale, 1));
+}
+.msl-gfund__spark {
+	inline-size: 6px;
+	block-size: 6px;
+	border-radius: 50%;
+	background: var(--msl-amber);
+	box-shadow: 0 0 8px 2px oklch(0.90 0.13 78 / 0.5);
+	flex: none;
+}
+.msl-gfund__name {
+	font-weight: 600;
+	color: var(--msl-ink);
+}
+.msl-gfund__city {
+	color: var(--msl-muted);
+}
+.msl-page .msl-gfund__back {
+	margin-block-start: 30px;
+}
+.msl-page .msl-gfund__back a {
+	display: inline-block;
+	padding: 6px 2px;
+}
+/*
+ * The sticky ask.
+ *
+ * Off on a wide screen, where the button in the panel is already in view the
+ * whole time. On a phone the page is a screenful of story and a list of names,
+ * and the moment somebody decides is the moment they are reading those names.
+ */
+.msl-gfund__bar {
+	display: none;
+}
+
+@media (max-width: 900px) {
+	.msl-gfund__grid {
+		grid-template-columns: minmax(0, 1fr);
+	}
+	/* The ask first, the artwork under it: on a narrow screen the scroll is
+	   the scarce thing, and the number is what the page is for. */
+	.msl-gfund__panel {
+		order: -1;
+	}
+	.msl-gfund__canvas {
+		block-size: clamp(240px, 56vw, 340px);
+	}
+}
+@media (max-width: 720px) {
+	.msl-gfund {
+		padding-block-start: 24px;
+	}
+	.msl-gfund__panel {
+		padding: 26px 20px 22px;
+		border-radius: 24px;
+	}
+	.msl-page .msl-gfund__story {
+		padding: 22px 20px;
+		border-radius: 20px;
+	}
+	.msl-page .msl-gfund__actions .msl-btn {
+		inline-size: 100%;
+	}
+	/* Leaves room for the bar, plus the phone's own home indicator. */
+	.msl-gfund {
+		padding-block-end: calc(84px + env(safe-area-inset-bottom, 0px));
+	}
+	.msl-gfund__bar {
+		position: fixed;
+		inset-inline: 0;
+		inset-block-end: 0;
+		z-index: 40;
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		padding: 10px 14px calc(10px + env(safe-area-inset-bottom, 0px));
+		background: var(--msl-sheet);
+		border-block-start: 1px solid var(--msl-border);
+		box-shadow: 0 -10px 30px oklch(0.34 0.06 50 / 0.12);
+	}
+	.msl-page .msl-gfund__barfig {
+		margin: 0;
+		flex: none;
+		font-weight: 700;
+		font-variant-numeric: tabular-nums;
+		color: var(--msl-ink);
+		font-size: calc(15px * var(--msl-scale, 1));
+	}
+	.msl-gfund__barsep {
+		margin-inline: 3px;
+		color: var(--msl-muted);
+	}
+	.msl-page .msl-gfund__barbtn {
+		flex: 1;
+		inline-size: auto;
+		padding-block: 13px;
+	}
+	/*
+	 * The accessibility button lives in the same corner as the bar's figure and
+	 * sat on top of it. It is fixed to the viewport, so it has to be lifted
+	 * clear rather than the bar being made shorter — and only on a page that
+	 * has a bar, which is why the rule hangs off the article's own class.
+	 */
+	.msl-page:has(.msl-gfund__bar) .msl-a11y {
+		inset-block-end: calc(84px + env(safe-area-inset-bottom, 0px));
+	}
+}
+
 .msl-gowner {
 	margin-block-start: 26px;
 	padding: 22px 26px;

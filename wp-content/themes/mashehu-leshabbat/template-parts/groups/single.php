@@ -1,11 +1,24 @@
 <?php
 /**
- * One group's page.
+ * One group's page, as a crowdfunding page.
  *
- * Its own artwork, its own count against its own target, and the one button
- * that matters. The artwork is the same canvas engine the campaign page uses,
- * initialised with this group's numbers and shape — a second drawing routine
- * for "the small artwork" would be a second thing to keep true.
+ * Which is what it is: somebody is asking people they know for a specific
+ * number of a specific thing, on behalf of a named person, and the page has to
+ * do what those pages do — say how far along it is, who has already said yes,
+ * and make the one action impossible to miss. The earlier version put the
+ * numbers in a quiet row under the artwork and left the button below the fold
+ * on a phone.
+ *
+ * The artwork is the same canvas engine the campaign page uses, initialised
+ * with this group's own count, target, shape and colour — a second drawing
+ * routine for "the small artwork" would be a second thing to keep true. It
+ * fills in proportion: nothing lit at zero, every piece lit at the target.
+ *
+ * A group that is still waiting for approval is **joinable**. Approval is the
+ * campaign reading a stranger's text before it is published under the project's
+ * name; it is not a gate on whether that person's family may light candles, and
+ * the link is already in twenty relatives' hands by then. See
+ * MSL_Groups::accepts_joins().
  *
  * @package Mashehu_LeShabbat
  *
@@ -20,86 +33,121 @@ defined( 'ABSPATH' ) || exit;
 
 $msl_group['count'] = MSL_Groups::lights( $msl_group );
 
-$msl_pct    = msl_group_pct( $msl_group );
-$msl_ded    = msl_group_dedication( $msl_group, $msl_groups );
-$msl_owner  = MSL_Groups::owns( $msl_group, $msl_token );
-$msl_live   = MSL_Groups::LIVE === $msl_group['status'];
-$msl_share  = MSL_Groups::url( (string) $msl_group['code'] );
-$msl_wa     = sprintf( msl_t( $msl_groups, 'wa_message' ), $msl_share );
-$msl_state  = array(
+$msl_pct   = msl_group_pct( $msl_group );
+$msl_ded   = msl_group_dedication( $msl_group, $msl_groups );
+$msl_owner = MSL_Groups::owns( $msl_group, $msl_token );
+$msl_open  = MSL_Groups::accepts_joins( $msl_group );
+$msl_wait  = MSL_Groups::PENDING === $msl_group['status'];
+$msl_share = MSL_Groups::url( (string) $msl_group['code'] );
+$msl_wa    = sprintf( msl_t( $msl_groups, 'wa_message' ), $msl_share );
+$msl_feed  = MSL_Joins::group_feed( (int) $msl_group['id'] );
+$msl_state = array(
 	MSL_Groups::PENDING  => 'state_pending',
 	MSL_Groups::CLOSED   => 'state_closed',
 	MSL_Groups::REJECTED => 'state_rejected',
 );
 ?>
-<article class="msl-group" data-msl-group="<?php echo esc_attr( (string) $msl_group['code'] ); ?>">
+<article class="msl-gfund" data-msl-group="<?php echo esc_attr( (string) $msl_group['code'] ); ?>">
 
 	<?php if ( isset( $msl_state[ $msl_group['status'] ] ) ) : ?>
 		<p class="msl-gnote" role="status"<?php msl_i18n( 'groups', $msl_state[ $msl_group['status'] ] ); ?>><?php msl_the( $msl_groups, $msl_state[ $msl_group['status'] ] ); ?></p>
 	<?php endif; ?>
 
-	<header class="msl-group__head" data-msl-rise>
-		<?php if ( '' !== $msl_ded ) : ?>
-			<p class="msl-group__ded"><?php echo esc_html( $msl_ded ); ?></p>
-		<?php endif; ?>
+	<div class="msl-gfund__grid">
 
-		<h1 class="msl-heading"><?php echo esc_html( (string) $msl_group['title'] ); ?></h1>
-
-		<?php if ( '' !== trim( (string) $msl_group['story'] ) ) : ?>
-			<div class="msl-group__story"><?php msl_paragraphs( (string) $msl_group['story'] ); ?></div>
-		<?php endif; ?>
-
-		<?php if ( '' !== trim( (string) $msl_group['owner_name'] ) ) : ?>
-			<p class="msl-group__by">
-				<span<?php msl_i18n( 'groups', 'single_opened_by' ); ?>><?php msl_the( $msl_groups, 'single_opened_by' ); ?></span>
-				<strong><?php echo esc_html( (string) $msl_group['owner_name'] ); ?></strong>
-			</p>
-		<?php endif; ?>
-	</header>
-
-	<div class="msl-group__stage" data-msl-rise>
 		<?php
 		/*
 		 * Decorative: every number the artwork encodes is written beside it in
 		 * words, so nothing here is the only way to learn anything.
 		 */
 		?>
-		<canvas class="msl-group__canvas" data-msl-canvas="hero" aria-hidden="true"></canvas>
-
-		<div class="msl-group__figures">
-			<p class="msl-group__count">
-				<span class="msl-group__value" data-msl-group-count><?php echo esc_html( msl_num( (int) $msl_group['count'] ) ); ?></span>
-				<span class="msl-group__label"<?php msl_i18n( 'groups', 'single_lights' ); ?>><?php msl_the( $msl_groups, 'single_lights' ); ?></span>
-			</p>
-
-			<p class="msl-group__target">
-				<span class="msl-group__label"<?php msl_i18n( 'groups', 'single_target' ); ?>><?php msl_the( $msl_groups, 'single_target' ); ?></span>
-				<span class="msl-group__value"><?php echo esc_html( msl_num( (int) $msl_group['target'] ) ); ?></span>
-			</p>
+		<div class="msl-gfund__art" data-msl-rise>
+			<canvas class="msl-gfund__canvas" data-msl-canvas="hero" aria-hidden="true"></canvas>
 		</div>
 
-		<div class="msl-group__track" role="progressbar" aria-valuemin="0" aria-valuemax="100"
-			aria-valuenow="<?php echo esc_attr( (string) $msl_pct ); ?>"
-			aria-label="<?php echo esc_attr( msl_t( $msl_groups, 'single_lights' ) ); ?>"
-			data-msl-group-progress>
-			<span class="msl-group__fill" style="width:<?php echo esc_attr( (string) $msl_pct ); ?>%"></span>
-		</div>
-
-		<div class="msl-group__actions">
-			<?php if ( $msl_live ) : ?>
-				<button type="button" class="msl-btn msl-btn--hero" data-msl-open-join
-					<?php msl_i18n( 'groups', 'single_cta' ); ?>><?php msl_the( $msl_groups, 'single_cta' ); ?></button>
+		<div class="msl-gfund__panel" data-msl-rise>
+			<?php if ( '' !== $msl_ded ) : ?>
+				<p class="msl-gfund__ded"><?php echo esc_html( $msl_ded ); ?></p>
 			<?php endif; ?>
 
-			<a class="msl-btn msl-btn--whatsapp" data-msl-whatsapp
-				data-msl-template="<?php echo esc_attr( msl_t( $msl_groups, 'wa_message' ) ); ?>"
-				href="<?php echo esc_url( 'https://wa.me/?text=' . rawurlencode( $msl_wa ) ); ?>"
-				target="_blank" rel="noopener"
-				<?php msl_i18n( 'groups', 'single_share' ); ?>><?php msl_the( $msl_groups, 'single_share' ); ?></a>
-		</div>
+			<h1 class="msl-heading msl-gfund__title"><?php echo esc_html( (string) $msl_group['title'] ); ?></h1>
 
-		<p class="msl-group__also"<?php msl_i18n( 'groups', 'single_also' ); ?>><?php msl_the( $msl_groups, 'single_also' ); ?></p>
+			<?php if ( '' !== trim( (string) $msl_group['owner_name'] ) ) : ?>
+				<p class="msl-gfund__by">
+					<span<?php msl_i18n( 'groups', 'single_opened_by' ); ?>><?php msl_the( $msl_groups, 'single_opened_by' ); ?></span>
+					<strong><?php echo esc_html( (string) $msl_group['owner_name'] ); ?></strong>
+				</p>
+			<?php endif; ?>
+
+			<p class="msl-gfund__raised">
+				<span class="msl-gfund__big" data-msl-group-count><?php echo esc_html( msl_num( (int) $msl_group['count'] ) ); ?></span>
+				<span class="msl-gfund__unit"<?php msl_i18n( 'groups', 'single_lights' ); ?>><?php msl_the( $msl_groups, 'single_lights' ); ?></span>
+			</p>
+
+			<div class="msl-gfund__track" role="progressbar" aria-valuemin="0" aria-valuemax="100"
+				aria-valuenow="<?php echo esc_attr( (string) $msl_pct ); ?>"
+				aria-label="<?php echo esc_attr( msl_t( $msl_groups, 'single_lights' ) ); ?>"
+				data-msl-group-progress>
+				<span class="msl-gfund__fill" style="width:<?php echo esc_attr( (string) $msl_pct ); ?>%"></span>
+			</div>
+
+			<dl class="msl-gfund__stats">
+				<div class="msl-gfund__stat">
+					<dt<?php msl_i18n( 'groups', 'single_pct' ); ?>><?php msl_the( $msl_groups, 'single_pct' ); ?></dt>
+					<dd><span data-msl-group-pct><?php echo esc_html( msl_num( $msl_pct ) ); ?></span>%</dd>
+				</div>
+				<div class="msl-gfund__stat">
+					<dt<?php msl_i18n( 'groups', 'single_target' ); ?>><?php msl_the( $msl_groups, 'single_target' ); ?></dt>
+					<dd><?php echo esc_html( msl_num( (int) $msl_group['target'] ) ); ?></dd>
+				</div>
+			</dl>
+
+			<div class="msl-gfund__actions">
+				<?php if ( $msl_open ) : ?>
+					<button type="button" class="msl-btn msl-btn--hero msl-gfund__join" data-msl-open-join
+						<?php msl_i18n( 'groups', 'single_cta' ); ?>><?php msl_the( $msl_groups, 'single_cta' ); ?></button>
+				<?php endif; ?>
+
+				<a class="msl-btn msl-btn--whatsapp" data-msl-whatsapp
+					data-msl-template="<?php echo esc_attr( msl_t( $msl_groups, 'wa_message' ) ); ?>"
+					href="<?php echo esc_url( 'https://wa.me/?text=' . rawurlencode( $msl_wa ) ); ?>"
+					target="_blank" rel="noopener"
+					<?php msl_i18n( 'groups', 'single_share' ); ?>><?php msl_the( $msl_groups, 'single_share' ); ?></a>
+			</div>
+
+			<?php if ( $msl_wait ) : ?>
+				<p class="msl-gfund__wait"<?php msl_i18n( 'groups', 'single_pending_join' ); ?>><?php msl_the( $msl_groups, 'single_pending_join' ); ?></p>
+			<?php endif; ?>
+
+			<p class="msl-gfund__also"<?php msl_i18n( 'groups', 'single_also' ); ?>><?php msl_the( $msl_groups, 'single_also' ); ?></p>
+		</div>
 	</div>
+
+	<?php if ( '' !== trim( (string) $msl_group['story'] ) ) : ?>
+		<section class="msl-gfund__story" data-msl-rise>
+			<?php msl_paragraphs( (string) $msl_group['story'] ); ?>
+		</section>
+	<?php endif; ?>
+
+	<section class="msl-gfund__people" data-msl-rise aria-labelledby="msl-gfund-people">
+		<h2 class="msl-gfund__peoplehead" id="msl-gfund-people"<?php msl_i18n( 'groups', 'single_supporters' ); ?>><?php msl_the( $msl_groups, 'single_supporters' ); ?></h2>
+
+		<?php if ( array() === $msl_feed ) : ?>
+			<p class="msl-gfund__empty"<?php msl_i18n( 'groups', 'single_first' ); ?>><?php msl_the( $msl_groups, 'single_first' ); ?></p>
+		<?php else : ?>
+			<ul class="msl-gfund__list">
+				<?php foreach ( $msl_feed as $msl_person ) : ?>
+					<li class="msl-gfund__person">
+						<span class="msl-gfund__spark" aria-hidden="true"></span>
+						<span class="msl-gfund__name"><?php echo esc_html( $msl_person['name'] ); ?></span>
+						<?php if ( '' !== $msl_person['city'] ) : ?>
+							<span class="msl-gfund__city"><?php echo esc_html( $msl_person['city'] ); ?></span>
+						<?php endif; ?>
+					</li>
+				<?php endforeach; ?>
+			</ul>
+		<?php endif; ?>
+	</section>
 
 	<?php if ( $msl_owner ) : ?>
 		<?php
@@ -115,7 +163,28 @@ $msl_state  = array(
 		</section>
 	<?php endif; ?>
 
-	<p class="msl-group__back">
+	<p class="msl-gfund__back">
 		<a href="<?php echo esc_url( MSL_Groups::page_url() ); ?>"<?php msl_i18n( 'groups', 'single_back' ); ?>><?php msl_the( $msl_groups, 'single_back' ); ?></a>
 	</p>
+
+	<?php if ( $msl_open ) : ?>
+		<?php
+		/*
+		 * The one action, kept within thumb reach on a phone. On a page this
+		 * long the button otherwise sits above a screenful of story and a list
+		 * of names, and the moment somebody decides is the moment they are
+		 * reading those names.
+		 */
+		?>
+		<div class="msl-gfund__bar" data-msl-gfund-bar>
+			<p class="msl-gfund__barfig">
+				<span data-msl-group-count><?php echo esc_html( msl_num( (int) $msl_group['count'] ) ); ?></span>
+				<span class="msl-gfund__barsep" aria-hidden="true">/</span>
+				<span><?php echo esc_html( msl_num( (int) $msl_group['target'] ) ); ?></span>
+			</p>
+
+			<button type="button" class="msl-btn msl-btn--hero msl-gfund__barbtn" data-msl-open-join
+				<?php msl_i18n( 'groups', 'single_cta' ); ?>><?php msl_the( $msl_groups, 'single_cta' ); ?></button>
+		</div>
+	<?php endif; ?>
 </article>

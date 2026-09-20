@@ -43,6 +43,7 @@ final class MSL_Panel {
 		add_action( 'admin_menu', array( self::class, 'menu' ), 11 );
 		add_action( 'admin_menu', array( self::class, 'move_first' ), 12 );
 		add_action( 'admin_post_msl_save_content', array( self::class, 'handle_save' ) );
+		add_action( 'admin_post_msl_zmanim_recheck', array( self::class, 'handle_zmanim_recheck' ) );
 		add_action( 'admin_enqueue_scripts', array( self::class, 'assets' ) );
 	}
 
@@ -326,7 +327,7 @@ final class MSL_Panel {
 		}
 
 		self::render_login_notice();
-		self::render_zmanim_notice();
+		self::render_zmanim_notice( $page_id );
 
 		$inputs = self::input_count( $page_id );
 		$limit  = (int) ini_get( 'max_input_vars' );
@@ -406,8 +407,18 @@ final class MSL_Panel {
 	 * prints the times it actually holds — if the hour on this screen is the
 	 * hour on the calendar, the feature is working.
 	 */
-	private static function render_zmanim_notice(): void {
-		$zmanim = MSL_Meta::get( 'zmanim', MSL_Importer::page_id() );
+	private static function render_zmanim_notice( int $page_id ): void {
+		/*
+		 * The page being edited, not the one the importer happens to remember.
+		 *
+		 * This used to read MSL_Importer::page_id(), which is the campaign page
+		 * that option points at. On an install where the campaign lives on a
+		 * page created by hand rather than by the importer, that is a different
+		 * page — so the panel described settings nobody was editing, and a
+		 * switch turned on here was reported from over there. The front end has
+		 * never had the problem, because it reads the page it is rendering.
+		 */
+		$zmanim = MSL_Meta::get( 'zmanim', $page_id );
 
 		if ( ! MSL_Zmanim::enabled( $zmanim ) ) {
 			printf(
@@ -422,10 +433,24 @@ final class MSL_Panel {
 		$week = MSL_Zmanim::week( $zmanim );
 
 		if ( null === $week ) {
+			$failure = MSL_Zmanim::last_failure();
+
 			printf(
-				'<div class="notice notice-warning"><p><strong>%s</strong> %s</p></div>',
+				'<div class="notice notice-warning"><p><strong>%s</strong> %s</p>%s<p>%s</p></div>',
 				esc_html__( 'המשיכה האוטומטית של זמני השבת פעילה, אבל לא התקבלה תשובה מ-hebcal.com.', 'mashehu-leshabbat' ),
-				esc_html__( 'האתר ממשיך לעבוד לפי היום והשעה שבחלק 01, והניסיון יחזור מעצמו בעוד כמה דקות. אם זה חוזר על עצמו — כנראה שהשרת חוסם פניות החוצה.', 'mashehu-leshabbat' )
+				esc_html__( 'האתר ממשיך לעבוד לפי היום והשעה שבחלק 01, והניסיון יחזור מעצמו בעוד כמה דקות.', 'mashehu-leshabbat' ),
+				null === $failure ? '' : sprintf(
+					'<p><code>%s</code> <span class="description">%s</span></p>',
+					esc_html( (string) $failure['reason'] ),
+					esc_html(
+						sprintf(
+							/* translators: %s: how long ago, e.g. "5 minutes". */
+							__( 'לפני %s. חסימה של פניות החוצה מהשרת נראית כך; במקרה כזה יש לפנות לחברת האחסון ולבקש לאפשר פניות ל-hebcal.com.', 'mashehu-leshabbat' ),
+							human_time_diff( (int) $failure['when'] )
+						)
+					)
+				),
+				self::zmanim_recheck_button()
 			);
 
 			return;
@@ -440,7 +465,7 @@ final class MSL_Panel {
 		$named   = '' !== $portion ? 'פרשת ' . $portion : (string) $week['holiday_he'];
 
 		printf(
-			'<div class="notice notice-success"><p><strong>%s</strong> %s</p></div>',
+			'<div class="notice notice-success"><p><strong>%s</strong> %s</p><p>%s</p></div>',
 			esc_html__( 'זמני השבת מתעדכנים מהרשת.', 'mashehu-leshabbat' ),
 			esc_html(
 				sprintf(
@@ -452,7 +477,49 @@ final class MSL_Panel {
 					(int) $week['havdalah'] > 0 ? (string) wp_date( 'H:i', (int) $week['havdalah'], $zone ) : '—',
 					null !== $date ? $date['he'] : '—'
 				)
-			)
+			),
+			self::zmanim_recheck_button()
+		);
+	}
+
+	/**
+	 * Empty the times cache and go straight back to the panel.
+	 *
+	 * The next read on the screen we return to does the actual call, so the
+	 * notice that greets them is the result of a request made a second ago.
+	 */
+	public static function handle_zmanim_recheck(): void {
+		if ( ! current_user_can( 'edit_pages' ) ) {
+			wp_die( esc_html__( 'אין הרשאה.', 'mashehu-leshabbat' ) );
+		}
+
+		check_admin_referer( 'msl_zmanim_recheck' );
+
+		MSL_Zmanim::forget( MSL_Meta::get( 'zmanim', MSL_Importer::page_id() ) );
+
+		wp_safe_redirect( admin_url( 'admin.php?page=' . self::SLUG ) );
+		exit;
+	}
+
+	/**
+	 * The button that empties the times cache and asks again.
+	 *
+	 * The cache is what makes this feature cheap to run, and it is also what
+	 * makes a wrong setting take six hours to disprove. Whoever is looking at
+	 * this screen is looking at it because they want an answer now.
+	 *
+	 * @return string
+	 */
+	private static function zmanim_recheck_button(): string {
+		return sprintf(
+			'<a class="button" href="%s">%s</a>',
+			esc_url(
+				wp_nonce_url(
+					admin_url( 'admin-post.php?action=msl_zmanim_recheck' ),
+					'msl_zmanim_recheck'
+				)
+			),
+			esc_html__( 'בדיקה מחדש מול hebcal', 'mashehu-leshabbat' )
 		);
 	}
 

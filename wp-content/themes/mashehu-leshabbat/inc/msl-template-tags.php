@@ -281,32 +281,71 @@ function msl_parsha_prefix( string $lang ): string {
  * @return string
  */
 function msl_countdown( array $chrome, array $campaign ): string {
-	$parsha    = msl_parsha( $campaign );
-	$remaining = max( 0, MSL_Theme::candle_lighting( $campaign ) - time() );
-	$days      = (int) floor( $remaining / DAY_IN_SECONDS );
+	return msl_countdown_text(
+		$chrome,
+		msl_parsha( $campaign ),
+		max( 0, MSL_Theme::candle_lighting( $campaign ) - time() )
+	);
+}
+
+/**
+ * The countdown sentence for a given number of seconds.
+ *
+ * Split out from msl_countdown() so the phrasing can be checked at every
+ * boundary without moving the clock or the calendar — and because the browser
+ * renders the same sentence from the same seconds, and the two drifting apart
+ * is the kind of thing nobody sees until the last hour before Shabbat.
+ *
+ * Under a day the unit changes rather than the number growing a colon.
+ * "בעוד 06:24:13" is a stopwatch, and nobody reads a stopwatch to work out
+ * whether there is still time to get to the shops. Hours until the last hour,
+ * then minutes.
+ *
+ * Hebrew counts one, two and many with three different words, which is why
+ * each unit has three lines rather than one: "בעוד 1 ימים" in the header of a
+ * Hebrew site is the kind of small wrongness people notice.
+ *
+ * @param array<string, mixed> $chrome    Resolved chrome section.
+ * @param string               $name      What this Shabbat is called.
+ * @param int                  $remaining Seconds until candle lighting.
+ * @return string
+ */
+function msl_countdown_text( array $chrome, string $name, int $remaining ): string {
+	$days = (int) floor( $remaining / DAY_IN_SECONDS );
 
 	if ( $days > 2 ) {
-		return sprintf( msl_t( $chrome, 'countdown_days' ), $parsha, $days );
+		return sprintf( msl_t( $chrome, 'countdown_days' ), $name, $days );
 	}
 
-	// Hebrew counts one, two and many differently, and "בעוד 1 ימים" in the
-	// header of a Hebrew site is the kind of small wrongness people notice.
 	if ( 2 === $days ) {
-		return sprintf( msl_t( $chrome, 'countdown_2days' ), $parsha );
+		return sprintf( msl_t( $chrome, 'countdown_2days' ), $name );
 	}
 
 	if ( 1 === $days ) {
-		return sprintf( msl_t( $chrome, 'countdown_day' ), $parsha );
+		return sprintf( msl_t( $chrome, 'countdown_day' ), $name );
 	}
 
-	$clock = sprintf(
-		'%02d:%02d:%02d',
-		(int) floor( $remaining % DAY_IN_SECONDS / HOUR_IN_SECONDS ),
-		(int) floor( $remaining % HOUR_IN_SECONDS / MINUTE_IN_SECONDS ),
-		$remaining % MINUTE_IN_SECONDS
-	);
+	$hours = (int) floor( $remaining / HOUR_IN_SECONDS );
 
-	return sprintf( msl_t( $chrome, 'countdown_clock' ), $parsha, $clock );
+	if ( $hours > 2 ) {
+		return sprintf( msl_t( $chrome, 'countdown_hours' ), $name, $hours );
+	}
+
+	if ( 2 === $hours ) {
+		return sprintf( msl_t( $chrome, 'countdown_2hours' ), $name );
+	}
+
+	if ( 1 === $hours ) {
+		return sprintf( msl_t( $chrome, 'countdown_hour' ), $name );
+	}
+
+	$minutes = (int) floor( $remaining / MINUTE_IN_SECONDS );
+
+	if ( $minutes > 1 ) {
+		return sprintf( msl_t( $chrome, 'countdown_minutes' ), $name, $minutes );
+	}
+
+	return sprintf( msl_t( $chrome, 'countdown_minute' ), $name );
 }
 
 

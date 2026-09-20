@@ -363,10 +363,6 @@
 	 * Countdown
 	 * --------------------------------------------------------------- */
 
-	function pad(n) {
-		return String(n).padStart(2, '0');
-	}
-
 	/* Fixed in each language, not a content field: see msl_parsha_prefix(). */
 	function parshaPrefix() {
 		return state.lang === 'en' ? 'Parashat ' : 'פרשת ';
@@ -398,8 +394,29 @@
 			return;
 		}
 
-		var clock = pad(Math.floor((remaining % 86400) / 3600)) + ':' + pad(Math.floor((remaining % 3600) / 60)) + ':' + pad(remaining % 60);
-		node.textContent = format(t('chrome.countdown_clock'), [parsha, clock]);
+		/* Under a day the unit changes rather than the number growing a colon.
+		   Mirrors msl_countdown() exactly — the server renders the first frame
+		   and this keeps it moving, so the two must agree on every boundary. */
+		var hours = Math.floor(remaining / 3600);
+
+		if (hours > 2) {
+			node.textContent = format(t('chrome.countdown_hours'), [parsha, num(hours)]);
+			return;
+		}
+
+		if (hours === 2 || hours === 1) {
+			node.textContent = format(t(hours === 2 ? 'chrome.countdown_2hours' : 'chrome.countdown_hour'), [parsha]);
+			return;
+		}
+
+		var minutes = Math.floor(remaining / 60);
+
+		if (minutes > 1) {
+			node.textContent = format(t('chrome.countdown_minutes'), [parsha, num(minutes)]);
+			return;
+		}
+
+		node.textContent = format(t('chrome.countdown_minute'), [parsha]);
 	}
 
 	function renderUrgency() {
@@ -1060,7 +1077,6 @@
 			});
 		});
 	}
-
 
 	/* ------------------------------------------------------------------
 	 * Coming into view
@@ -2155,7 +2171,6 @@
 	 * course of a visit. It stops when the page is not on screen — there is no
 	 * reason to keep animating behind an overlay.
 	 */
-
 
 	/* ------------------------------------------------------------------
 	 * Wiring

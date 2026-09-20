@@ -257,6 +257,11 @@ final class MSL_Zmanim {
 	private const LOCK_TTL = 30;
 
 	/**
+	 * Transient holding the last failure, for the panel to explain.
+	 */
+	private const ERROR_KEY = 'msl_zmanim_error';
+
+	/**
 	 * Per-request cache, so one page view asks the cache once.
 	 *
 	 * @var array<string, mixed>
@@ -499,13 +504,101 @@ final class MSL_Zmanim {
 			)
 		);
 
-		if ( is_wp_error( $response ) || 200 !== wp_remote_retrieve_response_code( $response ) ) {
+		/*
+		 * Why it failed, kept for the panel.
+		 *
+		 * The visitor must never see any of this — the page falls back to the
+		 * hand-set time and looks completely normal, which is the right answer
+		 * for them and a useless one for whoever has to notice. "No answer from
+		 * hebcal.com" is not enough to act on either: a host that blocks
+		 * outgoing requests, a DNS failure and a rate limit need three different
+		 * things done about them, and they are distinguishable only here.
+		 */
+		if ( is_wp_error( $response ) ) {
+			self::remember_failure( $response->get_error_message() );
+
+			return null;
+		}
+
+		$code = (int) wp_remote_retrieve_response_code( $response );
+
+		if ( 200 !== $code ) {
+			self::remember_failure( sprintf( 'HTTP %d', $code ) );
+
 			return null;
 		}
 
 		$body = json_decode( (string) wp_remote_retrieve_body( $response ), true );
 
-		return is_array( $body ) ? $body : null;
+		if ( ! is_array( $body ) ) {
+			self::remember_failure( 'תשובה שאינה JSON' );
+
+			return null;
+		}
+
+		delete_transient( self::ERROR_KEY );
+
+		return $body;
+	}
+
+	/**
+	 * Keep the last reason a call failed, and when.
+	 *
+	 * @param string $reason Human-readable reason.
+	 */
+	private static function remember_failure( string $reason ): void {
+		set_transient(
+			self::ERROR_KEY,
+			array(
+				'reason' => mb_substr( $reason, 0, 200 ),
+				'when'   => time(),
+			),
+			DAY_IN_SECONDS
+		);
+	}
+
+	/**
+	 * The last reason a call failed, or null.
+	 *
+	 * @return array{reason: string, when: int}|null
+	 */
+	public static function last_failure(): ?array {
+		$stored = get_transient( self::ERROR_KEY );
+
+		return is_array( $stored ) && isset( $stored['reason'], $stored['when'] ) ? $stored : null;
+	}
+
+	/**
+	 * Drop everything cached for a place, so the next read calls out again.
+	 *
+	 * The cache is what makes this feature cheap, and it is also what makes a
+	 * misconfiguration take six hours to disprove. This is the button.
+	 *
+	 * @param array<string, mixed> $zmanim Resolved zmanim section.
+	 */
+	public static function forget( array $zmanim ): void {
+		$place = self::place( $zmanim );
+		$havd  = max( 0, min( 120, (int) ( $zmanim['havdalah'] ?? 0 ) ) );
+		$key   = 'msl_zmanim_' . $place . '_' . $havd;
+
+		delete_transient( $key );
+		delete_transient( $key . '_lock' );
+		delete_transient( self::ERROR_KEY );
+
+		// The Hebrew date and the sunset are cached per day, so the keys carry
+		// a date. Today and tomorrow cover the only two a re-check can be
+		// looking at, either side of the evening the day turns on.
+		$zone = self::zone( $zmanim );
+
+		foreach ( array( 0, DAY_IN_SECONDS ) as $offset ) {
+			$day = (string) wp_date( 'Y-m-d', time() + $offset, $zone );
+
+			delete_transient( 'msl_hdate_' . $place . '_' . $day );
+			delete_transient( 'msl_hdate_' . $place . '_' . $day . '_n' );
+			delete_transient( 'msl_sunset_' . $place . '_' . $day );
+		}
+
+		self::$memo = array();
 	}
 
 	/**

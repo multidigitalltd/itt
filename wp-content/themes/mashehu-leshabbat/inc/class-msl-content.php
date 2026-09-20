@@ -77,8 +77,10 @@ final class MSL_Content {
 			'countdown_day_en'   => array( 'Shabbat Parashat %s tomorrow', 'Shabbat %s tomorrow' ),
 			'countdown_2days_he' => array( 'השבת פרשת %s בעוד יומיים', 'השבת %s בעוד יומיים' ),
 			'countdown_2days_en' => array( 'Shabbat Parashat %s in two days', 'Shabbat %s in two days' ),
-			'countdown_clock_he' => array( 'השבת פרשת %1$s בעוד %2$s', 'השבת %1$s בעוד %2$s' ),
-			'countdown_clock_en' => array( 'Shabbat Parashat %1$s in %2$s', 'Shabbat %1$s in %2$s' ),
+			// countdown_clock is not here: the field was retired in the same
+			// release, replaced by hours and minutes. A page still holding the
+			// old value simply holds a key nothing reads, and the next save
+			// drops it, because sanitisation keeps only what the schema names.
 		);
 
 		$key = MSL_Meta::key( 'chrome' );
@@ -151,8 +153,16 @@ final class MSL_Content {
 				'countdown_day_en'  => 'Shabbat %s tomorrow',
 				'countdown_2days_he' => 'השבת %s בעוד יומיים',
 				'countdown_2days_en' => 'Shabbat %s in two days',
-				'countdown_clock_he' => 'השבת %1$s בעוד %2$s',
-				'countdown_clock_en' => 'Shabbat %1$s in %2$s',
+				'countdown_hours_he' => 'השבת %1$s בעוד %2$d שעות',
+				'countdown_hours_en' => 'Shabbat %1$s in %2$d hours',
+				'countdown_2hours_he' => 'השבת %s בעוד שעתיים',
+				'countdown_2hours_en' => 'Shabbat %s in two hours',
+				'countdown_hour_he'  => 'השבת %s בעוד שעה',
+				'countdown_hour_en'  => 'Shabbat %s in an hour',
+				'countdown_minutes_he' => 'השבת %1$s בעוד %2$d דקות',
+				'countdown_minutes_en' => 'Shabbat %1$s in %2$d minutes',
+				'countdown_minute_he' => 'השבת %s עוד רגע',
+				'countdown_minute_en' => 'Shabbat %s any minute now',
 				'credit_text'       => 'uxui & dev by multi digital',
 				'credit_url'        => 'https://m-d.co.il/',
 				'accessibility_url' => '',

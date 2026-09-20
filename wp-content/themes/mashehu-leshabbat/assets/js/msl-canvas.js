@@ -649,6 +649,28 @@ window.MSLCanvas = (function () {
 		return Math.max(0, Math.min(total, Math.round(total * (state.count / state.target)) + (extra || 0)));
 	}
 
+	/*
+	 * The same progress, unrounded.
+	 *
+	 * The artwork has a fixed number of cells and the target does not: a group
+	 * of 250 makes each candle worth about three cells, and the campaign's
+	 * 172,000 makes one cell worth two hundred candles. Rounded, that second
+	 * case means two hundred people in a row light a candle and the picture
+	 * does not change, which is the opposite of what the whole thing says it
+	 * does.
+	 *
+	 * So the leading cell — the one that has been partly earned — is drawn at
+	 * the fraction earned. Every single join moves it, whatever the target, and
+	 * the cells behind it stay exactly as bright as they were. At zero nothing
+	 * is lit; at the target everything is.
+	 */
+	function litExact(extra) {
+		if (!cells) { return 0; }
+		var total = cells.length;
+		var raw = total * (state.count / state.target) + (extra || 0);
+		return Math.max(0, Math.min(total, raw));
+	}
+
 	/* ------------------------------------------------------------------
 	 * The artwork
 	 * --------------------------------------------------------------- */
@@ -670,7 +692,12 @@ window.MSLCanvas = (function () {
 		var ox = (w - S) / 2;
 		var oy = (h - S) / 2 + (o.dy || 0) * h;
 		var total = cells.length;
-		var lit = litCount(o.extra);
+		var exact = litExact(o.extra);
+		var lit = Math.floor(exact);
+		/* What the next cell has earned so far, 0..1. Held a little off the
+		   floor so the very first join is visible rather than theoretical. */
+		var edge = lit < total ? exact - lit : 0;
+		var edgeGlow = edge > 0 ? 0.18 + 0.82 * edge : 0;
 		var cell = S / N;
 		var accent = state.accent;
 		var i, c, px, py, tw, b, sz, bz;
@@ -705,18 +732,23 @@ window.MSLCanvas = (function () {
 			px = ox + c.nx * S + c.jx * cell;
 			py = oy + c.ny * S + c.jy * cell;
 
-			if (i < lit) {
+			if (i <= lit && (i < lit || edgeGlow > 0)) {
+				/* The cell at the edge is the one being earned right now: same
+				   flame, dimmer and smaller in proportion to how much of it the
+				   joins so far have paid for. */
+				var strength = i < lit ? 1 : edgeGlow;
+
 				tw = state.still ? 1 : 0.80 + 0.20 * Math.sin(t * 0.0016 + c.ph);
 				b = c.heat > 0.85 ? 3 : c.heat > 0.55 ? 2 : c.heat > 0.3 ? 1 : 0;
-				sz = cell * (2.0 + c.heat * 1.5) * c.sc * scale;
+				sz = cell * (2.0 + c.heat * 1.5) * c.sc * scale * (0.55 + 0.45 * strength);
 
 				if (c.heat > 0.42) {
 					bz = sz * 3.1;
-					g.globalAlpha = 0.055 * tw;
+					g.globalAlpha = 0.055 * tw * strength;
 					g.drawImage(sprites[1], px - bz / 2, py - bz / 2, bz, bz);
 				}
 
-				g.globalAlpha = (0.70 + c.heat * 0.30) * tw;
+				g.globalAlpha = (0.70 + c.heat * 0.30) * tw * strength;
 				g.drawImage(sprites[b], px - sz / 2, py - sz / 2, sz, sz);
 			} else {
 				g.globalAlpha = 1;

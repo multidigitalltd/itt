@@ -599,6 +599,60 @@ final class MSL_Groups {
 		return self::total( $page_id, self::PENDING );
 	}
 
+	/**
+	 * What the table holds, for an editor looking at an archive that is empty.
+	 *
+	 * The archive lists what is live, which is right — a stranger's text is not
+	 * published before somebody has read it. But from the page itself the two
+	 * reasons it can be empty look identical: nobody has opened a group, or
+	 * four people have and all four are waiting for approval. The second one
+	 * has an editor believing the feature is broken while the fix is a button
+	 * two clicks away, so the page says which it is, to the people who can act
+	 * on it.
+	 *
+	 * The count of rows belonging to another page is here for the third reason,
+	 * the one that is a genuine fault: groups written against a campaign page
+	 * that is no longer the campaign page. Nothing in the theme moves them, so
+	 * if that number is ever anything but zero it wants saying out loud rather
+	 * than leaving as an archive that is quietly, permanently empty.
+	 *
+	 * @param int $page_id Campaign page.
+	 * @return array<string, int>
+	 */
+	public static function census( int $page_id ): array {
+		global $wpdb;
+
+		$out = array(
+			'live'      => 0,
+			'pending'   => 0,
+			'closed'    => 0,
+			'rejected'  => 0,
+			'elsewhere' => 0,
+		);
+
+		if ( ! MSL_DB::ready() ) {
+			return $out;
+		}
+
+		foreach ( array( self::LIVE, self::PENDING, self::CLOSED, self::REJECTED ) as $status ) {
+			$out[ $status ] = self::total( $page_id, $status );
+		}
+
+		$table = MSL_DB::groups_table();
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$everything = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$table}" );
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$here = (int) $wpdb->get_var(
+			$wpdb->prepare( "SELECT COUNT(*) FROM {$table} WHERE page_id = %d", $page_id )
+		);
+
+		$out['elsewhere'] = max( 0, $everything - $here );
+
+		return $out;
+	}
+
 	/* ---------------------------------------------------------------------
 	 * Writing
 	 * ------------------------------------------------------------------ */

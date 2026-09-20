@@ -12,6 +12,8 @@ declare( strict_types = 1 );
 defined( 'ABSPATH' ) || exit;
 
 $msl_rows = MSL_Groups::archive( MSL_Importer::page_id(), 48 );
+
+require MSL_DIR . 'template-parts/groups/pending-notice.php';
 ?>
 <section class="msl-garchive" id="msl-groups" aria-labelledby="msl-garchive-title" data-msl-rise>
 	<h2 class="msl-garchive__title" id="msl-garchive-title"<?php msl_i18n( 'groups', 'archive_title' ); ?>><?php msl_the( $msl_groups, 'archive_title' ); ?></h2>

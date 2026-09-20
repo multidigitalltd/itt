@@ -34,8 +34,11 @@
 		   them would make one of the numbers on screen a lie. */
 		groupCount: config.group ? config.group.count : 0,
 		pct: config.stats.pct,
-		rate: 0,
-		lastPoll: 0,
+		/* What the server last said. `participants` is what is on screen and
+		   walks towards it; the two differ only for about a second after a
+		   poll. Everything anybody sees is therefore a number the server
+		   issued, which is what makes two people looking together agree. */
+		target: config.stats.participants,
 		refCode: '',
 		refCount: 0,
 		nextMilestone: 0,
@@ -46,7 +49,6 @@
 		wallPick: null,
 		last10: config.stats.last10,
 		countries: config.stats.countries,
-		expected: config.stats.participants,
 		pieces: {}
 	};
 
@@ -248,8 +250,14 @@
 	}
 
 	function applyStats(data) {
-		state.participants = data.participants;
+		state.target = data.participants;
 		state.pct = data.pct;
+
+		/* A figure below what is on screen is a correction, not an animation:
+		   land on it at once rather than easing down. */
+		if (state.participants > state.target) {
+			state.participants = state.target;
+		}
 
 		if (typeof data.closed === 'boolean' && data.closed !== config.campaign.closed) {
 			config.campaign.closed = data.closed;
@@ -267,21 +275,31 @@
 	}
 
 	/*
-	 * Between polls the counter walks up at the rate the last two polls
-	 * observed, rather than sitting still and then jumping. That difference is
-	 * the whole reason the page reads as live rather than as a page that
-	 * refreshes.
+	 * The counter walks up to the number the last poll returned, rather than
+	 * replacing it in one jump. It closes the gap in about a second and then
+	 * stops — it never walks past the server's figure.
+	 *
+	 * It used to project forwards instead, at the rate the last two polls
+	 * happened to observe, and refuse to come down again. Both halves of that
+	 * were wrong together: one eight-second window that catches a +1 reads as
+	 * 450 an hour where the truth is 150, the projection runs ahead on that
+	 * guess, and the refusal to come down makes each browser keep its own
+	 * overshoot for as long as the tab is open. Two people looking at the same
+	 * campaign on two screens saw two different numbers, drifting further
+	 * apart the longer they watched. The server's figure is arithmetic on the
+	 * clock and is the same for everybody; the only job here is to reach it.
 	 */
-	function interpolate() {
-		if (state.rate <= 0 || document.hidden) { return; }
+	function walkCounter() {
+		if (document.hidden || state.participants === state.target) { return; }
 
-		var elapsed = (Date.now() - state.lastPoll) / 1000;
-		var projected = Math.floor(state.expected + state.rate * elapsed);
-
-		if (projected > state.participants) {
-			state.participants = projected;
-			renderCounters();
+		if (state.participants > state.target) {
+			state.participants = state.target;
+		} else {
+			var gap = state.target - state.participants;
+			state.participants = Math.min( state.target, state.participants + Math.max( 1, Math.ceil( gap / 5 ) ) );
 		}
+
+		renderCounters();
 	}
 
 	function pollStats() {
@@ -292,25 +310,7 @@
 			.then(function (data) {
 				if (!data) { return; }
 
-				var now = Date.now();
-
-				if (state.lastPoll > 0) {
-					var seconds = (now - state.lastPoll) / 1000;
-					var gained = data.participants - state.expected;
-					state.rate = seconds > 0 ? Math.max(0, gained / seconds) : 0;
-				}
-
-				state.expected = data.participants;
-				state.lastPoll = now;
-
-				/* Never walk the number backwards: the interpolation may have
-				   run ahead of the poll, and a counter that ticks down is
-				   worse than one that is briefly optimistic. */
-				if (data.participants >= state.participants) {
-					applyStats(data);
-				} else {
-					applyStats(Object.assign({}, data, { participants: state.participants }));
-				}
+				applyStats(data);
 			})
 			.catch(function () { /* The seeded numbers stay on screen. */ });
 	}
@@ -2027,8 +2027,7 @@
 		state.refCount = result.referral_count || 0;
 		state.nextMilestone = result.next_milestone || 0;
 		state.participants = result.participants;
-		state.expected = result.participants;
-		state.lastPoll = Date.now();
+		state.target = result.participants;
 
 		writeCookie(config.cookies.mine, result.referral_code, config.cookies.refDays);
 
@@ -2063,6 +2062,7 @@
 		canvasEngine.startWow({
 			count: function () {
 				state.participants = result.participants;
+				state.target = Math.max( state.target, result.participants );
 				canvasEngine.setState({ count: artCount() });
 				renderCounters();
 
@@ -2259,8 +2259,7 @@
 	function boot() {
 		document.body.dataset.mslScreen = 'home';
 
-		state.expected = state.participants;
-		state.lastPoll = Date.now();
+		state.target = state.participants;
 
 		/* An invite link puts the inviter's code in the address; keep it in a
 		   first-party cookie so the attribution survives the whole flow. */
@@ -2334,7 +2333,7 @@
 		window.setInterval(renderUrgency, 60000);
 		window.setInterval(pollStats, 8000);
 		window.setInterval(pollFeed, 15000);
-		window.setInterval(interpolate, 1000);
+		window.setInterval(walkCounter, 200);
 		window.setInterval(pollReferral, 30000);
 
 		pollStats();

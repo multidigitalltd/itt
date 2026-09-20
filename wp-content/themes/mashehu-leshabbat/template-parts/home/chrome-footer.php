@@ -14,11 +14,35 @@ defined( 'ABSPATH' ) || exit;
 
 $msl_chrome = MSL_Meta::get( 'chrome' );
 
+/**
+ * Where a legal link goes: the address that was typed, or the page the theme
+ * made for it.
+ *
+ * The two pages exist from the first admin visit, so leaving the field empty
+ * used to mean the site had an accessibility statement and a privacy policy
+ * that nothing on it linked to — which for both of them is the same as not
+ * having one. A typed address still wins: a campaign that keeps its policy
+ * somewhere else means it.
+ *
+ * @param string $typed     The address from the content panel.
+ * @param string $blueprint The page the theme creates for it.
+ * @return string
+ */
+$msl_legal = static function ( string $typed, string $blueprint ): string {
+	if ( '' !== trim( $typed ) ) {
+		return trim( $typed );
+	}
+
+	$page = MSL_Importer::page_id( $blueprint );
+
+	return $page > 0 ? (string) get_permalink( $page ) : '';
+};
+
 $msl_links = array_filter(
 	array(
-		(string) $msl_chrome['accessibility_url'] => __( 'הצהרת נגישות', 'mashehu-leshabbat' ),
-		(string) $msl_chrome['terms_url']         => __( 'תנאי שימוש', 'mashehu-leshabbat' ),
-		(string) $msl_chrome['privacy_url']       => __( 'מדיניות פרטיות', 'mashehu-leshabbat' ),
+		$msl_legal( (string) $msl_chrome['accessibility_url'], 'accessibility' ) => __( 'הצהרת נגישות', 'mashehu-leshabbat' ),
+		(string) $msl_chrome['terms_url']                                        => __( 'תנאי שימוש', 'mashehu-leshabbat' ),
+		$msl_legal( (string) $msl_chrome['privacy_url'], 'privacy' )             => __( 'מדיניות פרטיות', 'mashehu-leshabbat' ),
 	),
 	static fn( string $label, string $url ): bool => '' !== trim( $url ),
 	ARRAY_FILTER_USE_BOTH

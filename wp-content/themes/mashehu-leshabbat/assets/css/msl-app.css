@@ -3231,6 +3231,20 @@ html.msl-a11y-scaled .msl-panel__title {
 	line-height: 1.62;
 }
 
+/* The date a policy was last changed, and the name of the person to write to:
+   both are small print that has to stay readable, so they take the body colour
+   rather than a lighter one. */
+.msl-page .msl-about__meta {
+	margin: 14px 0 0;
+	color: var(--msl-body);
+	font-size: calc(15px * var(--msl-scale, 1));
+}
+.msl-page .msl-about__contactname {
+	display: block;
+	font-weight: 700;
+	color: var(--msl-ink);
+}
+
 /*
  * The verse.
  *

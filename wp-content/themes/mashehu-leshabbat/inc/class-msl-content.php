@@ -853,6 +853,112 @@ final class MSL_Content {
 				'err_closed_he'    => 'פתיחת קבוצות חדשות סגורה כרגע.',
 				'err_closed_en'    => 'Opening new groups is closed at the moment.',
 			),
+			'privacy'           => array(
+				'eyebrow_he'       => 'מדיניות פרטיות',
+				'eyebrow_en'       => 'Privacy policy',
+				'title_he'         => 'מה נשמר כאן, ומה לא',
+				'title_en'         => 'What is kept here, and what is not',
+				'lead_he'          => 'האתר הזה מבקש מכם מעט מאוד, ושומר עוד פחות. הדף הזה מפרט בדיוק מה נשמר כשמצטרפים, מה נמחק או מוצפן מיד, ומה אף פעם לא נאסף.',
+				'lead_en'          => 'This site asks very little of you, and keeps less. This page sets out exactly what is stored when you join, what is hashed or encrypted at once, and what is never collected at all.',
+				'updated_he'       => 'עודכן לאחרונה: ספטמבר 2026',
+				'updated_en'       => 'Last updated: September 2026',
+				'blocks'           => array(
+					array(
+						'title_he' => 'מה נשמר כשמצטרפים',
+						'title_en' => 'What is stored when you join',
+						'body_he'  => 'כשמוסיפים אור נשמרים: השם הפרטי שהוקלד (או "אנונימי", אם בחרתם כך), העיר והמדינה, הדברים שבחרתם לעשות לכבוד השבת, שפת האתר שבה הצטרפתם, והתאריך והשעה.
+
+אם כתבתם הקדשה — היא נשמרת כפי שנכתבה, ומוצגת באתר רק אחרי שאדם מהצוות קרא אותה ואישר.
+
+העיר שהוקלדה מתורגמת לנקודה על המפה מתוך רשימת ערים שהוגדרה מראש באתר. האתר אינו מבקש ואינו מקבל את המיקום של המכשיר שלכם, והנקודות שמוצגות על המפה מעוגלות ומאוחדות כך שאי אפשר להגיע מהן לאדם מסוים.',
+						'body_en'  => 'When you add a light we store: the first name you typed (or “anonymous”, if you chose that), the city and country, the things you chose to do in honour of Shabbat, the site language you joined in, and the date and time.
+
+If you wrote a dedication, it is stored as written, and appears on the site only after a member of the team has read and approved it.
+
+The city you type is turned into a point on the map from a list of cities configured in advance on the site. The site does not ask for and does not receive your device’s location, and the points shown on the map are rounded and grouped so that no individual can be reached through them.',
+					),
+					array(
+						'title_he' => 'טלפון, דוא"ל וכתובת IP — נשמרים כטביעה בלבד',
+						'title_en' => 'Phone, email and IP address — kept only as a fingerprint',
+						'body_he'  => 'אם השארתם טלפון או דוא"ל, ואת כתובת ה-IP שממנה הגעתם, האתר אינו שומר בשום מקום בצורה קריאה. הוא שומר טביעה חד-כיוונית שלהם (hash עם מלח): מחרוזת שאפשר להשוות אליה, ואי אפשר לחזור ממנה אל הפרט המקורי.
+
+הטביעות משמשות לשני דברים בלבד: לזהות שאותו אדם כבר הצטרף, ולמנוע הצפה אוטומטית של הטופס. הן חסרות ערך לכל שימוש אחר, וגם למי שיגיע אליהן.',
+						'body_en'  => 'If you left a phone number or an email address, and the IP address you arrived from, the site does not store any of them in readable form. It stores a one-way, salted fingerprint: a string that can be compared against, and that cannot be turned back into the original detail.
+
+These fingerprints are used for two things only: to recognise that the same person has already joined, and to stop the form being flooded automatically. They are worthless for anything else, including to anyone who reaches them.',
+					),
+					array(
+						'title_he' => 'תזכורת לפני שבת',
+						'title_en' => 'A reminder before Shabbat',
+						'body_he'  => 'מי שביקש תזכורת לפני השבת — ורק מי שביקש — משאיר כתובת דוא"ל שנשמרת מוצפנת, ומשמשת אך ורק לשליחת אותה תזכורת. היא אינה נמכרת, אינה מושכרת ואינה מועברת לאף גורם.
+
+אפשר לבקש הסרה בכל רגע בפנייה לכתובת שבתחתית הדף, והכתובת נמחקת.',
+						'body_en'  => 'Anyone who asked for a reminder before Shabbat — and only those who asked — leaves an email address, which is stored encrypted and used solely to send that reminder. It is not sold, rented or passed to anyone.
+
+You can ask to be removed at any moment by writing to the address at the foot of this page, and the address is deleted.',
+					),
+					array(
+						'title_he' => 'קבוצות',
+						'title_en' => 'Groups',
+						'body_he'  => 'מי שפותח קבוצה מקליד את שם הקבוצה, את שם האדם שלכבודו היא נפתחה ואת הטקסט שלה. הטקסט הזה מוצג בעמוד ציבורי, ולכן הוא נקרא ומאושר לפני הפרסום — ולכן גם כדאי לא לכתוב בו פרטים רפואיים או אישיים שאינכם רוצים שיהיו גלויים.
+
+מי שמצטרף לקבוצה נספר בה, והצגת שמות המצטרפים בעמוד הקבוצה היא הגדרה של האתר שאפשר לכבות ולהדליק.',
+						'body_en'  => 'Whoever opens a group types the group’s name, the name of the person it was opened for, and its text. That text appears on a public page, so it is read and approved before it is published — and for the same reason it is better not to write medical or personal details in it that you would not want to be visible.
+
+Anyone who joins a group is counted in it, and whether the names of those who joined are shown on the group’s page is a site setting that can be switched on or off.',
+					),
+					array(
+						'title_he' => 'עוגיות',
+						'title_en' => 'Cookies',
+						'body_he'  => 'האתר שומר במכשיר שלכם כמה עוגיות משלו בלבד: השפה שבחרתם, קוד ההזמנה של מי ששיתף אתכם, סימון של הנר שלכם כדי שנוכל להראות לכם אותו כשתחזרו, ואם התחברתם לאיזור האישי — עוגיית התחברות חתומה.
+
+אין באתר עוגיות של פרסום, של רשתות חברתיות או של מדידת התנהגות, ואין בו כלי אנליטיקה כלל.',
+						'body_en'  => 'The site stores a few cookies of its own on your device and nothing else: the language you chose, the invitation code of whoever shared it with you, a marker for your own candle so we can show it to you when you return, and, if you signed in to the personal area, a signed sign-in cookie.
+
+There are no advertising, social-network or behavioural cookies on this site, and no analytics tools of any kind.',
+					),
+					array(
+						'title_he' => 'מה לא יוצא מהאתר',
+						'title_en' => 'What never leaves the site',
+						'body_he'  => 'הדפדפן שלכם אינו פונה לשום דומיין חיצוני בזמן הגלישה כאן: הגופנים, הגרפיקה והמפה מוגשים מהאתר עצמו.
+
+לשרת עצמו יש שתי פניות החוצה, ואף אחת מהן אינה כוללת פרט שלכם: זמני כניסת השבת נמשכים מ-hebcal.com, ומי שבוחר להתחבר עם חשבון גוגל — פנייה לגוגל מתבצעת בשבילו, לבקשתו, כדי לאמת את הכתובת.',
+						'body_en'  => 'Your browser does not contact any external domain while you are here: the fonts, the graphics and the map are all served from this site itself.
+
+The server makes two outbound calls, and neither carries any detail of yours: Shabbat candle-lighting times are fetched from hebcal.com, and for anyone who chooses to sign in with a Google account, a call is made to Google on their behalf, at their request, to verify the address.',
+					),
+					array(
+						'title_he' => 'מי רואה, וכמה זמן זה נשמר',
+						'title_en' => 'Who sees it, and how long it is kept',
+						'body_he'  => 'את הנתונים רואים רק בעלי ההרשאות שמנהלים את האתר. המידע אינו נמכר, אינו מושכר ואינו מועבר לצד שלישי.
+
+הצטרפויות נשמרות כל עוד המיזם פעיל, כי הן הנרות שביצירה ואי אפשר למחוק אותן בלי למחוק אור שמישהו הדליק. פרט אישי — כתובת לתזכורת, שם, הקדשה — נמחק לבקשתכם.',
+						'body_en'  => 'Only the people with permissions who run the site see the data. It is not sold, not rented and not passed to any third party.
+
+Joins are kept for as long as the project runs, because they are the candles in the artwork and they cannot be deleted without deleting a light somebody lit. A personal detail — a reminder address, a name, a dedication — is deleted at your request.',
+					),
+					array(
+						'title_he' => 'הזכויות שלכם',
+						'title_en' => 'Your rights',
+						'body_he'  => 'אתם רשאים לדעת איזה מידע נשמר עליכם, לתקן אותו, ולבקש שיימחק. פנייה אחת לכתובת שלמטה מספיקה, ונטפל בה.',
+						'body_en'  => 'You are entitled to know what information is held about you, to correct it, and to ask for it to be deleted. One message to the address below is enough, and we will deal with it.',
+					),
+					array(
+						'title_he' => 'שינויים במדיניות',
+						'title_en' => 'Changes to this policy',
+						'body_he'  => 'אם המדיניות תשתנה, הנוסח המעודכן יופיע בדף הזה ותאריך העדכון שבראשו ישתנה בהתאם.',
+						'body_en'  => 'If this policy changes, the updated text will appear on this page and the date at the top of it will change accordingly.',
+					),
+				),
+				'contact_title_he' => 'יצירת קשר',
+				'contact_title_en' => 'Contact',
+				'contact_lead_he'  => 'לכל שאלה בנושא פרטיות, ולכל בקשה לעיין במידע, לתקן אותו או למחוק אותו:',
+				'contact_lead_en'  => 'For any question about privacy, and for any request to see, correct or delete information:',
+				'contact_name'     => 'רבקה',
+				'contact_email'    => 'motionklik@gmail.com',
+				'cta_he'           => 'חזרה לעמוד הקמפיין',
+				'cta_en'           => 'Back to the campaign',
+			),
 			'about'             => array(
 				'eyebrow_he'      => 'על המיזם',
 				'eyebrow_en'      => 'About the project',

@@ -389,9 +389,9 @@ final class MSL_Fields {
 					self::bi( 'text', 'countdown_minute', 'ספירה לאחור — הרגע האחרון', 3, '%s = שם השבת.' ),
 					self::text( 'credit_text', 'קרדיט בפוטר', 'ריק = לא יוצג.' ),
 					self::url( 'credit_url', 'קישור הקרדיט' ),
-					self::url( 'accessibility_url', 'קישור להצהרת הנגישות' ),
-					self::url( 'terms_url', 'קישור לתנאי השימוש' ),
-					self::url( 'privacy_url', 'קישור למדיניות הפרטיות' ),
+					self::url( 'accessibility_url', 'קישור להצהרת הנגישות', 'ריק = הקישור מוביל לעמוד "הצהרת נגישות" שהתבנית יצרה. למלא רק אם ההצהרה נמצאת במקום אחר.' ),
+					self::url( 'terms_url', 'קישור לתנאי השימוש', 'ריק = הקישור לא יוצג. אין עמוד תנאי שימוש בתבנית.' ),
+					self::url( 'privacy_url', 'קישור למדיניות הפרטיות', 'ריק = הקישור מוביל לעמוד "מדיניות פרטיות" שהתבנית יצרה, והטקסט שלו נערך בתיבה "עמוד מדיניות הפרטיות". למלא רק אם המדיניות נמצאת במקום אחר.' ),
 				)
 			),
 			'campaign' => self::section(
@@ -863,6 +863,33 @@ final class MSL_Fields {
 					),
 					self::bi( 'text', 'cta', 'כפתור החזרה לקמפיין' ),
 					self::bi( 'text', 'back', 'קישור חזרה בכותרת' ),
+				)
+			),
+			'privacy'  => self::section(
+				'עמוד מדיניות הפרטיות',
+				'privacy',
+				array(
+					self::bi( 'text', 'eyebrow', 'שורת פתיחה קטנה' ),
+					self::bi( 'text', 'title', 'כותרת ראשית' ),
+					self::bi( 'textarea', 'lead', 'פסקת פתיחה', 4 ),
+					self::bi( 'text', 'updated', 'שורת "עודכן לאחרונה"' ),
+					self::repeater(
+						'blocks',
+						'פרקי המדיניות',
+						'title_he',
+						array(
+							self::text( 'title_he', 'כותרת (עברית)' ),
+							self::text( 'title_en', 'כותרת (English)' ),
+							self::textarea( 'body_he', 'טקסט (עברית)', 5 ),
+							self::textarea( 'body_en', 'טקסט (English)', 5 ),
+						),
+						'שורה ריקה בטקסט פותחת פסקה חדשה. הנוסח שמגיע עם התבנית מתאר נכון מה האתר באמת אוסף ומה הוא לא — כדאי לעבור עליו ולהתאים אותו לארגון לפני העלייה לאוויר.'
+					),
+					self::bi( 'text', 'contact_title', 'כותרת — יצירת קשר' ),
+					self::bi( 'textarea', 'contact_lead', 'טקסט מעל פרטי הקשר', 3 ),
+					self::text( 'contact_name', 'שם איש הקשר' ),
+					self::text( 'contact_email', 'דוא"ל ליצירת קשר', 'מוצג בעמוד כקישור שנפתח בתוכנת הדואר.' ),
+					self::bi( 'text', 'cta', 'כפתור החזרה לקמפיין' ),
 				)
 			),
 			'auth'     => self::section(

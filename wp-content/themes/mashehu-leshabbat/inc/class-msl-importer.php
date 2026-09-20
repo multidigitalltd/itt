@@ -31,7 +31,7 @@ final class MSL_Importer {
 	/**
 	 * Bumped whenever a blueprint is added, so an existing install gets it.
 	 */
-	private const VERSION = '3';
+	private const VERSION = '4';
 
 	/**
 	 * Page blueprints.
@@ -59,6 +59,12 @@ final class MSL_Importer {
 			'title'    => 'האיזור האישי',
 			'slug'     => 'ezor-ishi',
 			'template' => 'template-msl-account.php',
+			'front'    => false,
+		),
+		'privacy'       => array(
+			'title'    => 'מדיניות פרטיות',
+			'slug'     => 'privacy',
+			'template' => 'template-msl-privacy.php',
 			'front'    => false,
 		),
 		'accessibility' => array(

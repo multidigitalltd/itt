@@ -25,13 +25,14 @@ final class MSL_Theme {
 	public const TEMPLATE_ABOUT  = 'template-msl-about.php';
 	public const TEMPLATE_GROUPS  = 'template-msl-groups.php';
 	public const TEMPLATE_ACCOUNT = 'template-msl-account.php';
+	public const TEMPLATE_PRIVACY = 'template-msl-privacy.php';
 
 	/**
 	 * Every template that is part of the design and needs the design's assets.
 	 *
 	 * @var array<int, string>
 	 */
-	public const TEMPLATES = array( self::TEMPLATE, self::TEMPLATE_ABOUT, self::TEMPLATE_GROUPS, self::TEMPLATE_ACCOUNT );
+	public const TEMPLATES = array( self::TEMPLATE, self::TEMPLATE_ABOUT, self::TEMPLATE_GROUPS, self::TEMPLATE_ACCOUNT, self::TEMPLATE_PRIVACY );
 
 	/**
 	 * Each template against the set of content sections it carries.
@@ -48,6 +49,7 @@ final class MSL_Theme {
 		self::TEMPLATE_ABOUT  => 'about',
 		self::TEMPLATE_GROUPS  => 'groups',
 		self::TEMPLATE_ACCOUNT => 'account',
+		self::TEMPLATE_PRIVACY => 'privacy',
 	);
 
 	/**
@@ -305,6 +307,10 @@ final class MSL_Theme {
 		'account'  => array(
 			'label' => 'האיזור האישי',
 			'page'  => 'account',
+		),
+		'privacy'  => array(
+			'label' => 'מדיניות הפרטיות',
+			'page'  => 'privacy',
 		),
 		'join'     => array(
 			'label'  => 'פתיחת חלון ההצטרפות',

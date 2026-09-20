@@ -77,7 +77,10 @@ final class MSL_Stats {
 			// campaign already had before this site went live.
 			'countries'    => max( (int) $campaign['countries'], $rows['countries'] ),
 			'cities'       => max( (int) $campaign['cities'], $rows['cities'] ),
-			'dedications'  => $rows['dedications'],
+			// Same shape as the opening participant count: a number the campaign
+			// sets, with the dedications people really wrote added on top of it.
+			// The wall itself lists rows, so it shows only the real ones.
+			'dedications'  => max( 0, (int) ( $campaign['dedications_seed'] ?? 0 ) ) + $rows['dedications'],
 			'last10'       => $rows['last10'] + self::demo_recent( $campaign ),
 		);
 

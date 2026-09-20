@@ -45,8 +45,15 @@ $msl_wa    = sprintf( msl_t( $msl_groups, 'wa_message' ), $msl_share );
  * campaign listed itself. Real joins come first because they are real; the
  * listed names fill in behind them, which is what makes a group that has just
  * opened look like a group rather than like an error.
+ *
+ * A campaign can turn the whole list off in the groups box, and then it is not
+ * read at all rather than read and hidden — the rows are nobody's business if
+ * they are not going on the page, and a hidden list is one CSS mistake away
+ * from being a visible one.
  */
-$msl_feed = array_merge(
+$msl_show_people = 1 === (int) ( $msl_groups['show_people'] ?? 0 );
+
+$msl_feed = ! $msl_show_people ? array() : array_merge(
 	array_map(
 		static fn( array $row ): array => array(
 			'name' => $row['name'],
@@ -145,6 +152,7 @@ $msl_state = array(
 		</section>
 	<?php endif; ?>
 
+	<?php if ( $msl_show_people ) : ?>
 	<section class="msl-gfund__people" data-msl-rise aria-labelledby="msl-gfund-people">
 		<h2 class="msl-gfund__peoplehead" id="msl-gfund-people"<?php msl_i18n( 'groups', 'single_supporters' ); ?>><?php msl_the( $msl_groups, 'single_supporters' ); ?></h2>
 
@@ -170,6 +178,7 @@ $msl_state = array(
 			</ul>
 		<?php endif; ?>
 	</section>
+	<?php endif; ?>
 
 	<?php if ( $msl_owner ) : ?>
 		<?php

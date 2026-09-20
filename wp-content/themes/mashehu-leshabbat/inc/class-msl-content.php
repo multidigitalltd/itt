@@ -174,6 +174,8 @@ final class MSL_Content {
 				'parsha_en'   => 'Mishpatim',
 				'target'      => 172000,
 				'seed_count'  => 127438,
+				'demo_rate'   => 0,
+				'demo_from'   => '',
 				'artwork'     => 'rotate',
 				'accent'      => '#FFB25C',
 				'candle_day'  => '5',

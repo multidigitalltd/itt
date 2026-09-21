@@ -149,6 +149,16 @@ final class MSL_REST {
 
 		register_rest_route(
 			self::NAMESPACE,
+			'/session',
+			array(
+				'methods'             => WP_REST_Server::READABLE,
+				'permission_callback' => '__return_true',
+				'callback'            => array( self::class, 'session' ),
+			)
+		);
+
+		register_rest_route(
+			self::NAMESPACE,
 			'/join',
 			array(
 				'methods'             => WP_REST_Server::CREATABLE,
@@ -337,8 +347,30 @@ final class MSL_REST {
 				// So that "my candle" still works on a device that kept the
 				// code cookie but lost the rest of the join.
 				'piece' => MSL_Joins::piece_for_code( $page_id, $code ),
+				// For somebody arriving on this code's shared link: whose light
+				// they are being shown. Empty when that person joined without
+				// a name.
+				'name'  => MSL_Joins::name_for_code( $page_id, $code ),
 			)
 		);
+	}
+
+	/**
+	 * Whether this browser is signed in, asked somewhere a cache cannot answer.
+	 *
+	 * The personal area declares itself uncacheable in the three ways the
+	 * caches that matter obey, and on a host that ignores all three a signed-in
+	 * person is handed the signed-out copy of the page and told to sign in
+	 * again — which they then do, and get the same stored page back. The page
+	 * asks here whether that is what happened, because this answer is computed
+	 * per request from the cookie and no page cache stands in front of it.
+	 *
+	 * @return WP_REST_Response
+	 */
+	public static function session(): WP_REST_Response {
+		nocache_headers();
+
+		return new WP_REST_Response( array( 'signedIn' => null !== MSL_Auth::current() ) );
 	}
 
 	/**

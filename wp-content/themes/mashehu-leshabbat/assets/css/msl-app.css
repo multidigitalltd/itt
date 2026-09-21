@@ -2003,7 +2003,15 @@
 .msl-screen--result {
 	z-index: 60;
 	display: flex;
-	align-items: center;
+	/*
+	 * Not `center`. A flex item that is taller than its scroll container and
+	 * centred in it has its top pushed above the container's own start, and
+	 * that part cannot be scrolled to — measured at 1240x700, where the card is
+	 * 862px tall and its first 55px were unreachable. `flex-start` plus an auto
+	 * block margin centres it while there is room and lets it start at the top
+	 * when there is not.
+	 */
+	align-items: flex-start;
 	justify-content: center;
 	padding: 28px;
 	overflow-y: auto;
@@ -2282,6 +2290,7 @@
 .msl-result {
 	inline-size: 100%;
 	max-inline-size: 520px;
+	margin-block: auto;
 	display: flex;
 	flex-direction: column;
 	gap: 14px;
@@ -4526,6 +4535,35 @@ html.msl-a11y-scaled .msl-panel__title {
 	   whole card is the target rather than the one line of text inside it. */
 	padding: 12px 16px;
 	color: inherit;
+}
+
+/* The card a personal link opens with: who lit the candle the camera is on,
+   and how many people have already lit one through that link. It sits above
+   the artwork's own bottom bar, out of the way of the pick card. */
+.msl-invitecard {
+	position: absolute;
+	inset-inline: 16px;
+	inset-block-start: 96px;
+	z-index: 2;
+	margin-inline: auto;
+	max-inline-size: 520px;
+	padding: 16px 20px;
+	border-radius: 22px;
+	background: var(--msl-sheet);
+	border: 1px solid var(--msl-border);
+	box-shadow: 0 18px 40px oklch(0.15 0.03 60 / 0.18);
+	text-align: center;
+}
+.msl-page .msl-invitecard__title {
+	margin: 0;
+	font-weight: 800;
+	font-size: calc(17px * var(--msl-scale, 1));
+	color: var(--msl-ink);
+}
+.msl-page .msl-invitecard__count {
+	margin: 6px 0 0;
+	color: var(--msl-body);
+	font-size: calc(15px * var(--msl-scale, 1));
 }
 
 /* The editor's note about groups waiting for approval. Only somebody who can

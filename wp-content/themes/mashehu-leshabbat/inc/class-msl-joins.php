@@ -281,6 +281,18 @@ final class MSL_Joins {
 		MSL_Stats::flush( $page_id );
 		MSL_Groups::flush( (int) ( $data['group_id'] ?? 0 ) );
 
+		/*
+		 * The inviter's tally is held for thirty seconds so that a share card
+		 * left open does not ask on every poll. Nothing used to clear it when a
+		 * join actually arrived, so the one moment the number matters — the
+		 * person who sent the link watching it right after somebody used it —
+		 * was the moment it was guaranteed to be stale. Whoever was credited
+		 * here has their count recounted on the next read.
+		 */
+		if ( '' !== $referrer ) {
+			delete_transient( 'msl_ref_' . $referrer );
+		}
+
 		return array(
 			'uuid'           => $uuid,
 			'referral_code'  => $code,
@@ -528,6 +540,38 @@ final class MSL_Joins {
 		);
 
 		return null === $piece ? -1 : (int) $piece;
+	}
+
+	/**
+	 * The first name behind a referral code, where that person gave one.
+	 *
+	 * Empty for somebody who joined anonymously, and empty for a code nobody
+	 * holds. It is the one field of theirs a shared link may say out loud: they
+	 * chose to be named on the page, and the link they sent is them saying so
+	 * again.
+	 *
+	 * @param int    $page_id Campaign page.
+	 * @param string $code    Referral code.
+	 * @return string
+	 */
+	public static function name_for_code( int $page_id, string $code ): string {
+		global $wpdb;
+
+		if ( ! self::is_code( $code ) || ! MSL_DB::ready() ) {
+			return '';
+		}
+
+		$table = MSL_DB::joins_table();
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$name = $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT first_name FROM {$table} WHERE page_id = %d AND referral_code = %s AND is_anonymous = 0 LIMIT 1",
+				$page_id,
+				$code
+			)
+		);
+
+		return null === $name ? '' : (string) $name;
 	}
 
 	/**

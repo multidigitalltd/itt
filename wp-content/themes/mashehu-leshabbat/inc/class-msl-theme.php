@@ -531,6 +531,7 @@ final class MSL_Theme {
 				'remind'   => esc_url_raw( rest_url( MSL_REST::NAMESPACE . '/remind' ) ),
 				'zmanim'   => esc_url_raw( rest_url( MSL_REST::NAMESPACE . '/zmanim' ) ),
 				'nonce'    => esc_url_raw( rest_url( MSL_REST::NAMESPACE . '/nonce' ) ),
+				'session'  => esc_url_raw( rest_url( MSL_REST::NAMESPACE . '/session' ) ),
 			),
 			'campaign'  => array(
 				'target'         => (int) $campaign['target'],

@@ -315,6 +315,111 @@
 			.catch(function () { /* The seeded numbers stay on screen. */ });
 	}
 
+	/*
+	 * The personal area, to somebody the server says is signed in.
+	 *
+	 * This page declares itself uncacheable three ways over, and a host that
+	 * obeys none of them serves the stored signed-out copy to a person who is
+	 * signed in: they sign in, come back, and meet the same stored page. The
+	 * marker element only exists on the signed-out screen, so asking here means
+	 * "the page says signed out" — and /session answers from the cookie, past
+	 * any cache, whether that is true.
+	 *
+	 * One reload with a key the cache has never seen usually fetches the real
+	 * page. If the answer is still "signed in" after that reload, no amount of
+	 * reloading will help, and the note says what will.
+	 */
+	/*
+	 * Arriving on somebody's personal link.
+	 *
+	 * The point of sharing is showing what you made, so a link opens on the
+	 * sharer's own candle rather than at the top of the page: the artwork, the
+	 * camera on their light, their card open on it, the line that names them,
+	 * how many people have already lit one through that link, and the button
+	 * that lights the next.
+	 *
+	 * The name and the count come from /referral, not from the HTML, so the
+	 * page itself stays identical for everybody and stays cacheable. The
+	 * artwork has to have drawn before a position can be turned into a cell,
+	 * so this waits for the first frames rather than asking too early.
+	 */
+	function inviteCode() {
+		var match = window.location.pathname.match(/\/join\/([A-Za-z0-9]{6,12})\/?$/);
+
+		return match ? match[1].toLowerCase() : '';
+	}
+
+	function fillInviteCard(data) {
+		var card = $('[data-msl-invite-card]');
+
+		if (!card) { return; }
+
+		var title = $('[data-msl-invite-title]', card);
+		var count = $('[data-msl-invite-count]', card);
+
+		if (title) {
+			title.textContent = data.name
+				? format(title.dataset.mslTemplate, [data.name])
+				: title.dataset.mslAnon;
+		}
+
+		if (count) {
+			count.textContent = data.count > 0
+				? format(count.dataset.mslTemplate, [num(data.count)])
+				: count.dataset.mslFirst;
+		}
+
+		card.hidden = false;
+	}
+
+	function landOnInvite(code) {
+		window.fetch(config.rest.referral + '/' + code, { credentials: 'same-origin' })
+			.then(function (r) { return r.ok ? r.json() : null; })
+			.then(function (data) {
+				if (!data) { return; }
+
+				fillInviteCard(data);
+
+				if (!(data.piece >= 0)) { return; }
+
+				goto('art');
+
+				var tries = 0;
+				var land = function () {
+					if (showPiece(data.piece) || tries > 120) { return; }
+
+					tries++;
+					window.requestAnimationFrame(land);
+				};
+
+				land();
+			})
+			.catch(function () { /* The page is still the campaign page. */ });
+	}
+
+	function probeSession() {
+		var probe = $('[data-msl-session-probe]');
+
+		if (!probe || !config.rest || !config.rest.session) { return; }
+
+		window.fetch(config.rest.session, { credentials: 'same-origin', cache: 'no-store' })
+			.then(function (r) { return r.ok ? r.json() : null; })
+			.then(function (data) {
+				if (!data || !data.signedIn) { return; }
+
+				var url = new URL(window.location.href);
+
+				if (url.searchParams.has('msl_fresh')) {
+					probe.hidden = false;
+					return;
+				}
+
+				url.searchParams.set('msl_fresh', String(Date.now()));
+				window.location.replace(url.toString());
+			})
+			.catch(function () { /* Offline: the sign-in form is still usable. */ });
+	}
+
 	function pollFeed() {
 		if (document.hidden) { return; }
 
@@ -781,28 +886,27 @@
 	 * camera goes to that cell, the zoom goes in far enough for one candle to be
 	 * a candle, and the card opens on it.
 	 */
-	function myCell() {
-		if (state.myPiece < 0) { return -1; }
+	function cellForPiece(piece) {
+		if (!(piece >= 0)) { return -1; }
 
 		var drawn = canvasEngine.litCount();
 		var people = Math.max(1, canvasEngine.state.count || 0);
 
 		if (drawn < 1) { return -1; }
 
-		return Math.max(0, Math.min(drawn - 1, Math.floor(state.myPiece * drawn / people)));
+		return Math.max(0, Math.min(drawn - 1, Math.floor(piece * drawn / people)));
 	}
 
-	function renderMyCandle() {
-		var button = $('[data-msl-my-candle]');
-
-		if (button) { button.hidden = state.myPiece < 0; }
+	function myCell() {
+		return cellForPiece(state.myPiece);
 	}
 
-	function showMyCandle() {
-		var index = myCell();
+	/* The camera on one person's candle, with their own row in the card. */
+	function showPiece(piece) {
+		var index = cellForPiece(piece);
 		var cell = index < 0 ? null : canvasEngine.cellAt(index);
 
-		if (!cell) { return; }
+		if (!cell) { return false; }
 
 		state.artPick = index;
 		canvasEngine.setState({
@@ -812,13 +916,25 @@
 			artZ: Math.max(2, canvasEngine.state.artZ)
 		});
 
-		/* The visitor's own record is the one that must never be a stand-in, so
-		   this asks for their exact position rather than their slice. */
-		loadPieces({ from: state.myPiece, to: state.myPiece }, function (person) {
+		loadPieces({ from: piece, to: piece }, function (person) {
 			showPick($('[data-msl-art-pick]'), person);
 		});
 
 		renderHints();
+
+		return true;
+	}
+
+	function renderMyCandle() {
+		var button = $('[data-msl-my-candle]');
+
+		if (button) { button.hidden = state.myPiece < 0; }
+	}
+
+	/* The visitor's own record is the one that must never be a stand-in, so this
+	   asks for their exact position rather than their slice. */
+	function showMyCandle() {
+		showPiece(state.myPiece);
 	}
 
 	function bindMyCandle() {
@@ -2263,10 +2379,10 @@
 
 		/* An invite link puts the inviter's code in the address; keep it in a
 		   first-party cookie so the attribution survives the whole flow. */
-		var match = window.location.pathname.match(/\/join\/([A-Za-z0-9]{6,12})\/?$/);
+		var invite = inviteCode();
 
-		if (match) {
-			writeCookie(config.cookies.ref, match[1].toLowerCase(), config.cookies.refDays);
+		if (invite) {
+			writeCookie(config.cookies.ref, invite, config.cookies.refDays);
 		}
 
 		state.refCode = readCookie(config.cookies.mine);
@@ -2328,6 +2444,10 @@
 		renderClosed();
 
 		if (state.refCode) { pollReferral(); }
+
+		probeSession();
+
+		if (invite) { landOnInvite(invite); }
 
 		window.setInterval(renderCountdown, 1000);
 		window.setInterval(renderUrgency, 60000);

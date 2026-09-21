@@ -50,6 +50,24 @@ $msl_stats   = MSL_Stats::all( (int) get_the_ID() );
 		<p class="msl-zoom__level" data-msl-zoom-level aria-live="polite">×1</p>
 	</div>
 
+	<?php
+	/*
+	 * Somebody who arrived on a personal link. The card names whose light they
+	 * are looking at and how many people have already lit one through that
+	 * link; both sentences are filled in by the browser, from the endpoint that
+	 * knows, so the page itself stays the same for everybody and cacheable.
+	 */
+	?>
+	<div class="msl-invitecard" data-msl-invite-card hidden>
+		<p class="msl-invitecard__title" data-msl-invite-title
+			data-msl-template="<?php echo esc_attr( msl_t( $msl_screens, 'invite_title' ) ); ?>"
+			data-msl-anon="<?php echo esc_attr( msl_t( $msl_screens, 'invite_title_anon' ) ); ?>"></p>
+
+		<p class="msl-invitecard__count" data-msl-invite-count
+			data-msl-template="<?php echo esc_attr( msl_t( $msl_screens, 'invite_count' ) ); ?>"
+			data-msl-first="<?php echo esc_attr( msl_t( $msl_screens, 'invite_first' ) ); ?>"></p>
+	</div>
+
 	<div class="msl-screen__bottom">
 		<div class="msl-pick" data-msl-art-pick hidden>
 			<span class="msl-pick__avatar" aria-hidden="true"></span>
@@ -60,5 +78,16 @@ $msl_stats   = MSL_Stats::all( (int) get_the_ID() );
 		</div>
 
 		<p class="msl-hint" data-msl-art-hint aria-live="polite"<?php msl_i18n( 'screens', 'art_hint_zoom' ); ?>><?php msl_the( $msl_screens, 'art_hint_zoom' ); ?></p>
+
+		<?php
+		/*
+		 * The same way in as the candle wall has, for the same reason: somebody
+		 * looking at the artwork and deciding to be in it should not have to
+		 * find their way back to the campaign page first. It is the join
+		 * window's own button, so a closed campaign takes it away here too.
+		 */
+		?>
+		<button type="button" class="msl-btn msl-btn--amber msl-btn--wide" data-msl-open-join
+			<?php msl_i18n( 'screens', 'light_mine' ); ?>><?php msl_the( $msl_screens, 'light_mine' ); ?></button>
 	</div>
 </div>

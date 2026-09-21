@@ -716,6 +716,7 @@ final class MSL_Fields {
 					self::bi( 'text', 'title', 'כותרת העמוד' ),
 					self::bi( 'textarea', 'lead', 'פסקת פתיחה', 3 ),
 
+					self::bi( 'textarea', 'stale_note', 'הודעה כשהעמוד הוגש ממטמון', 3, 'מוצגת רק למי שמחובר בפועל וקיבל בכל זאת את מסך הכניסה — כלומר כשמטמון עמודים מגיש עותק שמור של האיזור האישי.' ),
 					self::bi( 'text', 'login_title', 'כותרת טופס ההתחברות' ),
 					self::bi( 'text', 'f_email', 'שדה — כתובת מייל' ),
 					self::bi( 'text', 'f_password', 'שדה — סיסמה' ),
@@ -947,6 +948,10 @@ final class MSL_Fields {
 					self::bi( 'text', 'pick_none', 'כרטיס הנר — מדליק בלי שם שמור', 3, 'נרות שנספרו למניין לפני שהאתר עלה, ואין להם רשומה בבסיס הנתונים.' ),
 					self::bi( 'text', 'pick_none_sub', 'כרטיס הנר — שורה שנייה בלי שם שמור' ),
 					self::bi( 'text', 'light_mine', 'כפתור "להדליק נר משלי"' ),
+					self::bi( 'text', 'invite_title', 'קישור אישי — כותרת', 3, '%s = השם של מי ששיתף.' ),
+					self::bi( 'text', 'invite_title_anon', 'קישור אישי — כותרת כשאין שם' ),
+					self::bi( 'text', 'invite_count', 'קישור אישי — כמה הצטרפו דרכו', 3, '%s = המספר.' ),
+					self::bi( 'text', 'invite_first', 'קישור אישי — כשעוד אף אחד לא הצטרף דרכו' ),
 					self::bi( 'text', 'zoom_in', 'תווית כפתור הגדלה' ),
 					self::bi( 'text', 'zoom_out', 'תווית כפתור הקטנה' ),
 					self::bi( 'text', 'wow_parts', 'מסך ההצטרפות — תווית המונה' ),

@@ -33,6 +33,39 @@ $msl_action = esc_url( admin_url( 'admin-post.php' ) );
 	<p class="msl-gnote" role="status"<?php msl_i18n( 'account', 'forgot_sent' ); ?>><?php msl_the( $msl_account, 'forgot_sent' ); ?></p>
 <?php endif; ?>
 
+<?php
+/*
+ * Two reasons a person who is signed in can be looking at this screen, and
+ * neither of them is visible from the screen itself.
+ *
+ * The first is a page cache. This page says it must not be stored in the three
+ * ways the caches that matter obey, and a host that ignores all three hands a
+ * signed-in person the stored signed-out copy — so they sign in, are sent back
+ * here, and get the same stored page again. The element below carries no text
+ * until the browser has asked the server, past the cache, whether this browser
+ * actually holds a session; the answer decides whether it is shown.
+ */
+?>
+<p class="msl-gnote msl-gnote--bad" role="status" data-msl-session-probe
+	<?php msl_i18n( 'account', 'stale_note' ); ?> hidden><?php msl_the( $msl_account, 'stale_note' ); ?></p>
+
+<?php if ( is_user_logged_in() && current_user_can( 'edit_pages' ) ) : ?>
+	<?php
+	/*
+	 * The second is the one the people who run the site hit: being logged in to
+	 * WordPress is not being signed in here. Participants are rows in the
+	 * theme's own table and deliberately not WordPress users — a campaign that
+	 * hopes for a quarter of a million of them would otherwise put every one of
+	 * them on the site's login screen.
+	 */
+	?>
+	<div class="msl-gstaff" role="status">
+		<p class="msl-gstaff__title"><?php esc_html_e( 'רואים רק אתם — הודעה לצוות האתר', 'mashehu-leshabbat' ); ?></p>
+		<p class="msl-gstaff__line"><?php esc_html_e( 'אתם מחוברים לוורדפרס, וזו התחברות אחרת: האיזור האישי הוא חשבון של משתתף, עם כתובת מייל וסיסמה שנפתחות כאן. לכן המסך הזה מוצג למרות שאתם מחוברים לניהול.', 'mashehu-leshabbat' ); ?></p>
+		<p class="msl-gstaff__line"><?php esc_html_e( 'כדי לראות איך האיזור האישי נראה למשתתף, אפשר לפתוח כאן חשבון עם כתובת מייל שלכם — הוא נפרד לגמרי ממשתמש הניהול.', 'mashehu-leshabbat' ); ?></p>
+	</div>
+<?php endif; ?>
+
 <div class="msl-agrid">
 	<section class="msl-acard" aria-labelledby="msl-account-login" data-msl-rise>
 		<h2 class="msl-acard__title" id="msl-account-login"<?php msl_i18n( 'account', 'login_title' ); ?>><?php msl_the( $msl_account, 'login_title' ); ?></h2>

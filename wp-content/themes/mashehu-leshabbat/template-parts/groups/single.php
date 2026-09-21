@@ -194,8 +194,20 @@ $msl_state = array(
 		</section>
 	<?php endif; ?>
 
+	<?php
+	/*
+	 * The way out. It is the list of groups where there is one, and the
+	 * campaign page where there is not — somebody who arrived here from a
+	 * family message and read the whole page should be one press away from
+	 * adding a light of their own, not at a dead end.
+	 */
+	?>
 	<p class="msl-gfund__back">
-		<a href="<?php echo esc_url( MSL_Groups::page_url() ); ?>"<?php msl_i18n( 'groups', 'single_back' ); ?>><?php msl_the( $msl_groups, 'single_back' ); ?></a>
+		<?php if ( msl_groups_archive_on() ) : ?>
+			<a href="<?php echo esc_url( MSL_Groups::page_url() ); ?>"<?php msl_i18n( 'groups', 'single_back' ); ?>><?php msl_the( $msl_groups, 'single_back' ); ?></a>
+		<?php else : ?>
+			<a href="<?php echo esc_url( msl_campaign_url() ); ?>"<?php msl_i18n( 'groups', 'back_home' ); ?>><?php msl_the( $msl_groups, 'back_home' ); ?></a>
+		<?php endif; ?>
 	</p>
 
 	<?php if ( $msl_open ) : ?>

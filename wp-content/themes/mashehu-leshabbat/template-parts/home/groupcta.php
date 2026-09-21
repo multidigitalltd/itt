@@ -86,8 +86,10 @@ if ( ! $msl_open ) {
 			<a class="msl-btn msl-btn--hero" href="<?php echo esc_url( msl_groups_url( 'msl-open' ) ); ?>"
 				<?php msl_i18n( 'groupcta', 'cta' ); ?>><?php msl_the( $msl, 'cta' ); ?></a>
 
-			<a class="msl-textbtn msl-gcta__all" href="<?php echo esc_url( $msl_url ); ?>"
-				<?php msl_i18n( 'groupcta', 'cta_all' ); ?>><?php msl_the( $msl, 'cta_all' ); ?></a>
+			<?php if ( msl_groups_archive_on() ) : ?>
+				<a class="msl-textbtn msl-gcta__all" href="<?php echo esc_url( $msl_url ); ?>"
+					<?php msl_i18n( 'groupcta', 'cta_all' ); ?>><?php msl_the( $msl, 'cta_all' ); ?></a>
+			<?php endif; ?>
 		</p>
 
 		<p class="msl-gcta__note"<?php msl_i18n( 'groupcta', 'note' ); ?>><?php msl_the( $msl, 'note' ); ?></p>

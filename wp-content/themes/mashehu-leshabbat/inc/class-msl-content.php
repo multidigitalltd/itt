@@ -36,7 +36,7 @@ final class MSL_Content {
 	/**
 	 * The current copy revision.
 	 */
-	private const REVISION = 2;
+	private const REVISION = 3;
 
 	/**
 	 * The display pace this theme ships with.
@@ -83,6 +83,10 @@ final class MSL_Content {
 
 		if ( $done < 2 ) {
 			self::retire_silent_pace();
+		}
+
+		if ( $done < 3 ) {
+			self::add_personal_area_to_menus();
 		}
 
 		update_option( self::REVISION_OPTION, self::REVISION, false );
@@ -182,6 +186,56 @@ final class MSL_Content {
 			}
 
 			$stored['demo_rate'] = self::DEMO_RATE;
+
+			update_post_meta( (int) $page_id, $key, $stored );
+		}
+	}
+
+	/**
+	 * Revision 3 — the personal area is missing from menus saved before it existed.
+	 *
+	 * A menu is a list, and a list that a page has saved is kept exactly as it
+	 * was saved: new default items reach a page that never had its menu edited
+	 * and nobody else. So a site set up before the personal area existed has a
+	 * personal area with no way in except typing its address.
+	 *
+	 * The item is appended, not inserted, and only where nothing already points
+	 * at that page — somebody who removed it on purpose and then edits the menu
+	 * again keeps their decision, because this runs once.
+	 */
+	private static function add_personal_area_to_menus(): void {
+		$key = MSL_Meta::key( 'nav' );
+
+		$pages = get_posts(
+			array(
+				'post_type'        => 'page',
+				'post_status'      => 'any',
+				'numberposts'      => 200,
+				'fields'           => 'ids',
+				'meta_key'         => $key, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+				'suppress_filters' => false,
+			)
+		);
+
+		foreach ( $pages as $page_id ) {
+			$stored = get_post_meta( (int) $page_id, $key, true );
+
+			if ( ! is_array( $stored ) || ! isset( $stored['links'] ) || ! is_array( $stored['links'] ) ) {
+				continue;
+			}
+
+			foreach ( $stored['links'] as $link ) {
+				if ( is_array( $link ) && 'account' === ( $link['target'] ?? '' ) ) {
+					continue 2;
+				}
+			}
+
+			$stored['links'][] = array(
+				'label_he' => 'האיזור האישי',
+				'label_en' => 'My area',
+				'target'   => 'account',
+				'url'      => '',
+			);
 
 			update_post_meta( (int) $page_id, $key, $stored );
 		}
@@ -737,6 +791,7 @@ final class MSL_Content {
 			'groups'            => array(
 				'open_on'          => 1,
 				'auto_approve'     => 0,
+				'show_archive'     => 0,
 				'show_people'      => 0,
 				'eyebrow_he'       => 'קבוצות לשבת',
 				'eyebrow_en'       => 'Shabbat groups',
@@ -830,6 +885,8 @@ final class MSL_Content {
 				'single_opened_by_en' => 'Opened by',
 				'single_also_he'   => 'כל נר שנדלק כאן נספר גם ליצירה הגדולה של כל המשתתפים.',
 				'single_also_en'   => 'Every candle lit here counts for the great artwork of all the participants too.',
+				'back_home_he'     => 'חזרה לעמוד הקמפיין',
+				'back_home_en'     => 'Back to the campaign',
 				'single_back_he'   => 'לכל הקבוצות',
 				'single_back_en'   => 'All the groups',
 				'wa_message_he'    => 'פתחנו קבוצה לכבוד שבת. מצטרפים? %s',

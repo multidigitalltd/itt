@@ -509,6 +509,13 @@ function msl_nav_destination( array $row ): array {
 	}
 
 	if ( isset( $spec['page'] ) ) {
+		// The groups page in the menu means the list of them. With the list
+		// switched off the item would land on a page carrying only the form,
+		// which is not what its label promised.
+		if ( 'groups' === $spec['page'] && ! msl_groups_archive_on() ) {
+			return $none;
+		}
+
 		$page = MSL_Importer::page_id( $spec['page'] );
 
 		return $page > 0 ? array(
@@ -534,6 +541,20 @@ function msl_nav_destination( array $row ): array {
 		'href'   => $url,
 		'action' => '',
 	);
+}
+
+/**
+ * The campaign page itself.
+ *
+ * Falls back to the site's front page, so a reading page never carries a link
+ * to nowhere on an install where the campaign page was renamed or rebuilt.
+ *
+ * @return string
+ */
+function msl_campaign_url(): string {
+	$page = MSL_Importer::page_id();
+
+	return $page > 0 ? (string) get_permalink( $page ) : home_url( '/' );
 }
 
 /**
@@ -569,6 +590,28 @@ function msl_campaign_anchor( string $id ): string {
  * @param string $anchor Fragment id, without the hash.
  * @return string
  */
+/**
+ * Does this site have a page that lists all the groups?
+ *
+ * A campaign can run groups without a public index of them: people open a
+ * group, send its address to their own family, and nobody browses a directory
+ * of strangers' dedications. That is a switch in the groups box, and when it is
+ * off every way in — the menu item, the link in the campaign page's invitation,
+ * the way back from a group — goes with it. A button that leads to a list that
+ * is not there is worse than no button.
+ *
+ * @return bool
+ */
+function msl_groups_archive_on(): bool {
+	$page = MSL_Importer::page_id( 'groups' );
+
+	if ( $page < 1 ) {
+		return false;
+	}
+
+	return 1 === (int) ( MSL_Meta::get( 'groups', $page )['show_archive'] ?? 0 );
+}
+
 function msl_groups_url( string $anchor = '' ): string {
 	$page = MSL_Importer::page_id( 'groups' );
 

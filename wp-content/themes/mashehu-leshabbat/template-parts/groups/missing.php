@@ -23,7 +23,12 @@ nocache_headers();
 	<p class="msl-subheading"<?php msl_i18n( 'groups', 'state_rejected' ); ?>><?php msl_the( $msl_groups, 'state_rejected' ); ?></p>
 
 	<p class="msl-gmissing__actions">
-		<a class="msl-btn msl-btn--amber" href="<?php echo esc_url( MSL_Groups::page_url() ); ?>"
-			<?php msl_i18n( 'groups', 'single_back' ); ?>><?php msl_the( $msl_groups, 'single_back' ); ?></a>
+		<?php if ( msl_groups_archive_on() ) : ?>
+			<a class="msl-btn msl-btn--amber" href="<?php echo esc_url( MSL_Groups::page_url() ); ?>"
+				<?php msl_i18n( 'groups', 'single_back' ); ?>><?php msl_the( $msl_groups, 'single_back' ); ?></a>
+		<?php else : ?>
+			<a class="msl-btn msl-btn--amber" href="<?php echo esc_url( msl_campaign_url() ); ?>"
+				<?php msl_i18n( 'groups', 'back_home' ); ?>><?php msl_the( $msl_groups, 'back_home' ); ?></a>
+		<?php endif; ?>
 	</p>
 </section>

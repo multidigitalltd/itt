@@ -3462,11 +3462,12 @@ html.msl-a11y-scaled .msl-panel__title {
    ========================================================================== */
 
 /*
- * The candles are the hero's atmosphere, and on a phone atmosphere is exactly
- * what crowds out the sentence people came to read. The field thins from the
- * inside out — the columns nearest the headline go first — and what is left is
- * held back so the words win. Nothing is resized: a candle that is legible as a
- * candle at 22px stays one.
+ * The candles are the hero's atmosphere, and on a narrowing screen atmosphere
+ * is exactly what crowds out the sentence people came to read. Between 720 and
+ * 900px the field still sits behind the words, so it thins from the inside out
+ * — the column nearest the headline goes first — and what is left is held
+ * back. Nothing is resized: a candle that is legible as a candle at 22px stays
+ * one. Below 720px the field stops being a background at all; see next.
  */
 @media (max-width: 900px) {
 	.msl-hero__candle[data-msl-depth="inner"] {
@@ -3478,15 +3479,100 @@ html.msl-a11y-scaled .msl-panel__title {
 	}
 }
 
-@media (max-width: 620px) {
+/*
+ * On a phone the candles stop being a background and become a row.
+ *
+ * Scattered behind the words they are atmosphere on a wide screen and a
+ * collision on a narrow one: the field is the full height of the hero, the
+ * headline is the full width of it, and measured at 390px five candles sat
+ * under the title, the paragraph and the button. Dimming them did not fix
+ * that — text over a candle at 70% is still text over a candle.
+ *
+ * So below 720px the field leaves the absolute layer and becomes what it is
+ * anyway: candles standing together. They line up on one baseline underneath
+ * the hero, in their own space, at full strength — nothing overlaps anything,
+ * and the row reads as the thing the page is about rather than as decoration
+ * that got in the way.
+ *
+ * The overrides carry !important because each candle's position is written
+ * inline, per candle, by msl_hero_candles(); a stylesheet has no other way to
+ * take those three properties back.
+ */
+@media (max-width: 720px) {
+	.msl-hero {
+		display: flex;
+		flex-direction: column;
+		padding-block-end: 34px;
+	}
+
+	.msl-hero__content {
+		order: 1;
+	}
+
+	.msl-hero__candles {
+		order: 2;
+		position: relative;
+		inset: auto;
+		display: flex;
+		flex-wrap: wrap;
+		align-items: flex-end;
+		justify-content: center;
+		gap: 10px 20px;
+		min-block-size: 152px;
+		margin-block-start: 30px;
+		padding-inline: 16px;
+		opacity: 1;
+	}
+
+	.msl-hero__candles > .msl-hero__candle {
+		position: static !important;
+		inset: auto !important;
+		top: auto !important;
+	}
+
+	/* The inner column stays away: in a row it only adds width, and width is
+	   the one thing a phone has none of. */
+	.msl-hero__candle[data-msl-depth="mid"] {
+		display: block;
+	}
+}
+
+/*
+ * One row, not two. Nine candles wrap at 390px and the two that fall to the
+ * second line read as an accident rather than as a shelf, so the narrowest
+ * screens keep the five that fit.
+ */
+@media (max-width: 520px) {
 	.msl-hero__candle[data-msl-depth="mid"] {
 		display: none;
 	}
 
 	.msl-hero__candles {
-		opacity: 0.7;
+		gap: 18px;
+		min-block-size: 148px;
 	}
 }
+
+/*
+ * The eyebrow keeps its words and drops its ornament.
+ *
+ * It is a flex row — rule, candle, label, candle, rule — and at 390px the
+ * label alone is 244 of the 334 pixels it has. The rules collapse to nothing
+ * and the two candles get pushed past the ends of the row: measured at x=10
+ * and a rule at x=-6, which is why the line appeared to have two candles
+ * sliced off by the screen edges. On a phone the line is the sentence.
+ */
+@media (max-width: 520px) {
+	.msl-eyebrow__rule,
+	.msl-eyebrow > .msl-candle {
+		display: none;
+	}
+
+	.msl-eyebrow {
+		justify-content: center;
+	}
+}
+
 
 /*
  * Touch targets.

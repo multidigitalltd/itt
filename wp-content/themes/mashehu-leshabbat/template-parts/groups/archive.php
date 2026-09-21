@@ -11,6 +11,10 @@ declare( strict_types = 1 );
 
 defined( 'ABSPATH' ) || exit;
 
+if ( ! msl_groups_archive_on() ) {
+	return;
+}
+
 $msl_rows = MSL_Groups::archive( MSL_Importer::page_id(), 48 );
 
 require MSL_DIR . 'template-parts/groups/pending-notice.php';

@@ -99,8 +99,48 @@ final class MSL_Content {
 	 * to fix our own is the worse of the two.
 	 */
 	public static function maybe_migrate(): void {
-		$done = (int) get_option( self::REVISION_OPTION, 0 );
+		self::migrate_from( (int) get_option( self::REVISION_OPTION, 0 ) );
+	}
 
+	/**
+	 * The revision a site has been brought up to.
+	 *
+	 * @return int
+	 */
+	public static function revision_done(): int {
+		return (int) get_option( self::REVISION_OPTION, 0 );
+	}
+
+	/**
+	 * The revision this theme carries.
+	 *
+	 * @return int
+	 */
+	public static function revision_current(): int {
+		return self::REVISION;
+	}
+
+	/**
+	 * Run every migration again, from the beginning, whatever is recorded.
+	 *
+	 * The automatic pass runs once and then never again, which is right — and
+	 * useless on the day it did not do what it should have. A theme updated
+	 * while a cache held the old files, an update applied by copying folders,
+	 * a revision recorded by a pass that found no pages: all of them end with
+	 * a site that is one option away from being correct and no way to say so.
+	 * This is that way, and it is safe to press twice, because every migration
+	 * only rewrites a value that still matches the exact text it replaced.
+	 */
+	public static function migrate_again(): void {
+		self::migrate_from( 0 );
+	}
+
+	/**
+	 * Run the migrations after a given revision.
+	 *
+	 * @param int $done The revision already applied.
+	 */
+	private static function migrate_from( int $done ): void {
 		if ( $done >= self::REVISION ) {
 			return;
 		}
@@ -137,6 +177,34 @@ final class MSL_Content {
 	}
 
 	/**
+	 * The pages holding one of our meta keys.
+	 *
+	 * Asked of the database directly rather than through get_posts(), for one
+	 * reason: a migration must not depend on what else is installed. get_posts()
+	 * runs pre_get_posts, and a cache, a multilingual plugin or an SEO plugin
+	 * filtering that hook can quietly narrow the result to nothing — after
+	 * which the revision is recorded as done and the migration never runs
+	 * again. A silent, permanent no-op is the worst possible failure for
+	 * something whose whole job is to be run once.
+	 *
+	 * @param string $key Meta key.
+	 * @return array<int, int>
+	 */
+	private static function pages_with( string $key ): array {
+		global $wpdb;
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery -- a migration must not pass through pre_get_posts; see above. Not cached on purpose: it runs once.
+		$ids = $wpdb->get_col(
+			$wpdb->prepare(
+				"SELECT DISTINCT post_id FROM {$wpdb->postmeta} WHERE meta_key = %s LIMIT 500",
+				$key
+			)
+		);
+
+		return array_map( 'intval', (array) $ids );
+	}
+
+	/**
 	 * Revision 1 — the doubled word in the countdown.
 	 */
 	private static function retire_parashat_wording(): void {
@@ -155,16 +223,7 @@ final class MSL_Content {
 
 		$key = MSL_Meta::key( 'chrome' );
 
-		$pages = get_posts(
-			array(
-				'post_type'        => 'page',
-				'post_status'      => 'any',
-				'numberposts'      => 200,
-				'fields'           => 'ids',
-				'meta_key'         => $key, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
-				'suppress_filters' => false,
-			)
-		);
+		$pages = self::pages_with( $key );
 
 		foreach ( $pages as $page_id ) {
 			$stored = get_post_meta( (int) $page_id, $key, true );
@@ -207,16 +266,7 @@ final class MSL_Content {
 	private static function retire_silent_pace(): void {
 		$key = MSL_Meta::key( 'campaign' );
 
-		$pages = get_posts(
-			array(
-				'post_type'        => 'page',
-				'post_status'      => 'any',
-				'numberposts'      => 200,
-				'fields'           => 'ids',
-				'meta_key'         => $key, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
-				'suppress_filters' => false,
-			)
-		);
+		$pages = self::pages_with( $key );
 
 		foreach ( $pages as $page_id ) {
 			$stored = get_post_meta( (int) $page_id, $key, true );
@@ -250,16 +300,7 @@ final class MSL_Content {
 	private static function add_personal_area_to_menus(): void {
 		$key = MSL_Meta::key( 'nav' );
 
-		$pages = get_posts(
-			array(
-				'post_type'        => 'page',
-				'post_status'      => 'any',
-				'numberposts'      => 200,
-				'fields'           => 'ids',
-				'meta_key'         => $key, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
-				'suppress_filters' => false,
-			)
-		);
+		$pages = self::pages_with( $key );
 
 		foreach ( $pages as $page_id ) {
 			$stored = get_post_meta( (int) $page_id, $key, true );
@@ -314,16 +355,7 @@ final class MSL_Content {
 			}
 		}
 
-		$pages = get_posts(
-			array(
-				'post_type'        => 'page',
-				'post_status'      => 'any',
-				'numberposts'      => 200,
-				'fields'           => 'ids',
-				'meta_key'         => $groups_key, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
-				'suppress_filters' => false,
-			)
-		);
+		$pages = self::pages_with( $groups_key );
 
 		foreach ( $pages as $page_id ) {
 			$stored = get_post_meta( (int) $page_id, $groups_key, true );
@@ -341,16 +373,7 @@ final class MSL_Content {
 			update_post_meta( (int) $page_id, $groups_key, $stored );
 		}
 
-		$policies = get_posts(
-			array(
-				'post_type'        => 'page',
-				'post_status'      => 'any',
-				'numberposts'      => 200,
-				'fields'           => 'ids',
-				'meta_key'         => $privacy_key, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
-				'suppress_filters' => false,
-			)
-		);
+		$policies = self::pages_with( $privacy_key );
 
 		foreach ( $policies as $page_id ) {
 			$stored = get_post_meta( (int) $page_id, $privacy_key, true );
@@ -400,16 +423,7 @@ final class MSL_Content {
 	private static function show_who_lit(): void {
 		$key = MSL_Meta::key( 'groups' );
 
-		$pages = get_posts(
-			array(
-				'post_type'        => 'page',
-				'post_status'      => 'any',
-				'numberposts'      => 200,
-				'fields'           => 'ids',
-				'meta_key'         => $key, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
-				'suppress_filters' => false,
-			)
-		);
+		$pages = self::pages_with( $key );
 
 		foreach ( $pages as $page_id ) {
 			$stored = get_post_meta( (int) $page_id, $key, true );
@@ -445,16 +459,7 @@ final class MSL_Content {
 	private static function retire_skip_line(): void {
 		$key = MSL_Meta::key( 'join' );
 
-		$pages = get_posts(
-			array(
-				'post_type'        => 'page',
-				'post_status'      => 'any',
-				'numberposts'      => 200,
-				'fields'           => 'ids',
-				'meta_key'         => $key, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
-				'suppress_filters' => false,
-			)
-		);
+		$pages = self::pages_with( $key );
 
 		foreach ( $pages as $page_id ) {
 			$stored = get_post_meta( (int) $page_id, $key, true );
@@ -493,16 +498,7 @@ final class MSL_Content {
 		$key   = MSL_Meta::key( 'join' );
 		$fresh = self::section( 'join' );
 
-		$pages = get_posts(
-			array(
-				'post_type'        => 'page',
-				'post_status'      => 'any',
-				'numberposts'      => 200,
-				'fields'           => 'ids',
-				'meta_key'         => $key, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
-				'suppress_filters' => false,
-			)
-		);
+		$pages = self::pages_with( $key );
 
 		foreach ( $pages as $page_id ) {
 			$stored = get_post_meta( (int) $page_id, $key, true );

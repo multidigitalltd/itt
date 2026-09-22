@@ -44,6 +44,7 @@ final class MSL_Panel {
 		add_action( 'admin_menu', array( self::class, 'move_first' ), 12 );
 		add_action( 'admin_post_msl_save_content', array( self::class, 'handle_save' ) );
 		add_action( 'admin_post_msl_zmanim_recheck', array( self::class, 'handle_zmanim_recheck' ) );
+		add_action( 'admin_post_msl_copy_rerun', array( self::class, 'handle_copy_rerun' ) );
 		add_action( 'admin_enqueue_scripts', array( self::class, 'assets' ) );
 	}
 
@@ -328,6 +329,7 @@ final class MSL_Panel {
 
 		self::render_login_notice();
 		self::render_zmanim_notice( $page_id );
+		self::render_copy_notice();
 
 		$inputs = self::input_count( $page_id );
 		$limit  = (int) ini_get( 'max_input_vars' );
@@ -499,6 +501,63 @@ final class MSL_Panel {
 
 		wp_safe_redirect( admin_url( 'admin.php?page=' . self::SLUG ) );
 		exit;
+	}
+
+	/**
+	 * Run the content updates again, by hand.
+	 *
+	 * Wording that this theme changes after a page has been saved is brought up
+	 * by a one-time migration. "One time" is right and it is also the problem
+	 * on the day it did not take: an update copied over an old cache, a pass
+	 * that ran before the new files were in place, a revision recorded by a
+	 * pass that found nothing. From here it can simply be run again — and it is
+	 * safe to run twice, because each migration only rewrites a value that is
+	 * still word for word the text it replaces.
+	 */
+	public static function handle_copy_rerun(): void {
+		if ( ! current_user_can( 'edit_pages' ) ) {
+			wp_die( esc_html__( 'אין הרשאה.', 'mashehu-leshabbat' ) );
+		}
+
+		check_admin_referer( 'msl_copy_rerun' );
+
+		MSL_Content::migrate_again();
+
+		wp_safe_redirect( add_query_arg( 'msl_copy_ran', '1', admin_url( 'admin.php?page=' . self::SLUG ) ) );
+		exit;
+	}
+
+	/**
+	 * Where the stored copy stands against what the theme carries.
+	 */
+	private static function render_copy_notice(): void {
+		$done    = MSL_Content::revision_done();
+		$current = MSL_Content::revision_current();
+
+		if ( isset( $_GET['msl_copy_ran'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- reading a flag to print a notice.
+			printf(
+				'<div class="notice notice-success"><p>%s</p></div>',
+				esc_html__( 'עדכוני התוכן רצו שוב. אם עדיין מופיע נוסח ישן בעמוד — זה מטמון עמודים, וצריך לרוקן אותו.', 'mashehu-leshabbat' )
+			);
+		}
+
+		printf(
+			'<div class="notice notice-info"><p><strong>%s</strong> %s</p><p>%s</p><p>%s</p></div>',
+			esc_html__( 'עדכוני תוכן:', 'mashehu-leshabbat' ),
+			esc_html(
+				$done >= $current
+					/* translators: %d: revision number. */
+					? sprintf( __( 'העמודים מעודכנים לגרסה %d.', 'mashehu-leshabbat' ), $current )
+					/* translators: 1: revision applied, 2: revision available. */
+					: sprintf( __( 'העמודים בגרסה %1$d, והתבנית מביאה %2$d.', 'mashehu-leshabbat' ), $done, $current )
+			),
+			esc_html__( 'כשהתבנית משנה נוסח שכבר נשמר בעמוד, העדכון הזה הוא מה שמחליף אותו — ורק אם הוא עדיין מילה במילה הנוסח הישן. מה שכתבתם בעצמכם נשאר שלכם.', 'mashehu-leshabbat' ),
+			sprintf(
+				'<a class="button" href="%s">%s</a>',
+				esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=msl_copy_rerun' ), 'msl_copy_rerun' ) ),
+				esc_html__( 'להריץ את עדכוני התוכן שוב', 'mashehu-leshabbat' )
+			)
+		);
 	}
 
 	/**

@@ -152,6 +152,21 @@ $msl_state = array(
 				</p>
 			<?php endif; ?>
 
+			<?php
+			/*
+			 * Why the group was opened, under the name of the group. It used to
+			 * sit in a card of its own below everything, where it read as an
+			 * afterthought — and it is the reason somebody is on this page at
+			 * all: the number above means nothing until you know what it is
+			 * counting towards.
+			 */
+			?>
+			<?php if ( '' !== trim( (string) $msl_group['story'] ) ) : ?>
+				<div class="msl-gfund__story">
+					<?php msl_paragraphs( (string) $msl_group['story'] ); ?>
+				</div>
+			<?php endif; ?>
+
 			<p class="msl-gfund__raised">
 				<span class="msl-gfund__big" data-msl-group-count><?php echo esc_html( msl_num( (int) $msl_group['count'] ) ); ?></span>
 				<span class="msl-gfund__unit"<?php msl_i18n( 'groups', 'single_lights' ); ?>><?php msl_the( $msl_groups, 'single_lights' ); ?></span>
@@ -197,11 +212,6 @@ $msl_state = array(
 		</div>
 	</div>
 
-	<?php if ( '' !== trim( (string) $msl_group['story'] ) ) : ?>
-		<section class="msl-gfund__story" data-msl-rise>
-			<?php msl_paragraphs( (string) $msl_group['story'] ); ?>
-		</section>
-	<?php endif; ?>
 
 	<?php
 	/*

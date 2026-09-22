@@ -4946,14 +4946,15 @@ select.msl-input {
 	line-height: 1.55;
 	color: var(--msl-muted);
 }
+/* Inside the panel now, under the group's name, so it is set as text and not
+   as a card: a second box inside the box would read as a second subject. */
 .msl-page .msl-gfund__story {
-	margin-block-start: 26px;
-	padding: 28px 30px;
-	border-radius: 26px;
-	background: var(--msl-sheet);
-	max-inline-size: 70ch;
+	margin-block: 14px 20px;
+	padding-block-start: 14px;
+	border-block-start: 1px solid var(--msl-border);
 	color: var(--msl-body);
-	line-height: 1.75;
+	font-size: calc(15.5px * var(--msl-scale, 1));
+	line-height: 1.7;
 }
 .msl-page .msl-gfund__story p {
 	margin-block-end: 12px;

@@ -827,54 +827,44 @@ final class MSL_Groups {
 		$clean = (array) $clean;
 
 		/*
-		 * The picture, if one came. It is taken after validation and before the
-		 * row is written, so a group is never opened with half a picture: if
-		 * the file is refused, the person is sent back to the form with the
+		 * The pictures, if any came. They are taken after validation and before
+		 * the row is written, so a group is never opened with half a picture:
+		 * if a file is refused, the person is sent back to the form with the
 		 * reason and nothing at all has been created.
 		 *
-		 * Nothing from the request decides what is stored. The bytes are
-		 * decoded, resampled and re-encoded by MSL_Photo, and what lands in the
-		 * row is an id of our own making plus a grid of numbers.
+		 * Two fields, because they are two decisions. The cover stands at the
+		 * head of the page and is stored; the other becomes the candles and is
+		 * not stored at all, only the numbers derived from it.
+		 *
+		 * Nothing from the request decides what is kept. The bytes are decoded
+		 * and re-encoded by MSL_Photo, and what lands in the row is an id of our
+		 * own making plus a grid of numbers.
 		 */
-		if ( isset( $_FILES['msl_photo'] ) && UPLOAD_ERR_NO_FILE !== (int) ( $_FILES['msl_photo']['error'] ?? UPLOAD_ERR_NO_FILE ) ) {
-			if ( UPLOAD_ERR_OK !== (int) $_FILES['msl_photo']['error'] ) {
-				// The commonest of these by far is a photograph straight off a
-				// phone meeting the server's own upload limit.
-				self::bounce( $back, 'photo_big' );
+		$cover = self::uploaded( 'msl_photo' );
+
+		if ( null !== $cover ) {
+			$id = MSL_Photo::cover( $cover, (string) $clean['title'] );
+
+			if ( is_wp_error( $id ) ) {
+				self::bounce( $back, (string) $id->get_error_message() );
 			}
 
-			/*
-			 * Only two values are taken out of $_FILES, and neither is a
-			 * string the browser chose: the temporary path PHP wrote itself,
-			 * which is checked with is_uploaded_file(), and the size on disk.
-			 * The submitted name and the claimed type are not read at all —
-			 * MSL_Photo decides what the file is by looking inside it.
-			 */
-			$photo = MSL_Photo::accept(
-				array(
-					'tmp_name' => (string) $_FILES['msl_photo']['tmp_name'], // phpcs:ignore WordPress.Security.ValidatedSanitizedInput -- a path PHP wrote; validated with is_uploaded_file().
-					'size'     => (int) $_FILES['msl_photo']['size'],
-				),
-				(string) $clean['title']
-			);
+			$clean['photo_id'] = (int) $id;
+		}
 
-			if ( is_wp_error( $photo ) ) {
-				self::bounce( $back, (string) $photo->get_error_message() );
+		$art = self::uploaded( 'msl_art_photo' );
+
+		if ( null !== $art ) {
+			$grid = MSL_Photo::artwork( $art );
+
+			if ( is_wp_error( $grid ) ) {
+				self::bounce( $back, (string) $grid->get_error_message() );
 			}
 
-			$clean['photo_id']  = (int) $photo['id'];
-			$clean['photo_art'] = (string) $photo['grid'];
-
-			/*
-			 * The artwork choice rides with the upload rather than sitting in
-			 * the list of shapes, because that is where the person is looking
-			 * when they make it. A ticked box with no picture, or with one the
-			 * server could not read, leaves the chosen shape alone: better a
-			 * menorah than an empty frame.
-			 */
-			if ( '' !== $clean['photo_art'] && isset( $_POST['photo_artwork'] ) ) {
-				$clean['artwork'] = self::PHOTO_ART;
-			}
+			// Sending a picture to be made into candles is the whole of saying
+			// so; there is no second box to tick.
+			$clean['photo_art'] = (string) $grid;
+			$clean['artwork']   = self::PHOTO_ART;
 		}
 
 		if ( self::PHOTO_ART === ( $clean['artwork'] ?? '' ) && '' === ( $clean['photo_art'] ?? '' ) ) {
@@ -898,6 +888,40 @@ final class MSL_Groups {
 		);
 
 		exit;
+	}
+
+	/**
+	 * One uploaded file from the request, or null where none was sent.
+	 *
+	 * Two values are taken and no more: the temporary path PHP wrote itself,
+	 * which MSL_Photo checks with is_uploaded_file(), and the size on disk. The
+	 * submitted name and the claimed type are not read at all — what the file
+	 * is gets decided by looking inside it.
+	 *
+	 * @param string $field The file field's name.
+	 * @return array{tmp_name:string, size:int}|null
+	 */
+	private static function uploaded( string $field ): ?array {
+		if ( ! isset( $_FILES[ $field ] ) ) {
+			return null;
+		}
+
+		$error = (int) ( $_FILES[ $field ]['error'] ?? UPLOAD_ERR_NO_FILE );
+
+		if ( UPLOAD_ERR_NO_FILE === $error ) {
+			return null;
+		}
+
+		if ( UPLOAD_ERR_OK !== $error ) {
+			// By far the commonest of these is a photograph straight off a
+			// phone meeting the server's own upload limit.
+			self::bounce( self::page_url(), 'photo_big' );
+		}
+
+		return array(
+			'tmp_name' => (string) $_FILES[ $field ]['tmp_name'], // phpcs:ignore WordPress.Security.ValidatedSanitizedInput -- a path PHP wrote; validated with is_uploaded_file().
+			'size'     => (int) $_FILES[ $field ]['size'],
+		);
 	}
 
 	/**

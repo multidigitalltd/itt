@@ -4800,24 +4800,6 @@ select.msl-input {
 .msl-gform__row--one {
 	grid-template-columns: minmax(0, 1fr);
 }
-/* The one checkbox in this form that is not a card: it belongs to the field
-   above it, and reads as a sentence next to its box. */
-.msl-page .msl-photoart {
-	display: flex;
-	align-items: flex-start;
-	gap: 10px;
-	margin-block-start: 12px;
-	font-size: calc(15px * var(--msl-scale, 1));
-	line-height: 1.5;
-	cursor: pointer;
-}
-.msl-photoart input {
-	inline-size: 18px;
-	block-size: 18px;
-	margin: 3px 0 0;
-	flex: none;
-	accent-color: var(--msl-amber);
-}
 .msl-gfund__grid {
 	display: grid;
 	grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);

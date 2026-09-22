@@ -9,7 +9,18 @@
  * proportion to the count. Nothing here draws anything. It produces numbers,
  * and the artwork the visitor sees is the drawing engine reading them.
  *
- * Three decisions worth knowing about:
+ * **Two pictures, two decisions.** The cover at the head of the page and the
+ * picture the candles are made from are separate fields, because they are
+ * separate choices: a family may want the person at the top and an artwork
+ * made from something else, or an artwork from a picture they would rather not
+ * publish at all. Either, both or neither — a group with none of them is the
+ * page it always was.
+ *
+ * And they are kept differently. The cover is stored, because it is shown. The
+ * artwork's source is **not**: it is read, turned into one number per cell, and
+ * dropped. What survives of it is a grid nobody can turn back into a face.
+ *
+ * Three more decisions worth knowing about:
  *
  * **The uploaded bytes are never served.** The file is decoded, resampled and
  * re-encoded into a fresh JPEG that this theme wrote itself, and only that copy
@@ -81,13 +92,68 @@ final class MSL_Photo {
 	}
 
 	/**
-	 * Take one uploaded file and give back an attachment id and a grid.
+	 * The cover: a picture to stand at the head of a group's page.
+	 *
+	 * @param array<string, mixed> $file  One entry of $_FILES.
+	 * @param string               $title What to call the attachment.
+	 * @return int|WP_Error Attachment id. An error message is an error key, not prose.
+	 */
+	public static function cover( array $file, string $title = '' ): int|WP_Error {
+		$source = self::open( $file );
+
+		if ( is_wp_error( $source ) ) {
+			return $source;
+		}
+
+		$clean = self::reencode( $source );
+
+		imagedestroy( $source );
+
+		if ( '' === $clean ) {
+			return new WP_Error( 'msl_photo', 'photo_server' );
+		}
+
+		$id = self::store( $clean, $title );
+
+		return $id > 0 ? $id : new WP_Error( 'msl_photo', 'photo_server' );
+	}
+
+	/**
+	 * The artwork: a picture to become candles.
+	 *
+	 * **Nothing is kept of this one but the numbers.** It is a separate field
+	 * from the cover because the two are separate decisions — a family may want
+	 * their grandfather at the head of the page and the artwork made from a
+	 * different photograph entirely, or an artwork from a picture they would
+	 * rather not publish at all. So this end of it stores no file: the picture
+	 * is read, turned into one number per cell, and dropped. What survives is a
+	 * grid that nobody can turn back into a face.
 	 *
 	 * @param array<string, mixed> $file One entry of $_FILES.
-	 * @param string               $title What to call the attachment.
-	 * @return array{id:int, grid:string}|WP_Error Error message is an error key, not prose.
+	 * @return string|WP_Error The grid, base64. An error message is an error key.
 	 */
-	public static function accept( array $file, string $title = '' ): array|WP_Error {
+	public static function artwork( array $file ): string|WP_Error {
+		$source = self::open( $file );
+
+		if ( is_wp_error( $source ) ) {
+			return $source;
+		}
+
+		$grid = self::grid( $source );
+
+		imagedestroy( $source );
+
+		// A picture with nothing in it — one flat colour, or a frame of black.
+		return '' !== $grid ? $grid : new WP_Error( 'msl_photo', 'photo_flat' );
+	}
+
+	/**
+	 * Check one upload and decode it, or say why not.
+	 *
+	 * @param array<string, mixed> $file One entry of $_FILES.
+	 * @return GdImage|WP_Error
+	 */
+	private static function open( array $file ): GdImage|WP_Error {
 		/*
 		 * Weight first, because it is the refusal a real person actually meets
 		 * — a photograph straight off a modern phone — and it deserves to be
@@ -122,29 +188,7 @@ final class MSL_Photo {
 
 		$source = @imagecreatefromstring( (string) file_get_contents( $path ) ); // phpcs:ignore WordPress.PHP.NoSilencedErrors, WordPress.WP.AlternativeFunctions -- a local temp file, and a decode failure is a return value here.
 
-		if ( false === $source ) {
-			return new WP_Error( 'msl_photo', 'photo_type' );
-		}
-
-		$grid  = self::grid( $source );
-		$clean = self::reencode( $source );
-
-		imagedestroy( $source );
-
-		if ( '' === $clean ) {
-			return new WP_Error( 'msl_photo', 'photo_server' );
-		}
-
-		$id = self::store( $clean, $title );
-
-		if ( $id < 1 ) {
-			return new WP_Error( 'msl_photo', 'photo_server' );
-		}
-
-		return array(
-			'id'   => $id,
-			'grid' => $grid,
-		);
+		return false !== $source ? $source : new WP_Error( 'msl_photo', 'photo_type' );
 	}
 
 	/**

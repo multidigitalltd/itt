@@ -146,6 +146,7 @@
 
 		renderCounters();
 		renderTemplates();
+		renderAgo();
 		renderReferral();
 		renderCountdown();
 		renderUrgency();
@@ -178,6 +179,7 @@
 		var pct = Math.min(100, Math.floor(state.groupCount * 100 / target));
 
 		$$('[data-msl-group-count]').forEach(function (node) { node.textContent = num(state.groupCount); });
+		$$('[data-msl-group-count-minus-one]').forEach(function (node) { node.textContent = num(Math.max(0, state.groupCount - 1)); });
 		$$('[data-msl-group-pct]').forEach(function (node) { node.textContent = num(pct); });
 
 		$$('[data-msl-group-progress]').forEach(function (node) {
@@ -191,6 +193,51 @@
 		if (canvasEngine.setState) {
 			canvasEngine.setState({ count: state.groupCount });
 		}
+	}
+
+	/* ------------------------------------------------------------------
+	 * "Four minutes ago"
+	 *
+	 * The server writes the sentence once and the browser keeps it true: the
+	 * page may be served from a cache, and it is in any case read for longer
+	 * than a minute by somebody watching their family answer. Every node keeps
+	 * the moment itself in `datetime`, so this is a re-derivation and not an
+	 * increment — a tab left open overnight is right when it is looked at
+	 * again, not a day behind.
+	 * --------------------------------------------------------------- */
+
+	function agoText(seconds) {
+		var days = Math.floor(seconds / 86400);
+
+		if (days > 2) { return format(t('groups.ago_days'), [num(days)]); }
+		if (days === 2) { return t('groups.ago_two_days'); }
+		if (days === 1) { return t('groups.ago_yesterday'); }
+
+		var hours = Math.floor(seconds / 3600);
+
+		if (hours > 2) { return format(t('groups.ago_hours'), [num(hours)]); }
+		if (hours === 2) { return t('groups.ago_two_hours'); }
+		if (hours === 1) { return t('groups.ago_hour'); }
+
+		var minutes = Math.floor(seconds / 60);
+
+		if (minutes > 2) { return format(t('groups.ago_minutes'), [num(minutes)]); }
+		if (minutes === 2) { return t('groups.ago_two_minutes'); }
+		if (minutes === 1) { return t('groups.ago_minute'); }
+
+		return t('groups.ago_now');
+	}
+
+	function renderAgo() {
+		var now = Date.now();
+
+		$$('[data-msl-ago]').forEach(function (node) {
+			var when = Date.parse(node.getAttribute('datetime'));
+
+			if (isNaN(when)) { return; }
+
+			node.textContent = agoText(Math.max(0, Math.round((now - when) / 1000)));
+		});
 	}
 
 	function renderCounters() {
@@ -2160,16 +2207,13 @@
 		renderReferral();
 		renderResult();
 
+		/* A group's page gets the same moment, because it is the same moment:
+		   the candle travels in and lands in the artwork the family is making.
+		   What differs is which number grows — the group's here, everybody's on
+		   the campaign page — and that is decided by artCount(), so there is
+		   one sequence and not two. */
 		if (config.group) {
-			/* A group's page has no wall and no full-screen artwork to pull the
-			   camera back from, so it does not borrow the campaign's flourish.
-			   The group's own number moves, its artwork gains a light, and the
-			   share card comes up — which is the whole point of joining here. */
 			state.groupCount += 1;
-			renderCounters();
-			goto('result');
-
-			return;
 		}
 
 		goto('wow');
@@ -2451,6 +2495,7 @@
 
 		window.setInterval(renderCountdown, 1000);
 		window.setInterval(renderUrgency, 60000);
+		window.setInterval(renderAgo, 60000);
 		window.setInterval(pollStats, 8000);
 		window.setInterval(pollFeed, 15000);
 		window.setInterval(walkCounter, 200);

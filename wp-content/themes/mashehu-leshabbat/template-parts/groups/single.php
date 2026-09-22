@@ -54,15 +54,16 @@ $msl_wa    = sprintf( msl_t( $msl_groups, 'wa_message' ), $msl_share );
 $msl_show_people = 1 === (int) ( $msl_groups['show_people'] ?? 0 );
 
 $msl_feed = ! $msl_show_people ? array() : array_merge(
+	MSL_Joins::group_feed( (int) $msl_group['id'] ),
+	/*
+	 * The names the campaign listed itself carry no time, and none is invented
+	 * for them: a made-up "four minutes ago" next to a real one is the kind of
+	 * detail that, once noticed, makes a visitor doubt the number too.
+	 */
 	array_map(
-		static fn( array $row ): array => array(
-			'name' => $row['name'],
-			'city' => $row['city'],
-			'anon' => false,
-		),
-		MSL_Joins::group_feed( (int) $msl_group['id'] )
-	),
-	MSL_Groups::seed_people( $msl_group )
+		static fn( array $row ): array => $row + array( 'when' => 0 ),
+		MSL_Groups::seed_people( $msl_group )
+	)
 );
 $msl_state = array(
 	MSL_Groups::PENDING  => 'state_pending',
@@ -86,6 +87,16 @@ $msl_state = array(
 		?>
 		<div class="msl-gfund__art" data-msl-rise>
 			<canvas class="msl-gfund__canvas" data-msl-canvas="hero" aria-hidden="true"></canvas>
+
+			<?php
+			/*
+			 * The way into the artwork itself. A real button and not the canvas:
+			 * the canvas is `aria-hidden`, and a decorative surface that turns
+			 * out to be the only door is a door a keyboard cannot find.
+			 */
+			?>
+			<button type="button" class="msl-btn msl-btn--light msl-gfund__open" data-msl-goto="art"
+				<?php msl_i18n( 'groups', 'single_open_art' ); ?>><?php msl_the( $msl_groups, 'single_open_art' ); ?></button>
 		</div>
 
 		<div class="msl-gfund__panel" data-msl-rise>
@@ -164,14 +175,32 @@ $msl_state = array(
 					<li class="msl-gfund__person<?php echo $msl_person['anon'] ? ' msl-gfund__person--anon' : ''; ?>">
 						<span class="msl-gfund__spark" aria-hidden="true"></span>
 
-						<?php if ( $msl_person['anon'] ) : ?>
-							<span class="msl-gfund__name"<?php msl_i18n( 'groups', 'single_anon' ); ?>><?php msl_the( $msl_groups, 'single_anon' ); ?></span>
-						<?php else : ?>
-							<span class="msl-gfund__name"><?php echo esc_html( $msl_person['name'] ); ?></span>
-						<?php endif; ?>
+						<span class="msl-gfund__who">
+							<?php if ( $msl_person['anon'] ) : ?>
+								<span class="msl-gfund__name"<?php msl_i18n( 'groups', 'single_anon' ); ?>><?php msl_the( $msl_groups, 'single_anon' ); ?></span>
+							<?php else : ?>
+								<span class="msl-gfund__name"><?php echo esc_html( $msl_person['name'] ); ?></span>
+							<?php endif; ?>
 
-						<?php if ( '' !== $msl_person['city'] ) : ?>
-							<span class="msl-gfund__city"><?php echo esc_html( $msl_person['city'] ); ?></span>
+							<?php if ( '' !== $msl_person['city'] ) : ?>
+								<span class="msl-gfund__city"><?php echo esc_html( $msl_person['city'] ); ?></span>
+							<?php endif; ?>
+						</span>
+
+						<?php
+						/*
+						 * When. Written as a real <time> carrying the moment in
+						 * UTC, so the browser can re-derive the sentence as the
+						 * minutes pass and after the page has sat in a cache,
+						 * and so a screen reader is handed a date rather than a
+						 * phrase that has drifted.
+						 */
+						?>
+						<?php if ( (int) $msl_person['when'] > 0 ) : ?>
+							<time class="msl-gfund__when" data-msl-ago
+								datetime="<?php echo esc_attr( gmdate( 'c', (int) $msl_person['when'] ) ); ?>"><?php
+								echo esc_html( msl_ago_text( $msl_groups, time() - (int) $msl_person['when'] ) );
+							?></time>
 						<?php endif; ?>
 					</li>
 				<?php endforeach; ?>

@@ -368,6 +368,70 @@ function msl_countdown_text( array $chrome, string $name, int $remaining ): stri
 
 
 /**
+ * How long ago something happened, as a sentence.
+ *
+ * The same shape as msl_countdown_text() and for the same reason: Hebrew counts
+ * one, two and many in three different words, so "5 minutes ago" and "two
+ * minutes ago" cannot be one template with a number in it. Every sentence is a
+ * field, so the campaign can soften any of them without touching the code.
+ *
+ * The page is rendered once and may sit in a cache for a while, so the browser
+ * re-derives all of these from the timestamp on the element. This is what the
+ * first paint says — and what somebody with JavaScript off keeps seeing, which
+ * is why it has to be right rather than merely present.
+ *
+ * @param array<string, mixed> $copy    Resolved groups content.
+ * @param int                  $elapsed Seconds since it happened.
+ * @return string
+ */
+function msl_ago_text( array $copy, int $elapsed ): string {
+	$elapsed = max( 0, $elapsed );
+	$days    = (int) floor( $elapsed / DAY_IN_SECONDS );
+
+	if ( $days > 2 ) {
+		return sprintf( msl_t( $copy, 'ago_days' ), $days );
+	}
+
+	if ( 2 === $days ) {
+		return msl_t( $copy, 'ago_two_days' );
+	}
+
+	if ( 1 === $days ) {
+		return msl_t( $copy, 'ago_yesterday' );
+	}
+
+	$hours = (int) floor( $elapsed / HOUR_IN_SECONDS );
+
+	if ( $hours > 2 ) {
+		return sprintf( msl_t( $copy, 'ago_hours' ), $hours );
+	}
+
+	if ( 2 === $hours ) {
+		return msl_t( $copy, 'ago_two_hours' );
+	}
+
+	if ( 1 === $hours ) {
+		return msl_t( $copy, 'ago_hour' );
+	}
+
+	$minutes = (int) floor( $elapsed / MINUTE_IN_SECONDS );
+
+	if ( $minutes > 2 ) {
+		return sprintf( msl_t( $copy, 'ago_minutes' ), $minutes );
+	}
+
+	if ( 2 === $minutes ) {
+		return msl_t( $copy, 'ago_two_minutes' );
+	}
+
+	if ( 1 === $minutes ) {
+		return msl_t( $copy, 'ago_minute' );
+	}
+
+	return msl_t( $copy, 'ago_now' );
+}
+
+/**
  * Render a multi-line content value as paragraphs.
  *
  * The editor fields are plain textareas on purpose — no editor, no markup to

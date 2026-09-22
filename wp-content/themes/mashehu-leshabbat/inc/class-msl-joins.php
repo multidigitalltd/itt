@@ -672,11 +672,19 @@ final class MSL_Joins {
 
 		$joins = MSL_DB::joins_table();
 
+		/*
+		 * Anonymous rows are here too, and they are the reason this reads
+		 * `is_anonymous` rather than filtering it out in SQL: on a page whose
+		 * whole job is to show a family that people are answering, a row that
+		 * says "somebody, four minutes ago" is the truth, and leaving it out
+		 * makes a group of twelve look like a group of five. What is withheld
+		 * is the name, which is exactly what that person asked for.
+		 */
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$rows = $wpdb->get_results(
 			$wpdb->prepare(
-				"SELECT first_name, city FROM {$joins}
-				 WHERE group_id = %d AND is_anonymous = 0 AND first_name <> ''
+				"SELECT first_name, city, is_anonymous, created_at FROM {$joins}
+				 WHERE group_id = %d
 				 ORDER BY id DESC LIMIT %d",
 				$group_id,
 				max( 1, min( 50, $limit ) )
@@ -687,9 +695,13 @@ final class MSL_Joins {
 		$feed = array();
 
 		foreach ( (array) $rows as $row ) {
+			$anon = 1 === (int) $row['is_anonymous'] || '' === trim( (string) $row['first_name'] );
+
 			$feed[] = array(
-				'name' => (string) $row['first_name'],
-				'city' => (string) $row['city'],
+				'name' => $anon ? '' : (string) $row['first_name'],
+				'city' => $anon ? '' : (string) $row['city'],
+				'anon' => $anon,
+				'when' => (int) strtotime( (string) $row['created_at'] . ' UTC' ),
 			);
 		}
 

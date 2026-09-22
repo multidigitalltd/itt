@@ -36,7 +36,7 @@ final class MSL_Content {
 	/**
 	 * The current copy revision.
 	 */
-	private const REVISION = 4;
+	private const REVISION = 5;
 
 	/**
 	 * The privacy paragraph about groups, exactly as it shipped before
@@ -101,6 +101,10 @@ final class MSL_Content {
 
 		if ( $done < 4 ) {
 			self::retire_group_approval();
+		}
+
+		if ( $done < 5 ) {
+			self::show_who_lit();
 		}
 
 		update_option( self::REVISION_OPTION, self::REVISION, false );
@@ -353,6 +357,48 @@ final class MSL_Content {
 			if ( $touched ) {
 				update_post_meta( (int) $page_id, $privacy_key, $stored );
 			}
+		}
+	}
+
+	/**
+	 * Revision 5 — the list of who has already lit one comes back on.
+	 *
+	 * It was switched off while it was a wrap of bare names and nothing else.
+	 * It is now what a funding page shows: who, and when. That is the part
+	 * which makes a family keep the page open, and the reason the switch was
+	 * turned off does not apply to it.
+	 *
+	 * As ever: only a stored zero, only once, and a campaign that switches it
+	 * off after this keeps it off.
+	 */
+	private static function show_who_lit(): void {
+		$key = MSL_Meta::key( 'groups' );
+
+		$pages = get_posts(
+			array(
+				'post_type'        => 'page',
+				'post_status'      => 'any',
+				'numberposts'      => 200,
+				'fields'           => 'ids',
+				'meta_key'         => $key, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+				'suppress_filters' => false,
+			)
+		);
+
+		foreach ( $pages as $page_id ) {
+			$stored = get_post_meta( (int) $page_id, $key, true );
+
+			if ( ! is_array( $stored ) || ! isset( $stored['show_people'] ) ) {
+				continue;
+			}
+
+			if ( 0 !== (int) $stored['show_people'] ) {
+				continue;
+			}
+
+			$stored['show_people'] = 1;
+
+			update_post_meta( (int) $page_id, $key, $stored );
 		}
 	}
 
@@ -909,7 +955,7 @@ final class MSL_Content {
 				'open_on'          => 1,
 				'auto_approve'     => 1,
 				'show_archive'     => 0,
-				'show_people'      => 0,
+				'show_people'      => 1,
 				'eyebrow_he'       => 'קבוצות לשבת',
 				'eyebrow_en'       => 'Shabbat groups',
 				'title_he'         => 'לפתוח קבוצה, ולהדליק ביחד',
@@ -1000,6 +1046,30 @@ final class MSL_Content {
 				'single_share_en'  => 'Share the group',
 				'single_opened_by_he' => 'נפתחה על ידי',
 				'single_opened_by_en' => 'Opened by',
+				'single_open_art_he' => 'לפתוח את היצירה',
+				'single_open_art_en' => 'Open the artwork',
+				'single_when_he'   => 'מתי',
+				'single_when_en'   => 'When',
+				'ago_now_he'       => 'ממש עכשיו',
+				'ago_now_en'       => 'just now',
+				'ago_minute_he'    => 'לפני דקה',
+				'ago_minute_en'    => 'a minute ago',
+				'ago_two_minutes_he' => 'לפני שתי דקות',
+				'ago_two_minutes_en' => 'two minutes ago',
+				'ago_minutes_he'   => 'לפני %d דקות',
+				'ago_minutes_en'   => '%d minutes ago',
+				'ago_hour_he'      => 'לפני שעה',
+				'ago_hour_en'      => 'an hour ago',
+				'ago_two_hours_he' => 'לפני שעתיים',
+				'ago_two_hours_en' => 'two hours ago',
+				'ago_hours_he'     => 'לפני %d שעות',
+				'ago_hours_en'     => '%d hours ago',
+				'ago_yesterday_he' => 'אתמול',
+				'ago_yesterday_en' => 'yesterday',
+				'ago_two_days_he'  => 'לפני יומיים',
+				'ago_two_days_en'  => 'two days ago',
+				'ago_days_he'      => 'לפני %d ימים',
+				'ago_days_en'      => '%d days ago',
 				'single_also_he'   => 'כל נר שנדלק כאן נספר גם ליצירה הגדולה של כל המשתתפים.',
 				'single_also_en'   => 'Every candle lit here counts for the great artwork of all the participants too.',
 				'back_home_he'     => 'חזרה לעמוד הקמפיין',

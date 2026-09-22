@@ -53,7 +53,20 @@ require MSL_DIR . 'template-parts/home/chrome-footer.php';
 if ( $msl_single && MSL_Groups::accepts_joins( $msl_group ) ) {
 	msl_section( 'join' );
 
+	require MSL_DIR . 'template-parts/groups/screen-wow.php';
 	require MSL_DIR . 'template-parts/home/screen-result.php';
+}
+
+/*
+ * The group's artwork, full screen. Printed for every group that can be seen,
+ * including one that is closed or waiting — looking at what a family already
+ * lit is not joining, and it is the part of the page people come back to.
+ */
+if ( $msl_single ) {
+	$msl_pct  = msl_group_pct( $msl_group );
+	$msl_open = MSL_Groups::accepts_joins( $msl_group );
+
+	require MSL_DIR . 'template-parts/groups/screen-art.php';
 }
 
 require MSL_DIR . 'template-parts/home/a11y-widget.php';

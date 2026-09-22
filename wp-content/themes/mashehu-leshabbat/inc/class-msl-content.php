@@ -36,7 +36,17 @@ final class MSL_Content {
 	/**
 	 * The current copy revision.
 	 */
-	private const REVISION = 3;
+	private const REVISION = 4;
+
+	/**
+	 * The privacy paragraph about groups, exactly as it shipped before
+	 * revision 4, so a page still holding it can be brought up and a page
+	 * whose owner rewrote it is left alone.
+	 */
+	private const GROUPS_POLICY_WAS = array(
+		'body_he' => "מי שפותח קבוצה מקליד את שם הקבוצה, את שם האדם שלכבודו היא נפתחה ואת הטקסט שלה. הטקסט הזה מוצג בעמוד ציבורי, ולכן הוא נקרא ומאושר לפני הפרסום — ולכן גם כדאי לא לכתוב בו פרטים רפואיים או אישיים שאינכם רוצים שיהיו גלויים.\n\nמי שמצטרף לקבוצה נספר בה, והצגת שמות המצטרפים בעמוד הקבוצה היא הגדרה של האתר שאפשר לכבות ולהדליק.",
+		'body_en' => "Whoever opens a group types the group’s name, the name of the person it was opened for, and its text. That text appears on a public page, so it is read and approved before it is published — and for the same reason it is better not to write medical or personal details in it that you would not want to be visible.\n\nAnyone who joins a group is counted in it, and whether the names of those who joined are shown on the group’s page is a site setting that can be switched on or off.",
+	);
 
 	/**
 	 * The display pace this theme ships with.
@@ -87,6 +97,10 @@ final class MSL_Content {
 
 		if ( $done < 3 ) {
 			self::add_personal_area_to_menus();
+		}
+
+		if ( $done < 4 ) {
+			self::retire_group_approval();
 		}
 
 		update_option( self::REVISION_OPTION, self::REVISION, false );
@@ -238,6 +252,107 @@ final class MSL_Content {
 			);
 
 			update_post_meta( (int) $page_id, $key, $stored );
+		}
+	}
+
+	/**
+	 * Revision 4 — a group no longer waits to be approved.
+	 *
+	 * Approval shipped on, on the reasoning that a stranger's words are
+	 * published under the campaign's name. The campaign decided otherwise: a
+	 * group is opened by somebody who wants their family to light candles
+	 * tonight, and a queue that only the site's owner can clear is a queue that
+	 * holds up exactly that. The switch stays — this only changes which way it
+	 * arrives.
+	 *
+	 * Only a stored zero is rewritten, and only once, so a campaign that turns
+	 * approval back on after this runs keeps it on.
+	 *
+	 * The privacy policy said the text is read before it is published, which
+	 * would now be untrue, so the same pass rewrites that paragraph — but only
+	 * where it is still word for word the one this file shipped.
+	 */
+	private static function retire_group_approval(): void {
+		$groups_key  = MSL_Meta::key( 'groups' );
+		$privacy_key = MSL_Meta::key( 'privacy' );
+		$now         = array();
+
+		foreach ( self::section( 'privacy' )['blocks'] ?? array() as $block ) {
+			if ( is_array( $block ) && 'קבוצות' === ( $block['title_he'] ?? '' ) ) {
+				$now = $block;
+				break;
+			}
+		}
+
+		$pages = get_posts(
+			array(
+				'post_type'        => 'page',
+				'post_status'      => 'any',
+				'numberposts'      => 200,
+				'fields'           => 'ids',
+				'meta_key'         => $groups_key, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+				'suppress_filters' => false,
+			)
+		);
+
+		foreach ( $pages as $page_id ) {
+			$stored = get_post_meta( (int) $page_id, $groups_key, true );
+
+			if ( ! is_array( $stored ) || ! isset( $stored['auto_approve'] ) ) {
+				continue;
+			}
+
+			if ( 0 !== (int) $stored['auto_approve'] ) {
+				continue;
+			}
+
+			$stored['auto_approve'] = 1;
+
+			update_post_meta( (int) $page_id, $groups_key, $stored );
+		}
+
+		$policies = get_posts(
+			array(
+				'post_type'        => 'page',
+				'post_status'      => 'any',
+				'numberposts'      => 200,
+				'fields'           => 'ids',
+				'meta_key'         => $privacy_key, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+				'suppress_filters' => false,
+			)
+		);
+
+		foreach ( $policies as $page_id ) {
+			$stored = get_post_meta( (int) $page_id, $privacy_key, true );
+
+			if ( ! is_array( $stored ) || ! isset( $stored['blocks'] ) || ! is_array( $stored['blocks'] ) ) {
+				continue;
+			}
+
+			$touched = false;
+
+			foreach ( $stored['blocks'] as $i => $block ) {
+				if ( ! is_array( $block ) || 'קבוצות' !== ( $block['title_he'] ?? '' ) ) {
+					continue;
+				}
+
+				foreach ( array( 'body_he', 'body_en' ) as $field ) {
+					if ( ( $block[ $field ] ?? '' ) !== self::GROUPS_POLICY_WAS[ $field ] ) {
+						continue;
+					}
+
+					if ( '' === (string) ( $now[ $field ] ?? '' ) ) {
+						continue;
+					}
+
+					$stored['blocks'][ $i ][ $field ] = (string) $now[ $field ];
+					$touched                          = true;
+				}
+			}
+
+			if ( $touched ) {
+				update_post_meta( (int) $page_id, $privacy_key, $stored );
+			}
 		}
 	}
 
@@ -792,7 +907,7 @@ final class MSL_Content {
 			),
 			'groups'            => array(
 				'open_on'          => 1,
-				'auto_approve'     => 0,
+				'auto_approve'     => 1,
 				'show_archive'     => 0,
 				'show_people'      => 0,
 				'eyebrow_he'       => 'קבוצות לשבת',
@@ -959,10 +1074,10 @@ You can ask to be removed at any moment by writing to the address at the foot of
 					array(
 						'title_he' => 'קבוצות',
 						'title_en' => 'Groups',
-						'body_he'  => 'מי שפותח קבוצה מקליד את שם הקבוצה, את שם האדם שלכבודו היא נפתחה ואת הטקסט שלה. הטקסט הזה מוצג בעמוד ציבורי, ולכן הוא נקרא ומאושר לפני הפרסום — ולכן גם כדאי לא לכתוב בו פרטים רפואיים או אישיים שאינכם רוצים שיהיו גלויים.
+						'body_he'  => 'מי שפותח קבוצה מקליד את שם הקבוצה, את שם האדם שלכבודו היא נפתחה ואת הטקסט שלה. הטקסט הזה מתפרסם בעמוד ציבורי מיד, ולכן כדאי לא לכתוב בו פרטים רפואיים או אישיים שאינכם רוצים שיהיו גלויים. אפשר לפנות אלינו בכל רגע ולבקש לתקן או להסיר קבוצה.
 
 מי שמצטרף לקבוצה נספר בה, והצגת שמות המצטרפים בעמוד הקבוצה היא הגדרה של האתר שאפשר לכבות ולהדליק.',
-						'body_en'  => 'Whoever opens a group types the group’s name, the name of the person it was opened for, and its text. That text appears on a public page, so it is read and approved before it is published — and for the same reason it is better not to write medical or personal details in it that you would not want to be visible.
+						'body_en'  => 'Whoever opens a group types the group’s name, the name of the person it was opened for, and its text. That text is published on a public page straight away, so it is better not to write medical or personal details in it that you would not want to be visible. You can write to us at any moment and ask for a group to be corrected or taken down.
 
 Anyone who joins a group is counted in it, and whether the names of those who joined are shown on the group’s page is a site setting that can be switched on or off.',
 					),

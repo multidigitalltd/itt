@@ -16,9 +16,12 @@
  * number this whole campaign is about.
  *
  * Free text written by strangers is published here under the project's name, so
- * a new group waits for approval by default. That default is a switch in the
- * content panel, because how much to trust the people opening groups is a
- * decision about a community and not about software.
+ * approval exists — but it arrives switched off, and a new group is live the
+ * moment it is opened. A group is opened by somebody who wants their family
+ * lighting candles tonight, and a queue only the site's owner can clear holds
+ * up exactly that. Both directions are one switch in the content panel,
+ * because how much to trust the people opening groups is a decision about a
+ * community and not about software.
  *
  * @package Mashehu_LeShabbat
  */
@@ -665,6 +668,25 @@ final class MSL_Groups {
 	 * @param string               $ip_hash Salted hash of the client address.
 	 * @return array<string, mixed>|WP_Error
 	 */
+	/**
+	 * Does a new group go straight to live?
+	 *
+	 * Read from the **groups page**, not from whichever page is passed around
+	 * here. The settings for groups are saved on the page that carries the
+	 * groups template, and the pages differ on every normal install — asking
+	 * the campaign page for them returns the shipped defaults and the switch in
+	 * the panel does nothing at all. That was true of this read until 1.29.0,
+	 * quietly, in the one direction nobody would notice: approval stayed on
+	 * however the switch was set.
+	 *
+	 * @return bool
+	 */
+	private static function auto_approves(): bool {
+		$page = MSL_Importer::page_id( 'groups' );
+
+		return 1 === (int) ( MSL_Meta::get( 'groups', $page > 0 ? $page : null )['auto_approve'] ?? 0 );
+	}
+
 	public static function create( int $page_id, array $data, string $ip_hash ): array|WP_Error {
 		global $wpdb;
 
@@ -680,7 +702,7 @@ final class MSL_Groups {
 		$code   = self::generate_code();
 		$token  = bin2hex( random_bytes( 16 ) );
 		$email  = (string) $data['owner_email'];
-		$auto   = 1 === (int) ( MSL_Meta::get( 'groups', $page_id )['auto_approve'] ?? 0 );
+		$auto   = self::auto_approves();
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery -- purpose-built table; see MSL_DB.
 		$inserted = $wpdb->insert(
@@ -1053,7 +1075,7 @@ final class MSL_Groups {
 			|| (string) $group['story'] !== $fields['story']
 			|| (int) $group['occasion'] !== $fields['occasion'];
 
-		$auto = 1 === (int) ( MSL_Meta::get( 'groups', (int) $group['page_id'] )['auto_approve'] ?? 0 );
+		$auto = self::auto_approves();
 
 		if ( $rewrote && ! $auto && self::LIVE === (string) $group['status'] ) {
 			$fields['status'] = self::PENDING;

@@ -39,6 +39,14 @@ $msl_owner = MSL_Groups::owns( $msl_group, $msl_token );
 $msl_open  = MSL_Groups::accepts_joins( $msl_group );
 $msl_wait  = MSL_Groups::PENDING === $msl_group['status'];
 $msl_share = MSL_Groups::url( (string) $msl_group['code'] );
+/*
+ * The picture, if it is still there. A row keeps the id of an attachment that
+ * somebody may since have deleted in Media — which is a legitimate way to take
+ * a photograph off a group — and an <img> pointing at nothing is worse than no
+ * picture at all.
+ */
+$msl_cover = (int) ( $msl_group['photo_id'] ?? 0 );
+$msl_cover = $msl_cover > 0 && wp_attachment_is_image( $msl_cover ) ? $msl_cover : 0;
 $msl_wa    = sprintf( msl_t( $msl_groups, 'wa_message' ), $msl_share );
 /*
  * Who is listed: the people who really joined, and after them the names the
@@ -72,6 +80,37 @@ $msl_state = array(
 );
 ?>
 <article class="msl-gfund" data-msl-group="<?php echo esc_attr( (string) $msl_group['code'] ); ?>">
+
+	<?php
+	/*
+	 * The picture, where one was uploaded. It is the first thing on the page
+	 * because it is the reason the page is about a person rather than about a
+	 * number — and it is entirely optional: a group without one reads exactly
+	 * as it did before, with nothing left behind where it would have been.
+	 *
+	 * Width and height are printed so the rest of the page does not jump when
+	 * it loads, and it is eager rather than lazy for the same reason: it is
+	 * the topmost thing on the screen, and lazy-loading what is already in
+	 * view only delays it.
+	 */
+	?>
+	<?php if ( $msl_cover > 0 ) : ?>
+		<figure class="msl-gcover" data-msl-rise>
+			<?php
+			echo wp_get_attachment_image(
+				$msl_cover,
+				'large',
+				false,
+				array(
+					'class'   => 'msl-gcover__img',
+					'alt'     => esc_attr( msl_t( $msl_groups, 'photo_alt' ) ),
+					'loading' => 'eager',
+				)
+			);
+			?>
+		</figure>
+	<?php endif; ?>
+
 
 	<?php if ( isset( $msl_state[ $msl_group['status'] ] ) ) : ?>
 		<p class="msl-gnote" role="status"<?php msl_i18n( 'groups', $msl_state[ $msl_group['status'] ] ); ?>><?php msl_the( $msl_groups, $msl_state[ $msl_group['status'] ] ); ?></p>

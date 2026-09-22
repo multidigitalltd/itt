@@ -81,6 +81,11 @@ final class MSL_Groups {
 	public const MAX_STORY  = 600;
 
 	/**
+	 * The artwork value that means "the picture this group uploaded".
+	 */
+	public const PHOTO_ART = 'photo';
+
+	/**
 	 * How many groups one address may open in a day.
 	 *
 	 * Generous for a family, useless for a script.
@@ -724,10 +729,18 @@ final class MSL_Groups {
 				'owner_email_hash' => '' !== $email ? MSL_DB::hash( $email ) : '',
 				'ip_hash'          => $ip_hash,
 				'person_id'        => null !== $person ? (int) $person['id'] : 0,
+				/*
+				 * The picture, and the candles derived from it. Both arrive
+				 * from the form handler after the file has been decoded,
+				 * re-encoded and stored — never from the submitted fields, so
+				 * a request that simply names an attachment id gets nowhere.
+				 */
+				'photo_id'         => max( 0, (int) ( $data['photo_id'] ?? 0 ) ),
+				'photo_art'        => (string) ( $data['photo_art'] ?? '' ),
 				'status'           => $auto ? self::LIVE : self::PENDING,
 				'created_at'       => current_time( 'mysql', true ),
 			),
-			array( '%s', '%d', '%s', '%s', '%s', '%d', '%s', '%s', '%d', '%s', '%s', '%s', '%s', '%s', '%s', '%d', '%s', '%s' )
+			array( '%s', '%d', '%s', '%s', '%s', '%d', '%s', '%s', '%d', '%s', '%s', '%s', '%s', '%s', '%s', '%d', '%d', '%s', '%s', '%s' )
 		);
 
 		if ( ! $inserted ) {
@@ -811,7 +824,55 @@ final class MSL_Groups {
 			self::bounce( $back, (string) $clean->get_error_message() );
 		}
 
-		$result = self::create( $page_id, (array) $clean, MSL_Joins::client_ip_hash() );
+		$clean = (array) $clean;
+
+		/*
+		 * The picture, if one came. It is taken after validation and before the
+		 * row is written, so a group is never opened with half a picture: if
+		 * the file is refused, the person is sent back to the form with the
+		 * reason and nothing at all has been created.
+		 *
+		 * Nothing from the request decides what is stored. The bytes are
+		 * decoded, resampled and re-encoded by MSL_Photo, and what lands in the
+		 * row is an id of our own making plus a grid of numbers.
+		 */
+		if ( isset( $_FILES['msl_photo'] ) && UPLOAD_ERR_NO_FILE !== (int) ( $_FILES['msl_photo']['error'] ?? UPLOAD_ERR_NO_FILE ) ) {
+			if ( UPLOAD_ERR_OK !== (int) $_FILES['msl_photo']['error'] ) {
+				// The commonest of these by far is a photograph straight off a
+				// phone meeting the server's own upload limit.
+				self::bounce( $back, 'photo_big' );
+			}
+
+			/*
+			 * Only two values are taken out of $_FILES, and neither is a
+			 * string the browser chose: the temporary path PHP wrote itself,
+			 * which is checked with is_uploaded_file(), and the size on disk.
+			 * The submitted name and the claimed type are not read at all —
+			 * MSL_Photo decides what the file is by looking inside it.
+			 */
+			$photo = MSL_Photo::accept(
+				array(
+					'tmp_name' => (string) $_FILES['msl_photo']['tmp_name'], // phpcs:ignore WordPress.Security.ValidatedSanitizedInput -- a path PHP wrote; validated with is_uploaded_file().
+					'size'     => (int) $_FILES['msl_photo']['size'],
+				),
+				(string) $clean['title']
+			);
+
+			if ( is_wp_error( $photo ) ) {
+				self::bounce( $back, (string) $photo->get_error_message() );
+			}
+
+			$clean['photo_id']  = (int) $photo['id'];
+			$clean['photo_art'] = (string) $photo['grid'];
+		}
+
+		if ( self::PHOTO_ART === ( $clean['artwork'] ?? '' ) && '' === ( $clean['photo_art'] ?? '' ) ) {
+			// Asked for a picture and sent none, or sent one this server could
+			// not read. Better a menorah than an empty frame.
+			$clean['artwork'] = 'rotate';
+		}
+
+		$result = self::create( $page_id, $clean, MSL_Joins::client_ip_hash() );
 
 		if ( is_wp_error( $result ) ) {
 			self::bounce( $back, (string) $result->get_error_message() );
@@ -873,7 +934,12 @@ final class MSL_Groups {
 			'honouree'    => trim( mb_substr( sanitize_text_field( (string) ( $post['honouree'] ?? '' ) ), 0, 120 ) ),
 			'story'       => trim( mb_substr( sanitize_textarea_field( (string) ( $post['story'] ?? '' ) ), 0, self::MAX_STORY ) ),
 			'target'      => max( self::MIN_TARGET, min( self::MAX_TARGET, (int) ( $post['target'] ?? 0 ) ) ),
-			'artwork'     => in_array( $artwork, MSL_Theme::ARTWORKS, true ) ? $artwork : 'rotate',
+			// 'photo' is a shape like any other here, and means "the picture
+			// this group uploaded". A group that asks for it without sending
+			// one is left with a grid of nothing, and the canvas falls back to
+			// the candles — which is why this does not need to know whether a
+			// file arrived.
+			'artwork'     => in_array( $artwork, MSL_Theme::ARTWORKS, true ) || self::PHOTO_ART === $artwork ? $artwork : 'rotate',
 			'accent'      => MSL_Theme::accent( (string) ( $post['accent'] ?? '' ) ),
 			'owner_name'  => trim( mb_substr( sanitize_text_field( (string) ( $post['owner_name'] ?? '' ) ), 0, 80 ) ),
 			'owner_email' => $email,
@@ -1376,6 +1442,8 @@ final class MSL_Groups {
 			'person_id'   => (int) $row['person_id'],
 			'seed_count'  => (int) ( $row['seed_count'] ?? 0 ),
 			'seed_names'  => (string) ( $row['seed_names'] ?? '' ),
+			'photo_id'    => (int) ( $row['photo_id'] ?? 0 ),
+			'photo_art'   => (string) ( $row['photo_art'] ?? '' ),
 			'is_demo'     => 1 === (int) ( $row['is_demo'] ?? 0 ),
 			'status'      => (string) $row['status'],
 			'created_at'  => (string) $row['created_at'],

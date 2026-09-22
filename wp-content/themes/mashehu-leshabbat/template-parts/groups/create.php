@@ -31,7 +31,15 @@ $msl_shapes   = MSL_Theme::ARTWORK_LABELS;
 	<h2 class="msl-gform__title" id="msl-gform-title"<?php msl_i18n( 'groups', 'form_title' ); ?>><?php msl_the( $msl_groups, 'form_title' ); ?></h2>
 	<p class="msl-gform__lead"<?php msl_i18n( 'groups', 'form_lead' ); ?>><?php msl_the( $msl_groups, 'form_lead' ); ?></p>
 
-	<form class="msl-gform__form" method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+	<?php
+	/*
+	 * multipart, because the form may carry a photograph. It still works with
+	 * no JavaScript and with no file: an empty file input posts nothing, and
+	 * the handler reads $_FILES only when something arrived.
+	 */
+	?>
+	<form class="msl-gform__form" method="post" enctype="multipart/form-data"
+		action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 		<input type="hidden" name="action" value="msl_group">
 		<?php wp_nonce_field( 'msl_group', 'msl_group_nonce' ); ?>
 
@@ -81,9 +89,35 @@ $msl_shapes   = MSL_Theme::ARTWORK_LABELS;
 					<?php foreach ( $msl_shapes as $msl_value => $msl_label ) : ?>
 						<option value="<?php echo esc_attr( $msl_value ); ?>"><?php echo esc_html( $msl_label ); ?></option>
 					<?php endforeach; ?>
+					<?php if ( MSL_Photo::available() ) : ?>
+						<option value="<?php echo esc_attr( MSL_Groups::PHOTO_ART ); ?>"<?php msl_i18n( 'groups', 'f_artwork_photo' ); ?>><?php msl_the( $msl_groups, 'f_artwork_photo' ); ?></option>
+					<?php endif; ?>
 				</select>
 			</p>
 		</div>
+
+		<?php
+		/*
+		 * The picture. One file, two uses: it heads the group's page, and the
+		 * artwork can be built out of it — bright where the picture is bright,
+		 * so the candles come out in the shape of whoever is in it.
+		 *
+		 * The field is offered only where this server can actually read an
+		 * image. A host without GD would accept the upload and then have
+		 * nothing to do with it, and a form that asks for something it cannot
+		 * use is worse than one that does not ask.
+		 */
+		?>
+		<?php if ( MSL_Photo::available() ) : ?>
+			<div class="msl-gform__row msl-gform__row--one">
+				<p class="msl-field">
+					<label class="msl-field__label" for="msl-g-photo"<?php msl_i18n( 'groups', 'f_photo' ); ?>><?php msl_the( $msl_groups, 'f_photo' ); ?></label>
+					<input type="file" class="msl-input msl-input--file" id="msl-g-photo" name="msl_photo"
+						accept="image/jpeg,image/png,image/webp" aria-describedby="msl-g-photo-help">
+					<span class="msl-field__help" id="msl-g-photo-help"<?php msl_i18n( 'groups', 'f_photo_help' ); ?>><?php msl_the( $msl_groups, 'f_photo_help' ); ?></span>
+				</p>
+			</div>
+		<?php endif; ?>
 
 		<div class="msl-gform__row">
 			<p class="msl-field">

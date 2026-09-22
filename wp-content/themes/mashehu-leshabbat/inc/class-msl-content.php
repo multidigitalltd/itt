@@ -993,6 +993,14 @@ final class MSL_Content {
 				'f_target_help_en' => 'You can change it later. A small target reached is worth more than a large one left open.',
 				'f_artwork_he'     => 'צורת היצירה של הקבוצה',
 				'f_artwork_en'     => 'The group’s artwork',
+				'f_artwork_photo_he' => 'מהתמונה שאעלה',
+				'f_artwork_photo_en' => 'From the photo I upload',
+				'f_photo_he'       => 'תמונה לקבוצה (לא חובה)',
+				'f_photo_en'       => 'A photo for the group (optional)',
+				'f_photo_help_he'  => 'התמונה תופיע בראש עמוד הקבוצה, ואם בחרתם "מהתמונה שאעלה" — גם היצירה תיבנה ממנה, נרות במקומות המוארים שבה. עד 8MB, JPG/PNG/WEBP. התמונה מתפרסמת בעמוד ציבורי.',
+				'f_photo_help_en'  => 'The photo heads the group’s page, and if you chose “From the photo I upload” the artwork is built from it too — candles where the picture is bright. Up to 8MB, JPG/PNG/WEBP. It is published on a public page.',
+				'photo_alt_he'     => 'תמונת הקבוצה',
+				'photo_alt_en'     => 'The group’s photo',
 				'f_owner_he'       => 'השם שלכם',
 				'f_owner_en'       => 'Your name',
 				'f_email_he'       => 'המייל שלכם',
@@ -1096,6 +1104,14 @@ final class MSL_Content {
 				'err_rate_en'      => 'A few groups have already been opened from this device today. Please try tomorrow.',
 				'err_closed_he'    => 'פתיחת קבוצות חדשות סגורה כרגע.',
 				'err_closed_en'    => 'Opening new groups is closed at the moment.',
+				'err_photo_he'     => 'התמונה לא הגיעה. אפשר לנסות לשלוח אותה שוב.',
+				'err_photo_en'     => 'The photo did not arrive. You can try sending it again.',
+				'err_photo_big_he' => 'התמונה גדולה מדי. עד 8MB — תמונה מהטלפון בדרך כלל נכנסת.',
+				'err_photo_big_en' => 'That photo is too large. Up to 8MB — a photo from a phone usually fits.',
+				'err_photo_type_he' => 'אפשר להעלות תמונה בלבד: JPG, PNG או WEBP.',
+				'err_photo_type_en' => 'Images only, please: JPG, PNG or WEBP.',
+				'err_photo_server_he' => 'לא הצלחנו לעבד את התמונה בשרת. אפשר לפתוח את הקבוצה בלעדיה ולהוסיף אותה אחר כך.',
+				'err_photo_server_en' => 'The server could not process that photo. You can open the group without it and add one later.',
 			),
 			'privacy'           => array(
 				'eyebrow_he'       => 'מדיניות פרטיות',
@@ -1146,8 +1162,12 @@ You can ask to be removed at any moment by writing to the address at the foot of
 						'title_en' => 'Groups',
 						'body_he'  => 'מי שפותח קבוצה מקליד את שם הקבוצה, את שם האדם שלכבודו היא נפתחה ואת הטקסט שלה. הטקסט הזה מתפרסם בעמוד ציבורי מיד, ולכן כדאי לא לכתוב בו פרטים רפואיים או אישיים שאינכם רוצים שיהיו גלויים. אפשר לפנות אלינו בכל רגע ולבקש לתקן או להסיר קבוצה.
 
+אפשר גם להעלות תמונה לקבוצה, וזו בחירה חופשית לגמרי. תמונה שהועלתה מתפרסמת בראש עמוד הקבוצה, ולעיתים גם היצירה נבנית ממנה. אנחנו שומרים עותק שהשרת שלנו יצר מחדש — בלי נתוני הצילום שהיו בקובץ המקורי — ואפשר לבקש את הסרתה בכל רגע.
+
 מי שמצטרף לקבוצה נספר בה, והצגת שמות המצטרפים בעמוד הקבוצה היא הגדרה של האתר שאפשר לכבות ולהדליק.',
 						'body_en'  => 'Whoever opens a group types the group’s name, the name of the person it was opened for, and its text. That text is published on a public page straight away, so it is better not to write medical or personal details in it that you would not want to be visible. You can write to us at any moment and ask for a group to be corrected or taken down.
+
+You may also upload a photo for the group, entirely as you choose. An uploaded photo is published at the head of the group’s page, and the artwork may be built from it. We keep a copy our own server re-encoded — without the camera data the original file carried — and you can ask for it to be removed at any moment.
 
 Anyone who joins a group is counted in it, and whether the names of those who joined are shown on the group’s page is a site setting that can be switched on or off.',
 					),

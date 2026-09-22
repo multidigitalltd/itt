@@ -4764,6 +4764,38 @@ select.msl-input {
 /* The artwork and the ask, side by side. The artwork leads on a wide screen
    because it is the thing that makes the number mean something; on a phone the
    ask comes first, because the scroll is the scarce resource. */
+/* The picture at the head of a group's page. Wide and shallow, because it is
+   an introduction and not the page: the numbers and the ask have to stay above
+   the fold on a phone, and a portrait at its own aspect ratio pushes them off.
+   object-fit keeps the face in the middle rather than squashing it. */
+.msl-gcover {
+	margin: 0 0 20px;
+	border-radius: 30px;
+	overflow: hidden;
+	background: var(--msl-ink-panel);
+	line-height: 0;
+}
+.msl-gcover__img {
+	inline-size: 100%;
+	block-size: clamp(170px, 26vw, 320px);
+	object-fit: cover;
+	/* Not the middle: these are pictures of people, and the middle of a
+	   portrait held upright is a chest. A third of the way down is where a
+	   face is in almost every photograph anybody takes of somebody. */
+	object-position: center 30%;
+	display: block;
+}
+/* A file input cannot be restyled far without replacing it, and replacing it
+   is how file fields stop working for keyboards and screen readers. So it is
+   left as the browser's own control, given the same box as its neighbours. */
+.msl-page .msl-input--file {
+	padding: 10px 12px;
+	background: var(--msl-surface);
+	cursor: pointer;
+}
+.msl-gform__row--one {
+	grid-template-columns: minmax(0, 1fr);
+}
 .msl-gfund__grid {
 	display: grid;
 	grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);

@@ -733,9 +733,34 @@ final class MSL_Admin {
 										<?php echo esc_html( $msl_label ); ?>
 									</option>
 								<?php endforeach; ?>
+								<?php
+								/*
+								 * Offered only where there is a picture to draw.
+								 * Without this the option would be missing from
+								 * the one screen that can edit such a group, and
+								 * saving anything at all would quietly move it
+								 * to a menorah.
+								 */
+								?>
+								<?php if ( '' !== (string) $value( 'photo_art', '' ) ) : ?>
+									<option value="<?php echo esc_attr( MSL_Groups::PHOTO_ART ); ?>" <?php selected( (string) $value( 'artwork', 'rotate' ), MSL_Groups::PHOTO_ART ); ?>>
+										<?php esc_html_e( 'התמונה של הקבוצה', 'mashehu-leshabbat' ); ?>
+									</option>
+								<?php endif; ?>
 							</select>
 						</td>
 					</tr>
+					<?php if ( (int) $value( 'photo_id', 0 ) > 0 ) : ?>
+						<tr>
+							<th scope="row"><?php esc_html_e( 'התמונה', 'mashehu-leshabbat' ); ?></th>
+							<td>
+								<?php echo wp_get_attachment_image( (int) $value( 'photo_id', 0 ), 'medium', false, array( 'style' => 'max-width:220px;height:auto;border-radius:10px' ) ); ?>
+								<p class="description">
+									<?php esc_html_e( 'הועלתה על ידי מי שפתח את הקבוצה, ומוצגת בראש עמוד הקבוצה. להסרה: למחוק אותה במדיה — העמוד ימשיך לעבוד בלעדיה.', 'mashehu-leshabbat' ); ?>
+								</p>
+							</td>
+						</tr>
+					<?php endif; ?>
 					<tr>
 						<th scope="row"><label for="msl-ge-accent"><?php esc_html_e( 'צבע האור', 'mashehu-leshabbat' ); ?></label></th>
 						<td><input type="text" id="msl-ge-accent" name="accent" class="regular-text" placeholder="#FFB25C"

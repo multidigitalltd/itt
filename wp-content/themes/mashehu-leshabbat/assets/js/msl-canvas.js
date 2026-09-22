@@ -47,6 +47,9 @@ window.MSLCanvas = (function () {
 
 	var cells = null;
 	var N = 76;
+
+	/* The most candles a photograph may become. See buildArt(). */
+	var PHOTO_CELLS = 1100;
 	var sprites = null;
 	var land = null;
 	var mapPoints = [];
@@ -309,6 +312,10 @@ window.MSLCanvas = (function () {
 	   what makes the flames read as flames rather than as a uniform dot field. */
 	function mask(kind, x, y, r) {
 		var cs, i, cx, dx, t, w, d, f, a, step, k, R, m;
+
+		if (kind === 'photo') {
+			return photoMask(x, y, r);
+		}
 
 		if (kind === 'star') {
 			R = 0.36;
@@ -573,8 +580,85 @@ window.MSLCanvas = (function () {
 		return null;
 	}
 
+	/* ------------------------------------------------------------------
+	 * A photograph, as candles
+	 *
+	 * The server has already done the looking: it sends one number per cell of
+	 * a square grid, 0 where the picture was dark and 255 where it was
+	 * brightest, with the polarity decided there too. All that is left here is
+	 * to read that grid the way every other artwork reads a formula — same
+	 * sprites, same flicker, same filling in proportion to the count — which is
+	 * why a photograph costs one branch in mask() and nothing anywhere else.
+	 * --------------------------------------------------------------- */
+
+	var photo = null;
+
+	function loadPhoto(encoded) {
+		photo = null;
+
+		if (typeof encoded !== 'string' || encoded.length < 8) { return; }
+
+		try {
+			var raw = window.atob(encoded);
+			var side = Math.round(Math.sqrt(raw.length));
+
+			/* Anything that is not a square grid is not a grid this wrote, and
+			   a half-read picture would draw as noise. */
+			if (side < 8 || side * side !== raw.length) { return; }
+
+			var bytes = new Uint8Array(raw.length);
+
+			for (var i = 0; i < raw.length; i++) { bytes[i] = raw.charCodeAt(i); }
+
+			photo = { side: side, data: bytes };
+		} catch (e) {
+			photo = null;
+		}
+	}
+
+	/* Bilinear, because the grid is coarser than the candle field: nearest
+	   neighbour would put the seams of a 64-wide grid into a 76-wide artwork,
+	   and a face would arrive with square edges. */
+	function photoAt(x, y) {
+		var side = photo.side;
+		var fx = Math.min(side - 1, Math.max(0, x * side - 0.5));
+		var fy = Math.min(side - 1, Math.max(0, y * side - 0.5));
+		var x0 = Math.floor(fx);
+		var y0 = Math.floor(fy);
+		var x1 = Math.min(side - 1, x0 + 1);
+		var y1 = Math.min(side - 1, y0 + 1);
+		var tx = fx - x0;
+		var ty = fy - y0;
+		var d = photo.data;
+		var top = d[y0 * side + x0] * (1 - tx) + d[y0 * side + x1] * tx;
+		var bot = d[y1 * side + x0] * (1 - tx) + d[y1 * side + x1] * tx;
+
+		return (top * (1 - ty) + bot * ty) / 255;
+	}
+
+	function photoMask(x, y, r) {
+		var v = photoAt(x, y);
+
+		if (v > 0.02) {
+			/* Never fully cold and never fully white: a flame at heat 0 reads
+			   as a dead pixel, and one at heat 1 everywhere flattens the
+			   picture into a slab. */
+			return { heat: Math.max(0.16, Math.min(0.98, 0.16 + v * 0.84)) };
+		}
+
+		/* The dark of the picture keeps the faintest scatter, the same one
+		   every other artwork ends on, so the frame does not read as a hole
+		   cut out of the night. */
+		return dust(y, r);
+	}
+
 	function buildArt() {
 		var kind = state.artwork || 'candles';
+
+		/* Asked for a photograph and given none — an old row, a server without
+		   GD, an image that could not be read. The candles are the answer that
+		   is never wrong. */
+		if (kind === 'photo' && !photo) { kind = 'candles'; }
 		var r = rng(20260807);
 		var out = [];
 		var gx, gy, nx, ny, m;
@@ -596,10 +680,38 @@ window.MSLCanvas = (function () {
 						ph: r() * TAU,
 						jx: (r() - 0.5) * 0.9,
 						jy: (r() - 0.5) * 0.9,
-						sc: 0.72 + r() * 0.62
+						/* A photograph's flames are drawn a little smaller than
+						   a drawn shape's. Its cells cover the whole frame
+						   rather than a figure in the middle of it, so at the
+						   usual size they overlap into a blur — and every
+						   overlap is also a sprite drawn over another one, which
+						   is where a 1280px artwork was losing its frame rate. */
+						sc: ( 'photo' === kind ? 0.56 : 0.72 ) + r() * ( 'photo' === kind ? 0.42 : 0.62 )
 					});
 				}
 			}
+		}
+
+		/*
+		 * A photograph can ask for far more candles than a drawn shape does.
+		 * The eight shapes in this file land between 800 and 1,100 cells
+		 * because they are lines and flames; a picture lights whatever share
+		 * of itself is bright, and a bright picture came out at 2,053 — which
+		 * measured at 77ms a frame on a 1280px artwork against the menorah's
+		 * 25ms, or thirteen frames a second on a machine far faster than the
+		 * phones this is for.
+		 *
+		 * So the field is thinned to the same league, deterministically and
+		 * without preferring the bright parts: dropping by heat would keep the
+		 * face and throw away the shading that makes it a face. The seed is
+		 * fixed, so a group's artwork is the same picture on every visit and
+		 * on every device.
+		 */
+		if ('photo' === kind && out.length > PHOTO_CELLS) {
+			var keep = PHOTO_CELLS / out.length;
+			var r3 = rng(4242);
+
+			out = out.filter(function () { return r3() < keep; });
 		}
 
 		/* Cooler cells light first, so the artwork fills from its edges inward
@@ -1760,8 +1872,10 @@ window.MSLCanvas = (function () {
 	}
 
 	function setState(patch) {
-		var rebuildArt = ('artwork' in patch && patch.artwork !== state.artwork);
+		var rebuildArt = ('artwork' in patch && patch.artwork !== state.artwork) || 'artGrid' in patch;
 		var rebuildSprites = ('accent' in patch && patch.accent !== state.accent);
+
+		if ('artGrid' in patch) { loadPhoto(patch.artGrid); }
 
 		Object.keys(patch).forEach(function (key) { state[key] = patch[key]; });
 
@@ -1790,6 +1904,8 @@ window.MSLCanvas = (function () {
 		state.accent = options.accent || state.accent;
 		state.artwork = options.artwork || state.artwork;
 		state.still = !!options.still;
+
+		loadPhoto(options.artGrid);
 
 		if (typeof options.motes === 'number') { moteCount = Math.max(0, Math.min(80, options.motes)); }
 		mapPoints = options.mapPoints || [];

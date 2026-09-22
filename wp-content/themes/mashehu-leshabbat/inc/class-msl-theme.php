@@ -351,6 +351,12 @@ final class MSL_Theme {
 			return $chosen;
 		}
 
+		// A group drawing its own photograph is a chosen shape too, even though
+		// it is not one this theme can draw from nothing.
+		if ( class_exists( 'MSL_Groups' ) && MSL_Groups::PHOTO_ART === $chosen ) {
+			return $chosen;
+		}
+
 		$next = self::candle_lighting( $campaign );
 		$last = $next - WEEK_IN_SECONDS;
 
@@ -442,6 +448,15 @@ final class MSL_Theme {
 			),
 			'accent'  => self::accent( (string) $group['accent'] ),
 			'live'    => MSL_Groups::LIVE === $group['status'],
+			/*
+			 * The candles derived from this group's photograph, as one number
+			 * per cell. It is sent only when the group actually asked for that
+			 * artwork — it is a few kilobytes, and a group drawing a menorah
+			 * has no use for it.
+			 */
+			'artGrid' => MSL_Groups::PHOTO_ART === (string) $group['artwork']
+				? (string) ( $group['photo_art'] ?? '' )
+				: '',
 		);
 	}
 

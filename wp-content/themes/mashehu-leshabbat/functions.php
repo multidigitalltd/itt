@@ -42,6 +42,7 @@ require_once MSL_DIR . 'inc/class-msl-i18n.php';
 require_once MSL_DIR . 'inc/class-msl-db.php';
 require_once MSL_DIR . 'inc/class-msl-joins.php';
 require_once MSL_DIR . 'inc/class-msl-stats.php';
+require_once MSL_DIR . 'inc/class-msl-photo.php';
 require_once MSL_DIR . 'inc/class-msl-groups.php';
 require_once MSL_DIR . 'inc/class-msl-rest.php';
 require_once MSL_DIR . 'inc/class-msl-auth.php';

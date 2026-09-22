@@ -778,16 +778,16 @@
  * fixed height is what pushes the menu off a phone.
  */
 .msl-logo__image {
-	block-size: 46px;
+	block-size: 58px;
 	inline-size: auto;
-	max-inline-size: min(240px, 42vw);
+	max-inline-size: min(300px, 46vw);
 	object-fit: contain;
 	display: block;
 }
 @media (max-width: 720px) {
 	.msl-logo__image {
-		block-size: 38px;
-		max-inline-size: 46vw;
+		block-size: 46px;
+		max-inline-size: 52vw;
 	}
 }
 /* Visible to a screen reader, and to nobody else. Used for the site name when

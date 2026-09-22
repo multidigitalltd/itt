@@ -95,32 +95,20 @@ $msl_shapes   = MSL_Theme::ARTWORK_LABELS;
 
 		<?php
 		/*
-		 * The pictures. Two fields and not one with a box beside it, because
-		 * they are two decisions and people make them separately: the person at
-		 * the head of the page, and the picture the candles are made of — which
-		 * may be a different photograph, or one they would rather not publish
-		 * at all. Nothing is kept of the second but the numbers.
-		 *
-		 * Offered only where this server can read an image. A host without GD
-		 * would accept the upload and then have nothing to do with it, and a
-		 * form that asks for something it cannot use is worse than one that does
-		 * not ask.
+		 * The cover, and only the cover. There was a second upload here for a
+		 * while, which the artwork was built from; the campaign asked for it to
+		 * go. Offered only where this server can read an image at all — a form
+		 * that asks for something it cannot use is worse than one that does not
+		 * ask.
 		 */
 		?>
 		<?php if ( MSL_Photo::available() ) : ?>
-			<div class="msl-gform__row">
+			<div class="msl-gform__row msl-gform__row--one">
 				<p class="msl-field">
 					<label class="msl-field__label" for="msl-g-photo"<?php msl_i18n( 'groups', 'f_photo' ); ?>><?php msl_the( $msl_groups, 'f_photo' ); ?></label>
 					<input type="file" class="msl-input msl-input--file" id="msl-g-photo" name="msl_photo"
 						accept="image/jpeg,image/png,image/webp" aria-describedby="msl-g-photo-help">
 					<span class="msl-field__help" id="msl-g-photo-help"<?php msl_i18n( 'groups', 'f_photo_help' ); ?>><?php msl_the( $msl_groups, 'f_photo_help' ); ?></span>
-				</p>
-
-				<p class="msl-field">
-					<label class="msl-field__label" for="msl-g-artphoto"<?php msl_i18n( 'groups', 'f_art_photo' ); ?>><?php msl_the( $msl_groups, 'f_art_photo' ); ?></label>
-					<input type="file" class="msl-input msl-input--file" id="msl-g-artphoto" name="msl_art_photo"
-						accept="image/jpeg,image/png,image/webp" aria-describedby="msl-g-artphoto-help">
-					<span class="msl-field__help" id="msl-g-artphoto-help"<?php msl_i18n( 'groups', 'f_art_photo_help' ); ?>><?php msl_the( $msl_groups, 'f_art_photo_help' ); ?></span>
 				</p>
 			</div>
 		<?php endif; ?>

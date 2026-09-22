@@ -47,9 +47,6 @@ window.MSLCanvas = (function () {
 
 	var cells = null;
 	var N = 76;
-
-	/* The most candles a photograph may become. See buildArt(). */
-	var PHOTO_CELLS = 1100;
 	var sprites = null;
 	var land = null;
 	var mapPoints = [];
@@ -313,10 +310,6 @@ window.MSLCanvas = (function () {
 	function mask(kind, x, y, r) {
 		var cs, i, cx, dx, t, w, d, f, a, step, k, R, m;
 
-		if (kind === 'photo') {
-			return photoMask(x, y, r);
-		}
-
 		if (kind === 'star') {
 			R = 0.36;
 			var scx = 0.5;
@@ -476,42 +469,205 @@ window.MSLCanvas = (function () {
 		/* Jerusalem, from the west: the wall it stands behind, the dome on its
 		   drum, and the two towers that frame it. The wall is a mass rather than
 		   an outline — an outlined rectangle reads as a box, not as stone. */
+		/*
+		 * The walls of Jerusalem, and not a skyline.
+		 *
+		 * This used to be a dome, two towers and a spire standing behind a low
+		 * wall — buildings, in other words, and the campaign asked for the
+		 * walls themselves. So the wall is now the whole subject: a long
+		 * crenellated band across the frame, three bastions standing out of it,
+		 * and a gate arch cut through the middle.
+		 *
+		 * The gate is drawn as an *absence*. Everything here lights candles, so
+		 * the only way to say "an opening" is to leave those cells dark and
+		 * light the stones around them — which is also how a gate reads from
+		 * outside the city at night.
+		 */
 		if (kind === 'jerusalem') {
-			var wallTop = 0.720;
+			var jTop = 0.520;          /* where the wall proper begins */
+			var jBase = 0.762;         /* the ground line */
+			var jLeft = 0.070;
+			var jRight = 0.930;
+			var gateCx = 0.5;
+			var gateR = 0.090;
+			var gateFloor = jBase;
+			var gateTop = 0.642;       /* springing line of the arch */
 
-			if (y > wallTop && y < 0.848 && x > 0.100 && x < 0.900 && r() < 0.70) { return { heat: 0.22 }; }
+			/* Inside the gateway: no stone, no candle. */
+			var inGate = (y > gateTop - gateR && y < gateFloor && Math.abs(x - gateCx) < gateR)
+				&& (y >= gateTop || Math.hypot(x - gateCx, y - gateTop) < gateR);
 
-			/* Crenellations, on top of the wall rather than cut into it: a
-			   block every 0.0667 across, with a real gap between them. */
-			if (y > 0.652 && y <= wallTop && x > 0.100 && x < 0.900) {
-				t = (x - 0.117) / 0.0667;
+			if (inGate) { return null; }
 
-				if (Math.abs(t - Math.round(t)) < 0.27) { return { heat: 0.34 }; }
+			/* The three bastions: squarer and taller than the wall, so the line
+			   of it is not one unbroken bar. */
+			var towers = [0.175, 0.500, 0.825];
+			var towerW = [0.062, 0.086, 0.062];
+			var towerTop = [0.436, 0.388, 0.436];
+
+			for (i = 0; i < towers.length; i++) {
+				if (Math.abs(x - towers[i]) <= towerW[i] && y > towerTop[i] && y < jBase) {
+					/* Face stones, thinned so the tower reads as masonry rather
+					   than as a filled block. */
+					if (r() < 0.30) { return { heat: 0.24 }; }
+
+					return null;
+				}
+
+				/* The battlement teeth on each tower's own top. */
+				if (Math.abs(x - towers[i]) <= towerW[i] && y > towerTop[i] - 0.048 && y <= towerTop[i]) {
+					t = (x - (towers[i] - towerW[i])) / 0.030;
+
+					if (Math.abs(t - Math.round(t)) < 0.26) { return { heat: 0.62 }; }
+
+					return null;
+				}
 			}
 
-			if (Math.abs(y - wallTop) <= 0.011 && x > 0.100 && x < 0.900) { return { heat: 0.36 }; }
+			/* The wall between them. */
+			if (y > jTop && y < jBase && x > jLeft && x < jRight) {
+				/* A course line every so often: a wall with no horizontals is a
+				   fence. */
+				if (Math.abs(((y - jTop) % 0.064) - 0.032) < 0.006) { return { heat: 0.30 }; }
 
-			/* The dome, its drum, and the light standing on it. */
-			if (onArc(x, y, 0.500, 0.556, 0.152, 0.018, 0, Math.PI)) { return { heat: 0.58 }; }
-			if (onSeg(x, y, 0.348, 0.556, 0.348, wallTop, 0.016)) { return { heat: 0.40 }; }
-			if (onSeg(x, y, 0.652, 0.556, 0.652, wallTop, 0.016)) { return { heat: 0.40 }; }
-			if (Math.abs(y - 0.556) <= 0.012 && Math.abs(x - 0.5) <= 0.152) { return { heat: 0.36 }; }
-			if (Math.abs(x - 0.5) <= 0.017 && y > 0.352 && y < 0.410) { return { heat: 0.50 }; }
+				if (r() < 0.16) { return { heat: 0.18 }; }
 
-			m = flame(x, y, 0.5, 0.250, 0.104, 0.019);
+				return null;
+			}
+
+			/* Its own crenellations, standing on top rather than cut into it. */
+			if (y > jTop - 0.052 && y <= jTop && x > jLeft && x < jRight) {
+				t = (x - jLeft) / 0.0538;
+
+				if (Math.abs(t - Math.round(t)) < 0.24) { return { heat: 0.60 }; }
+
+				return null;
+			}
+
+			/* The arch over the gate, and the ground the wall stands on. */
+			if (onArc(x, y, gateCx, gateTop, gateR + 0.020, 0.020, Math.PI, TAU)) { return { heat: 0.72 }; }
+			if (Math.abs(y - jBase) <= 0.010 && x > jLeft - 0.020 && x < jRight + 0.020) { return { heat: 0.30 }; }
+
+			/* One light over the gate — the reason for the whole picture. */
+			m = flame(x, y, gateCx, 0.250, 0.086, 0.017);
 
 			if (m) { return m; }
 
-			/* Two towers, one domed and one spired, so the skyline is not
-			   symmetrical about the dome. */
-			if (onPath(x, y, [[0.160, wallTop], [0.160, 0.462], [0.262, 0.462], [0.262, wallTop]], 0.017, false)) { return { heat: 0.38 }; }
-			if (onArc(x, y, 0.211, 0.462, 0.051, 0.017, 0, Math.PI)) { return { heat: 0.44 }; }
-			if (onPath(x, y, [[0.738, wallTop], [0.738, 0.446], [0.840, 0.446], [0.840, wallTop]], 0.017, false)) { return { heat: 0.38 }; }
-			/* A diagonal is the thinnest thing on the grid, so the spire is
-			   stroked wider than the walls to survive rasterising at N. */
-			if (onPath(x, y, [[0.724, 0.450], [0.789, 0.362], [0.854, 0.450]], 0.019, false)) { return { heat: 0.44 }; }
+			m = haze(x, y, gateCx, 0.310, 0.090, 0.260, 0.15, r);
 
-			m = haze(x, y, 0.5, 0.330, 0.100, 0.290, 0.16, r);
+			if (m) { return m; }
+
+			return dust(y, r);
+		}
+
+		/*
+		 * The Temple: a portico of pillars under a pediment, on its steps.
+		 *
+		 * Drawn as the front elevation and nothing else. A three-quarter view
+		 * would need shading to read, and shading is exactly what a field of
+		 * candles cannot do — every cell here is either a flame or nothing.
+		 */
+		if (kind === 'temple') {
+			var tBase = 0.812;
+			var tFloor = 0.700;        /* where the pillars stand */
+			var tCap = 0.470;          /* where they finish */
+			var tHalf = 0.330;
+
+			/* Three steps, each a little wider than the one above it. */
+			for (i = 0; i < 3; i++) {
+				var stepTop = tFloor + i * 0.038;
+				var stepHalf = tHalf + 0.026 + i * 0.030;
+
+				if (y > stepTop && y <= stepTop + 0.038 && Math.abs(x - 0.5) <= stepHalf) {
+					return { heat: 0.24 };
+				}
+			}
+
+			if (Math.abs(y - tBase) <= 0.009 && Math.abs(x - 0.5) <= tHalf + 0.120) { return { heat: 0.26 }; }
+
+			/* Six pillars, fluted by the gaps between their own strokes. */
+			var pillars = [-0.268, -0.161, -0.054, 0.054, 0.161, 0.268];
+
+			for (i = 0; i < pillars.length; i++) {
+				cx = 0.5 + pillars[i];
+
+				if (y > tCap && y < tFloor && Math.abs(x - cx) <= 0.026) {
+					/* The outer edge of each shaft is lit and its middle is
+					   left darker, which is what makes six pillars read as six
+					   and not as one wide band. */
+					return Math.abs(x - cx) > 0.013 ? { heat: 0.34 } : null;
+				}
+
+				/* Base and capital. */
+				if (Math.abs(y - tCap) <= 0.016 && Math.abs(x - cx) <= 0.036) { return { heat: 0.40 }; }
+				if (Math.abs(y - tFloor) <= 0.014 && Math.abs(x - cx) <= 0.036) { return { heat: 0.34 }; }
+			}
+
+			/* The entablature and the pediment above it. */
+			if (y > 0.406 && y <= 0.446 && Math.abs(x - 0.5) <= tHalf) { return { heat: 0.38 }; }
+			if (onPath(x, y, [[0.5 - tHalf, 0.406], [0.5, 0.276], [0.5 + tHalf, 0.406]], 0.016, false)) { return { heat: 0.44 }; }
+
+			/* The doorway, a tall opening in the middle, left dark. */
+			if (y > 0.520 && y < tFloor && Math.abs(x - 0.5) <= 0.054) {
+				return Math.abs(Math.abs(x - 0.5) - 0.054) < 0.012 || Math.abs(y - 0.520) < 0.012
+					? { heat: 0.36 }
+					: null;
+			}
+
+			m = flame(x, y, 0.5, 0.150, 0.096, 0.018);
+
+			if (m) { return m; }
+
+			m = haze(x, y, 0.5, 0.215, 0.090, 0.250, 0.14, r);
+
+			if (m) { return m; }
+
+			return dust(y, r);
+		}
+
+		/*
+		 * Hearts. Five of them, at different sizes, overlapping a little.
+		 *
+		 * The outline only: a filled heart at this scale is a blob, and the
+		 * shape lives entirely in its two shoulders and its point. The curve is
+		 * the standard implicit one, and "on the outline" is a band around
+		 * where that expression crosses zero.
+		 */
+		if (kind === 'hearts') {
+			var hearts = [
+				[0.500, 0.420, 0.170],
+				[0.178, 0.318, 0.090],
+				[0.822, 0.318, 0.090],
+				[0.315, 0.638, 0.082],
+				[0.685, 0.638, 0.082]
+			];
+
+			for (i = 0; i < hearts.length; i++) {
+				var hx = (x - hearts[i][0]) / hearts[i][2];
+				var hy = -(y - hearts[i][1]) / hearts[i][2];
+
+				/* (x² + y² − 1)³ − x²y³ = 0, the one everybody uses. */
+				var q = hx * hx + hy * hy - 1;
+				var v = q * q * q - hx * hx * hy * hy * hy;
+
+				/*
+				 * Divided by the size of its own gradient, which turns the
+				 * value of the expression into roughly the distance to the
+				 * curve. Without that the band is as wide as the expression is
+				 * steep — narrow at the point, enormous at the shoulders — and
+				 * five hearts come out as five blobs with holes in them.
+				 * Measured that way first; this is the fix for it.
+				 */
+				var gx = 6 * hx * q * q - 2 * hx * hy * hy * hy;
+				var gy = 6 * hy * q * q - 3 * hx * hx * hy * hy;
+				var dist = Math.abs(v) / (Math.hypot(gx, gy) + 1e-6) * hearts[i][2];
+
+				if (dist < 0.011) {
+					return { heat: i === 0 ? 0.62 : 0.46 };
+				}
+			}
+
+			m = haze(x, y, 0.5, 0.470, 0.240, 0.420, 0.10, r);
 
 			if (m) { return m; }
 
@@ -580,85 +736,8 @@ window.MSLCanvas = (function () {
 		return null;
 	}
 
-	/* ------------------------------------------------------------------
-	 * A photograph, as candles
-	 *
-	 * The server has already done the looking: it sends one number per cell of
-	 * a square grid, 0 where the picture was dark and 255 where it was
-	 * brightest, with the polarity decided there too. All that is left here is
-	 * to read that grid the way every other artwork reads a formula — same
-	 * sprites, same flicker, same filling in proportion to the count — which is
-	 * why a photograph costs one branch in mask() and nothing anywhere else.
-	 * --------------------------------------------------------------- */
-
-	var photo = null;
-
-	function loadPhoto(encoded) {
-		photo = null;
-
-		if (typeof encoded !== 'string' || encoded.length < 8) { return; }
-
-		try {
-			var raw = window.atob(encoded);
-			var side = Math.round(Math.sqrt(raw.length));
-
-			/* Anything that is not a square grid is not a grid this wrote, and
-			   a half-read picture would draw as noise. */
-			if (side < 8 || side * side !== raw.length) { return; }
-
-			var bytes = new Uint8Array(raw.length);
-
-			for (var i = 0; i < raw.length; i++) { bytes[i] = raw.charCodeAt(i); }
-
-			photo = { side: side, data: bytes };
-		} catch (e) {
-			photo = null;
-		}
-	}
-
-	/* Bilinear, because the grid is coarser than the candle field: nearest
-	   neighbour would put the seams of a 64-wide grid into a 76-wide artwork,
-	   and a face would arrive with square edges. */
-	function photoAt(x, y) {
-		var side = photo.side;
-		var fx = Math.min(side - 1, Math.max(0, x * side - 0.5));
-		var fy = Math.min(side - 1, Math.max(0, y * side - 0.5));
-		var x0 = Math.floor(fx);
-		var y0 = Math.floor(fy);
-		var x1 = Math.min(side - 1, x0 + 1);
-		var y1 = Math.min(side - 1, y0 + 1);
-		var tx = fx - x0;
-		var ty = fy - y0;
-		var d = photo.data;
-		var top = d[y0 * side + x0] * (1 - tx) + d[y0 * side + x1] * tx;
-		var bot = d[y1 * side + x0] * (1 - tx) + d[y1 * side + x1] * tx;
-
-		return (top * (1 - ty) + bot * ty) / 255;
-	}
-
-	function photoMask(x, y, r) {
-		var v = photoAt(x, y);
-
-		if (v > 0.02) {
-			/* Never fully cold and never fully white: a flame at heat 0 reads
-			   as a dead pixel, and one at heat 1 everywhere flattens the
-			   picture into a slab. */
-			return { heat: Math.max(0.16, Math.min(0.98, 0.16 + v * 0.84)) };
-		}
-
-		/* The dark of the picture keeps the faintest scatter, the same one
-		   every other artwork ends on, so the frame does not read as a hole
-		   cut out of the night. */
-		return dust(y, r);
-	}
-
 	function buildArt() {
 		var kind = state.artwork || 'candles';
-
-		/* Asked for a photograph and given none — an old row, a server without
-		   GD, an image that could not be read. The candles are the answer that
-		   is never wrong. */
-		if (kind === 'photo' && !photo) { kind = 'candles'; }
 		var r = rng(20260807);
 		var out = [];
 		var gx, gy, nx, ny, m;
@@ -680,38 +759,10 @@ window.MSLCanvas = (function () {
 						ph: r() * TAU,
 						jx: (r() - 0.5) * 0.9,
 						jy: (r() - 0.5) * 0.9,
-						/* A photograph's flames are drawn a little smaller than
-						   a drawn shape's. Its cells cover the whole frame
-						   rather than a figure in the middle of it, so at the
-						   usual size they overlap into a blur — and every
-						   overlap is also a sprite drawn over another one, which
-						   is where a 1280px artwork was losing its frame rate. */
-						sc: ( 'photo' === kind ? 0.56 : 0.72 ) + r() * ( 'photo' === kind ? 0.42 : 0.62 )
+						sc: 0.72 + r() * 0.62
 					});
 				}
 			}
-		}
-
-		/*
-		 * A photograph can ask for far more candles than a drawn shape does.
-		 * The eight shapes in this file land between 800 and 1,100 cells
-		 * because they are lines and flames; a picture lights whatever share
-		 * of itself is bright, and a bright picture came out at 2,053 — which
-		 * measured at 77ms a frame on a 1280px artwork against the menorah's
-		 * 25ms, or thirteen frames a second on a machine far faster than the
-		 * phones this is for.
-		 *
-		 * So the field is thinned to the same league, deterministically and
-		 * without preferring the bright parts: dropping by heat would keep the
-		 * face and throw away the shading that makes it a face. The seed is
-		 * fixed, so a group's artwork is the same picture on every visit and
-		 * on every device.
-		 */
-		if ('photo' === kind && out.length > PHOTO_CELLS) {
-			var keep = PHOTO_CELLS / out.length;
-			var r3 = rng(4242);
-
-			out = out.filter(function () { return r3() < keep; });
 		}
 
 		/* Cooler cells light first, so the artwork fills from its edges inward
@@ -1872,10 +1923,8 @@ window.MSLCanvas = (function () {
 	}
 
 	function setState(patch) {
-		var rebuildArt = ('artwork' in patch && patch.artwork !== state.artwork) || 'artGrid' in patch;
+		var rebuildArt = ('artwork' in patch && patch.artwork !== state.artwork);
 		var rebuildSprites = ('accent' in patch && patch.accent !== state.accent);
-
-		if ('artGrid' in patch) { loadPhoto(patch.artGrid); }
 
 		Object.keys(patch).forEach(function (key) { state[key] = patch[key]; });
 
@@ -1904,8 +1953,6 @@ window.MSLCanvas = (function () {
 		state.accent = options.accent || state.accent;
 		state.artwork = options.artwork || state.artwork;
 		state.still = !!options.still;
-
-		loadPhoto(options.artGrid);
 
 		if (typeof options.motes === 'number') { moteCount = Math.max(0, Math.min(80, options.motes)); }
 		mapPoints = options.mapPoints || [];

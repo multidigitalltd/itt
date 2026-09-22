@@ -2497,9 +2497,6 @@
 			count: artCount(),
 			accent: config.group ? config.group.accent : config.campaign.accent,
 			artwork: config.group ? config.group.artwork : config.campaign.artwork,
-			/* Only a group ever has one: the picture it was opened with, as
-			   one number per cell. */
-			artGrid: config.group ? config.group.artGrid : '',
 			motes: config.campaign.lights,
 			mapData: config.mapData,
 			mapPoints: config.mapPoints,

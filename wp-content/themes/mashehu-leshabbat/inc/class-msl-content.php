@@ -36,7 +36,7 @@ final class MSL_Content {
 	/**
 	 * The current copy revision.
 	 */
-	private const REVISION = 8;
+	private const REVISION = 9;
 
 	/**
 	 * The WhatsApp message, as it shipped before it said what the link shows.
@@ -183,6 +183,10 @@ final class MSL_Content {
 
 		if ( $done < 8 ) {
 			self::retire_share_message();
+		}
+
+		if ( $done < 9 ) {
+			self::add_menu_items();
 		}
 
 		update_option( self::REVISION_OPTION, self::REVISION, false );
@@ -573,6 +577,69 @@ final class MSL_Content {
 	}
 
 	/**
+	 * Revision 9 — the Shabbat times and the way to open a group, in the menu.
+	 *
+	 * Same story as the personal area in revision 3, and the same shape: a menu
+	 * is a list, and a list a page has saved is kept exactly as it was saved.
+	 * New default items reach a page that never had its menu edited and nobody
+	 * else, so a site set up earlier has a times section and a form to open a
+	 * group with nothing in the menu pointing at either.
+	 *
+	 * Appended, never inserted, and only where nothing already points at that
+	 * target — somebody who took an item out on purpose keeps their decision,
+	 * because this runs once.
+	 */
+	private static function add_menu_items(): void {
+		$key = MSL_Meta::key( 'nav' );
+
+		$wanted = array(
+			'zmanim'    => array(
+				'label_he' => 'זמני השבת',
+				'label_en' => 'Shabbat times',
+			),
+			'group_new' => array(
+				'label_he' => 'פתיחת קבוצה',
+				'label_en' => 'Open a group',
+			),
+		);
+
+		foreach ( self::pages_with( $key ) as $page_id ) {
+			$stored = get_post_meta( (int) $page_id, $key, true );
+
+			if ( ! is_array( $stored ) || ! isset( $stored['links'] ) || ! is_array( $stored['links'] ) ) {
+				continue;
+			}
+
+			$have = array();
+
+			foreach ( $stored['links'] as $link ) {
+				if ( is_array( $link ) ) {
+					$have[] = (string) ( $link['target'] ?? '' );
+				}
+			}
+
+			$touched = false;
+
+			foreach ( $wanted as $target => $labels ) {
+				if ( in_array( $target, $have, true ) ) {
+					continue;
+				}
+
+				$stored['links'][] = $labels + array(
+					'target' => $target,
+					'url'    => '',
+				);
+
+				$touched = true;
+			}
+
+			if ( $touched ) {
+				update_post_meta( (int) $page_id, $key, $stored );
+			}
+		}
+	}
+
+	/**
 	 * Defaults for one section.
 	 *
 	 * @param string $section Section key.
@@ -622,6 +689,8 @@ final class MSL_Content {
 				'privacy_url'       => '',
 			),
 			'campaign' => array(
+				'limit_joins'      => 0,
+				'moderate_dedications' => 0,
 				'parsha_he'        => 'משפטים',
 				'parsha_en'        => 'Mishpatim',
 				'target'           => 172000,
@@ -998,6 +1067,7 @@ final class MSL_Content {
 					array( 'label_he' => 'המפה', 'label_en' => 'The map', 'target' => 'map', 'url' => '' ),
 					array( 'label_he' => 'הקישור האישי שלי', 'label_en' => 'My personal link', 'target' => 'invite', 'url' => '' ),
 					array( 'label_he' => 'קבוצות', 'label_en' => 'Groups', 'target' => 'groups', 'url' => '' ),
+					array( 'label_he' => 'פתיחת קבוצה', 'label_en' => 'Open a group', 'target' => 'group_new', 'url' => '' ),
 					array( 'label_he' => 'האיזור האישי', 'label_en' => 'My area', 'target' => 'account', 'url' => '' ),
 					array( 'label_he' => 'על המיזם', 'label_en' => 'About', 'target' => 'about', 'url' => '' ),
 				),
@@ -1167,10 +1237,6 @@ final class MSL_Content {
 				'f_photo_en'       => 'A cover photo for the top of the group’s page (optional)',
 				'f_photo_help_he'  => 'התמונה תעמוד בראש עמוד הקבוצה, מעל השם והמספר. עד 8MB, JPG/PNG/WEBP, והיא מתפרסמת בעמוד ציבורי.',
 				'f_photo_help_en'  => 'The photo stands at the top of the group’s page, above the name and the number. Up to 8MB, JPG/PNG/WEBP, and it is published on a public page.',
-				'f_art_photo_he'   => 'תמונה שממנה תיבנה היצירה (לא חובה)',
-				'f_art_photo_en'   => 'A photo to build the artwork from (optional)',
-				'f_art_photo_help_he' => 'היצירה של הקבוצה תיבנה מהתמונה הזאת: נרות במקומות המוארים שבה, שנדלקים ככל שמצטרפים. התמונה עצמה אינה נשמרת ואינה מתפרסמת — רק מיקומי הנרות. אפשר להעלות כאן תמונה אחרת מזו שבראש העמוד, או רק אחת מהשתיים.',
-				'f_art_photo_help_en' => 'The group’s artwork is built from this photo: candles where the picture is bright, lighting up as people join. The photo itself is not stored and not published — only the positions of the candles. It can be a different photo from the one at the top of the page, or the only one you upload.',
 				'photo_alt_he'     => 'תמונת הקבוצה',
 				'photo_alt_en'     => 'The group’s photo',
 				'f_owner_he'       => 'השם שלכם',
@@ -1282,8 +1348,6 @@ final class MSL_Content {
 				'err_photo_big_en' => 'That photo is too large. Up to 8MB — a photo from a phone usually fits.',
 				'err_photo_type_he' => 'אפשר להעלות תמונה בלבד: JPG, PNG או WEBP.',
 				'err_photo_type_en' => 'Images only, please: JPG, PNG or WEBP.',
-				'err_photo_flat_he' => 'מהתמונה הזאת לא יוצאת יצירה — היא אחידה מדי. תמונה עם אור וצל תעבוד יפה.',
-				'err_photo_flat_en' => 'No artwork can be made from that picture — it is too uniform. One with light and shadow in it works well.',
 				'err_photo_server_he' => 'לא הצלחנו לעבד את התמונה בשרת. אפשר לפתוח את הקבוצה בלעדיה ולהוסיף אותה אחר כך.',
 				'err_photo_server_en' => 'The server could not process that photo. You can open the group without it and add one later.',
 			),

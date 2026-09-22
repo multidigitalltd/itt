@@ -558,6 +558,17 @@ function msl_nav_destination( array $row ): array {
 
 	$spec = MSL_Theme::NAV_TARGETS[ $target ] ?? array();
 
+	// An anchor on a page of its own — the form that opens a group — rather
+	// than an anchor on the campaign page.
+	if ( isset( $spec['anchor'], $spec['page'] ) ) {
+		$page = MSL_Importer::page_id( $spec['page'] );
+
+		return $page > 0 ? array(
+			'href'   => (string) get_permalink( $page ) . '#' . $spec['anchor'],
+			'action' => '',
+		) : $none;
+	}
+
 	if ( isset( $spec['anchor'] ) ) {
 		return array(
 			'href'   => msl_campaign_anchor( $spec['anchor'] ),

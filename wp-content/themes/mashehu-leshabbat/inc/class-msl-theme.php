@@ -219,7 +219,7 @@ final class MSL_Theme {
 	 *
 	 * @var array<int, string>
 	 */
-	public const ARTWORKS = array( 'candles', 'star', 'menorah', 'tablets', 'kiddush', 'jerusalem', 'israel', 'light' );
+	public const ARTWORKS = array( 'candles', 'star', 'menorah', 'tablets', 'kiddush', 'jerusalem', 'temple', 'hearts', 'israel', 'light' );
 
 	/**
 	 * The shapes as a person picks them, the weekly rotation included.
@@ -239,7 +239,9 @@ final class MSL_Theme {
 		'menorah'   => 'מנורה',
 		'tablets'   => 'לוחות הברית',
 		'kiddush'   => 'כוס קידוש',
-		'jerusalem' => 'ירושלים',
+		'jerusalem' => 'חומות ירושלים',
+		'temple'    => 'בית המקדש',
+		'hearts'    => 'לבבות',
 		'israel'    => 'מפת ישראל',
 		'light'     => 'נקודת אור',
 	);
@@ -304,6 +306,17 @@ final class MSL_Theme {
 			'label' => 'עמוד הקבוצות',
 			'page'  => 'groups',
 		),
+		/*
+		 * The form that opens a group, rather than the list of them. It is a
+		 * target of its own because the list is a switch that arrives off: the
+		 * page still exists and the form on it still works, and this is the one
+		 * way into it that does not depend on the list being shown.
+		 */
+		'group_new' => array(
+			'label'  => 'פתיחת קבוצה חדשה',
+			'page'   => 'groups',
+			'anchor' => 'msl-open',
+		),
 		'account'  => array(
 			'label' => 'האיזור האישי',
 			'page'  => 'account',
@@ -348,12 +361,6 @@ final class MSL_Theme {
 		$chosen = (string) ( $campaign['artwork'] ?? 'rotate' );
 
 		if ( in_array( $chosen, self::ARTWORKS, true ) ) {
-			return $chosen;
-		}
-
-		// A group drawing its own photograph is a chosen shape too, even though
-		// it is not one this theme can draw from nothing.
-		if ( class_exists( 'MSL_Groups' ) && MSL_Groups::PHOTO_ART === $chosen ) {
 			return $chosen;
 		}
 
@@ -448,15 +455,6 @@ final class MSL_Theme {
 			),
 			'accent'  => self::accent( (string) $group['accent'] ),
 			'live'    => MSL_Groups::LIVE === $group['status'],
-			/*
-			 * The candles derived from this group's photograph, as one number
-			 * per cell. It is sent only when the group actually asked for that
-			 * artwork — it is a few kilobytes, and a group drawing a menorah
-			 * has no use for it.
-			 */
-			'artGrid' => MSL_Groups::PHOTO_ART === (string) $group['artwork']
-				? (string) ( $group['photo_art'] ?? '' )
-				: '',
 		);
 	}
 

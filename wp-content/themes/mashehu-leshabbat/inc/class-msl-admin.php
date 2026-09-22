@@ -733,20 +733,6 @@ final class MSL_Admin {
 										<?php echo esc_html( $msl_label ); ?>
 									</option>
 								<?php endforeach; ?>
-								<?php
-								/*
-								 * Offered only where there is a picture to draw.
-								 * Without this the option would be missing from
-								 * the one screen that can edit such a group, and
-								 * saving anything at all would quietly move it
-								 * to a menorah.
-								 */
-								?>
-								<?php if ( '' !== (string) $value( 'photo_art', '' ) ) : ?>
-									<option value="<?php echo esc_attr( MSL_Groups::PHOTO_ART ); ?>" <?php selected( (string) $value( 'artwork', 'rotate' ), MSL_Groups::PHOTO_ART ); ?>>
-										<?php esc_html_e( 'התמונה של הקבוצה', 'mashehu-leshabbat' ); ?>
-									</option>
-								<?php endif; ?>
 							</select>
 						</td>
 					</tr>

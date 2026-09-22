@@ -195,10 +195,12 @@ final class MSL_Joins {
 		$email_hash = MSL_DB::hash( (string) $data['email'] );
 		$phone_hash = MSL_DB::hash( self::normalise_phone( (string) $data['phone'] ) );
 
-		$duplicate = self::find_duplicate( $page_id, $ip_hash, $email_hash, $phone_hash, (string) $data['first_name'], (string) $data['city'] );
+		if ( self::limits_on() ) {
+			$duplicate = self::find_duplicate( $page_id, $ip_hash, $email_hash, $phone_hash, (string) $data['first_name'], (string) $data['city'] );
 
-		if ( '' !== $duplicate ) {
-			return new WP_Error( 'msl_duplicate', $duplicate );
+			if ( '' !== $duplicate ) {
+				return new WP_Error( 'msl_duplicate', $duplicate );
+			}
 		}
 
 		$code       = self::generate_code();
@@ -354,7 +356,14 @@ final class MSL_Joins {
 				'page_id'    => $page_id,
 				'kind'       => (int) $kind,
 				'body'       => $body,
-				'status'     => 'pending',
+				/*
+				 * Published as it is written, unless the campaign asks for a
+				 * queue. A dedication is somebody naming the person they are
+				 * lighting for — it is the most personal thing on the site and
+				 * the one people check for straight away, and "waiting to be
+				 * approved" reads to them as "not counted".
+				 */
+				'status'     => self::moderate_dedications() ? 'pending' : 'approved',
 				'created_at' => current_time( 'mysql', true ),
 			),
 			array( '%d', '%d', '%d', '%s', '%s', '%s' )
@@ -364,6 +373,41 @@ final class MSL_Joins {
 	/* ---------------------------------------------------------------------
 	 * Abuse controls
 	 * ------------------------------------------------------------------ */
+
+	/**
+	 * Does a dedication wait to be read before it is shown?
+	 *
+	 * Off, as this ships. The switch is in the campaign box for a campaign that
+	 * wants the queue back — the moderation screen, the counts and the approve
+	 * and reject buttons all stay exactly as they were, and simply have nothing
+	 * waiting in them while this is off.
+	 *
+	 * @return bool
+	 */
+	public static function moderate_dedications(): bool {
+		return 1 === (int) ( MSL_Meta::get( 'campaign', MSL_Importer::page_id() )['moderate_dedications'] ?? 0 );
+	}
+
+	/**
+	 * Is a person allowed to light one candle, or as many as they like?
+	 *
+	 * Off, as this ships: the same person may light again, from the same house,
+	 * the same office or the same phone, as often as they want. A household
+	 * behind one address, a school, a whole mobile carrier behind one NAT —
+	 * every one of those is a crowd that the limits read as one person, and
+	 * this campaign is counting people who chose to do something, not unique
+	 * devices. It is a switch rather than deleted code because it is a decision
+	 * about a community, and campaigns change their minds about it.
+	 *
+	 * What does not depend on this switch, and stays on: the honeypot field and
+	 * the minimum fill time. Those turn away scripts without ever asking who
+	 * anybody is, and they cost a real person nothing.
+	 *
+	 * @return bool
+	 */
+	public static function limits_on(): bool {
+		return 1 === (int) ( MSL_Meta::get( 'campaign', MSL_Importer::page_id() )['limit_joins'] ?? 0 );
+	}
 
 	/**
 	 * Which duplicate rule, if any, this submission trips.
@@ -444,6 +488,10 @@ final class MSL_Joins {
 	 * @return bool
 	 */
 	public static function within_rate_limit( string $ip_hash, bool $consume ): bool {
+		if ( ! self::limits_on() ) {
+			return true;
+		}
+
 		$windows = array(
 			'msl_rl_h_' . $ip_hash => array( self::RATE_HOUR, HOUR_IN_SECONDS ),
 			'msl_rl_d_' . $ip_hash => array( self::RATE_DAY, DAY_IN_SECONDS ),

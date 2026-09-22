@@ -808,6 +808,8 @@ final class MSL_Fields {
 					self::bi( 'text', 'f_target', 'שדה — היעד' ),
 					self::bi( 'text', 'f_target_help', 'שדה — היעד, הסבר' ),
 					self::bi( 'text', 'f_artwork', 'שדה — צורת היצירה' ),
+					self::bi( 'text', 'f_artwork_help', 'שדה — צורת היצירה, הסבר' ),
+					self::bi( 'text', 'f_artwork_week', 'שדה — צורת היצירה, הערה על הסבב' ),
 					self::bi( 'text', 'f_owner', 'שדה — השם שלך' ),
 					self::bi( 'text', 'f_email', 'שדה — המייל שלך' ),
 					self::bi( 'text', 'f_email_help', 'שדה — המייל שלך, הסבר' ),

@@ -2568,6 +2568,66 @@
 	 * Boot
 	 * --------------------------------------------------------------- */
 
+	/* ------------------------------------------------------------------
+	 * The artwork picker
+	 * --------------------------------------------------------------- */
+
+	/*
+	 * Draws the picture on every card in "which artwork", on the form that
+	 * opens a group and on the one that edits it.
+	 *
+	 * The cards carry no picture until this runs, and they say so: the figures
+	 * are hidden in CSS until the fieldset is marked drawn. With no JavaScript
+	 * — or with a canvas the browser will not give a context for — what is left
+	 * is the list of names the dropdown used to be, still submitting the same
+	 * field. Half-drawn squares would be worse than none.
+	 */
+	function drawArtThumbs() {
+		var picks = document.querySelectorAll('[data-msl-artpick]');
+
+		if (!picks.length || !window.MSLCanvas || !MSLCanvas.thumb) { return; }
+
+		Array.prototype.forEach.call(picks, function (pick) {
+			/*
+			 * Shown first and taken back afterwards if nothing came of it —
+			 * the other way round does not work, and the reason is worth
+			 * writing down: a hidden canvas has no width, a canvas with no
+			 * width cannot be drawn into, and gating the reveal on a
+			 * successful draw therefore never reveals anything at all. Setting
+			 * it here also gives the boxes their size before the first
+			 * measurement, so nothing is drawn at the wrong scale.
+			 */
+			pick.setAttribute('data-msl-artpick-drawn', '1');
+
+			var any = false;
+
+			Array.prototype.forEach.call(pick.querySelectorAll('[data-msl-artthumb]'), function (cv) {
+				if (MSLCanvas.thumb(cv, cv.getAttribute('data-msl-artthumb')) > 0) { any = true; }
+			});
+
+			if (!any) { pick.removeAttribute('data-msl-artpick-drawn'); }
+		});
+	}
+
+	function bindArtThumbs() {
+		if (!document.querySelector('[data-msl-artpick]')) { return; }
+
+		drawArtThumbs();
+
+		/*
+		 * The grid reflows with the window and a canvas resized by CSS is a
+		 * stretched bitmap, not a redrawn one — the picture has to be laid down
+		 * again at the new size. Debounced, because a drag of the window edge
+		 * is a hundred of these and each one is ten artworks.
+		 */
+		var again = null;
+
+		window.addEventListener('resize', function () {
+			window.clearTimeout(again);
+			again = window.setTimeout(drawArtThumbs, 180);
+		});
+	}
+
 	function boot() {
 		document.body.dataset.mslScreen = 'home';
 
@@ -2625,6 +2685,7 @@
 		bindEvents();
 		bindArtView();
 		bindMap();
+		bindArtThumbs();
 		bindMyCandle();
 		bindWall();
 		bindShare();

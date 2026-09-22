@@ -818,6 +818,86 @@ window.MSLCanvas = (function () {
 		});
 	}
 
+	/*
+	 * One artwork, drawn small, still and complete: the picture beside a name
+	 * in the menu that asks a group which artwork it wants.
+	 *
+	 * It samples the same mask() the real artwork is built from. That is the
+	 * whole point of it being here rather than being ten picture files or ten
+	 * little drawing routines of its own — a thumbnail kept separately is a
+	 * second answer to "what does a menorah look like here", and the day one
+	 * of them is edited the menu starts lying about what it is offering.
+	 *
+	 * Coarser than the artwork, on purpose: at thumbnail size the full grid
+	 * puts several particles inside one pixel of a flame and the shape turns
+	 * to a smudge. And it is drawn once and left alone — ten of these on a
+	 * screen are ten still pictures, not ten animations.
+	 */
+	function thumb(cv, kind) {
+		if (!cv || !cv.getContext) { return 0; }
+
+		/* The form pages never call init(), so the palette may not exist yet. */
+		if (!sprites) { buildSprites(); }
+
+		var f = fit(cv);
+		var g = f.g;
+		var w = f.w;
+		var h = f.h;
+
+		if (w <= 0 || h <= 0) { return 0; }
+
+		g.clearRect(0, 0, w, h);
+
+		var M = 46;
+		var r = rng(20260807);
+		var S = Math.min(w, h) * 0.94;
+		var ox = (w - S) / 2;
+		var oy = (h - S) / 2;
+		var cell = S / M;
+		var drawn = 0;
+		var gx, gy, nx, ny, m, heat, sz;
+
+		var glow = g.createRadialGradient(
+			ox + S * 0.5, oy + S * 0.34, 0,
+			ox + S * 0.5, oy + S * 0.34, S * 0.55
+		);
+		glow.addColorStop(0, rgba(state.accent, 0.20));
+		glow.addColorStop(0.5, rgba(state.accent, 0.06));
+		glow.addColorStop(1, rgba(state.accent, 0));
+		g.fillStyle = glow;
+		g.fillRect(ox - S * 0.2, oy - S * 0.2, S * 1.4, S * 1.4);
+
+		g.globalCompositeOperation = 'lighter';
+
+		for (gy = 0; gy < M; gy++) {
+			for (gx = 0; gx < M; gx++) {
+				nx = (gx + 0.5 + (gy % 2) * 0.5) / M;
+				ny = (gy + 0.5) / M;
+
+				if (nx > 1) { continue; }
+
+				m = mask(kind, nx, ny, r);
+
+				if (!m) { continue; }
+
+				heat = Math.max(0, Math.min(1, m.heat));
+				sz = cell * (2.1 + heat * 1.5);
+				g.drawImage(
+					sprites[Math.min(3, Math.round(heat * 3))],
+					ox + nx * S - sz / 2,
+					oy + ny * S - sz / 2,
+					sz,
+					sz
+				);
+				drawn++;
+			}
+		}
+
+		g.globalCompositeOperation = 'source-over';
+
+		return drawn;
+	}
+
 	function litCount(extra) {
 		if (!cells) { return 0; }
 		var total = cells.length;
@@ -2088,6 +2168,7 @@ window.MSLCanvas = (function () {
 		state: state,
 		zooms: ZOOMS,
 		cellCount: function () { return cells ? cells.length : 0; },
+		thumb: thumb,
 		/* Where one cell sits in the artwork, so the page can put the camera on
 		   it — the viewer's focus is expressed in the same normalised space. */
 		cellAt: function (i) {

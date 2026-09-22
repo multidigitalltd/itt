@@ -34,7 +34,6 @@ if ( null === $msl_group || (int) $msl_group['person_id'] !== (int) $msl_person[
 $msl_requeued = isset( $_GET['msl_requeued'] );
 
 $msl_copy   = MSL_Meta::get( 'groups', MSL_Importer::page_id( 'groups' ) );
-$msl_shapes = MSL_Theme::ARTWORK_LABELS;
 ?>
 <header class="msl-ahead" data-msl-rise>
 	<h1 class="msl-heading"<?php msl_i18n( 'account', 'manage_title' ); ?>><?php msl_the( $msl_account, 'manage_title' ); ?></h1>
@@ -97,17 +96,14 @@ $msl_shapes = MSL_Theme::ARTWORK_LABELS;
 						value="<?php echo absint( $msl_group['target'] ); ?>">
 				</p>
 
-				<p class="msl-field">
-					<label class="msl-field__label" for="msl-m-artwork"<?php msl_i18n( 'groups', 'f_artwork' ); ?>><?php msl_the( $msl_copy, 'f_artwork' ); ?></label>
-					<select class="msl-input" id="msl-m-artwork" name="artwork">
-						<?php foreach ( $msl_shapes as $msl_shape => $msl_label ) : ?>
-							<option value="<?php echo esc_attr( $msl_shape ); ?>"<?php selected( $msl_shape, (string) $msl_group['artwork'] ); ?>>
-								<?php echo esc_html( $msl_label ); ?>
-							</option>
-						<?php endforeach; ?>
-					</select>
-				</p>
 			</div>
+
+			<?php
+			// The same picker the public form uses.
+			$msl_chosen = (string) $msl_group['artwork'];
+			$msl_id     = 'msl-m-art';
+			require MSL_DIR . 'template-parts/groups/artpick.php';
+			?>
 
 			<button type="submit" class="msl-btn msl-btn--hero msl-btn--wide"<?php msl_i18n( 'account', 'manage_save' ); ?>><?php msl_the( $msl_account, 'manage_save' ); ?></button>
 		</form>

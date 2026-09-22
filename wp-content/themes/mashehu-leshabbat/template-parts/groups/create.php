@@ -25,7 +25,6 @@ if ( 1 !== (int) ( $msl_groups['open_on'] ?? 0 ) ) {
 }
 
 $msl_campaign = MSL_Meta::get( 'campaign' );
-$msl_shapes   = MSL_Theme::ARTWORK_LABELS;
 ?>
 <section class="msl-gform" id="msl-open" aria-labelledby="msl-gform-title" data-msl-rise>
 	<h2 class="msl-gform__title" id="msl-gform-title"<?php msl_i18n( 'groups', 'form_title' ); ?>><?php msl_the( $msl_groups, 'form_title' ); ?></h2>
@@ -83,15 +82,16 @@ $msl_shapes   = MSL_Theme::ARTWORK_LABELS;
 				<span class="msl-field__help" id="msl-g-target-help"<?php msl_i18n( 'groups', 'f_target_help' ); ?>><?php msl_the( $msl_groups, 'f_target_help' ); ?></span>
 			</p>
 
-			<p class="msl-field">
-				<label class="msl-field__label" for="msl-g-artwork"<?php msl_i18n( 'groups', 'f_artwork' ); ?>><?php msl_the( $msl_groups, 'f_artwork' ); ?></label>
-				<select class="msl-input" id="msl-g-artwork" name="artwork">
-					<?php foreach ( $msl_shapes as $msl_value => $msl_label ) : ?>
-						<option value="<?php echo esc_attr( $msl_value ); ?>"><?php echo esc_html( $msl_label ); ?></option>
-					<?php endforeach; ?>
-				</select>
-			</p>
 		</div>
+
+		<?php
+		// Which artwork, with a picture of each. Shared with the owner's edit
+		// form, so the two can never end up offering different sets.
+		$msl_copy   = $msl_groups;
+		$msl_chosen = 'rotate';
+		$msl_id     = 'msl-g-art';
+		require MSL_DIR . 'template-parts/groups/artpick.php';
+		?>
 
 		<?php
 		/*

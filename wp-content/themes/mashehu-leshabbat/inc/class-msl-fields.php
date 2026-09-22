@@ -542,6 +542,11 @@ final class MSL_Fields {
 					self::bi( 'text', 'title', 'כותרת הסקשן' ),
 					self::bi( 'textarea', 'sub', 'שורה מתחת לכותרת', 3, 'המחרוזת %d מוחלפת במספר המדינות שהוגדר בקמפיין.' ),
 					self::bi( 'textarea', 'summary', 'תקציר טקסטואלי של המפה', 3, 'נקרא על ידי קוראי מסך במקום הקנבס. חובה לנגישות.' ),
+					self::bi( 'text', 'hint', 'רמז מתחת למפה' ),
+					self::bi( 'text', 'zoom_in', 'תווית כפתור ההגדלה' ),
+					self::bi( 'text', 'zoom_out', 'תווית כפתור ההקטנה' ),
+					self::bi( 'text', 'pick_count', 'כמה נרות מהמדינה שנבחרה', 3, '%s = המספר.' ),
+					self::bi( 'text', 'pick_one', 'כשיש נר אחד בלבד מהמדינה' ),
 					self::repeater(
 						'points',
 						'נקודות אור על המפה',

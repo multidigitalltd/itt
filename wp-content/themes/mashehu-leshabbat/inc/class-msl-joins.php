@@ -898,13 +898,20 @@ final class MSL_Joins {
 
 		$table = MSL_DB::joins_table();
 
+		/*
+		 * The country comes back with each cluster so the map can say where a
+		 * light is from when somebody zooms in on it. Grouping by it as well as
+		 * by position costs nothing — two decimal places is a couple of
+		 * kilometres, and a couple of kilometres is one country almost
+		 * everywhere that matters.
+		 */
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$rows = $wpdb->get_results(
 			$wpdb->prepare(
-				"SELECT ROUND(lat, 2) AS lat, ROUND(lng, 2) AS lng, COUNT(*) AS n
+				"SELECT ROUND(lat, 2) AS lat, ROUND(lng, 2) AS lng, country, COUNT(*) AS n
 				 FROM {$table}
 				 WHERE page_id = %d AND is_anonymous = 0 AND lat IS NOT NULL AND lng IS NOT NULL
-				 GROUP BY ROUND(lat, 2), ROUND(lng, 2)
+				 GROUP BY ROUND(lat, 2), ROUND(lng, 2), country
 				 HAVING n > 0
 				 ORDER BY n DESC
 				 LIMIT 400",
@@ -917,15 +924,69 @@ final class MSL_Joins {
 
 		foreach ( (array) $rows as $row ) {
 			$points[] = array(
-				'lat'    => (float) $row['lat'],
-				'lng'    => (float) $row['lng'],
-				'weight' => min( 3.0, 0.9 + log( 1 + (int) $row['n'] ) * 0.6 ),
+				'lat'     => (float) $row['lat'],
+				'lng'     => (float) $row['lng'],
+				'weight'  => min( 3.0, 0.9 + log( 1 + (int) $row['n'] ) * 0.6 ),
+				'country' => (string) $row['country'],
+				'n'       => (int) $row['n'],
 			);
 		}
 
 		set_transient( $key, $points, 5 * MINUTE_IN_SECONDS );
 
 		return $points;
+	}
+
+	/**
+	 * How many candles came from each country.
+	 *
+	 * Separate from the clusters on purpose: a person zooming into Manchester
+	 * wants to know how many lights are in Britain, not how many are in the two
+	 * square kilometres under the dot. The clusters answer "where", this
+	 * answers "how many from there".
+	 *
+	 * @param int $page_id Page ID.
+	 * @return array<string, int>
+	 */
+	public static function country_counts( int $page_id ): array {
+		global $wpdb;
+
+		if ( ! MSL_DB::ready() ) {
+			return array();
+		}
+
+		$key    = 'msl_countries_' . $page_id;
+		$cached = get_transient( $key );
+
+		if ( is_array( $cached ) ) {
+			return $cached;
+		}
+
+		$table = MSL_DB::joins_table();
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$rows = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT country, COUNT(*) AS n
+				 FROM {$table}
+				 WHERE page_id = %d AND country <> ''
+				 GROUP BY country
+				 ORDER BY n DESC
+				 LIMIT 200",
+				$page_id
+			),
+			ARRAY_A
+		);
+
+		$counts = array();
+
+		foreach ( (array) $rows as $row ) {
+			$counts[ (string) $row['country'] ] = (int) $row['n'];
+		}
+
+		set_transient( $key, $counts, 5 * MINUTE_IN_SECONDS );
+
+		return $counts;
 	}
 
 	/* ---------------------------------------------------------------------

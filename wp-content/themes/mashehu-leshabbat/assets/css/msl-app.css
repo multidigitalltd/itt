@@ -1364,10 +1364,101 @@
 .msl-map__frame:hover {
 	box-shadow: 0 30px 70px oklch(0.30 0.05 50 / 0.26);
 }
+.msl-map__frame {
+	position: relative;
+}
 .msl-map__canvas {
 	display: block;
 	inline-size: 100%;
 	block-size: 540px;
+	/* Not `none`: this sits in the middle of a long page, and a map that eats
+	   a vertical swipe is a map you cannot scroll past on a phone. Vertical
+	   belongs to the page; sideways and pinch belong to the map. */
+	touch-action: pan-y;
+	cursor: grab;
+}
+.msl-map__canvas:active {
+	cursor: grabbing;
+}
+/* The zoom controls sit in the frame's top corner, the same place and the same
+   component as the artwork's — somebody who has zoomed that already knows
+   where to look. */
+/* The frame is named as well as the modifier, and on purpose: the base
+   .msl-zoom is written further down this file with the same specificity, so a
+   bare .msl-zoom--map loses the cascade to it and inherits the other corner.
+   Both sides then end up pinned and the control stretches the whole way
+   across the map, which is what it did before this was measured. */
+.msl-map__frame .msl-zoom--map {
+	position: absolute;
+	/* One side pinned per axis, and the other explicitly let go: the base rule
+	   pins the opposite side on both axes — the far edge always, the bottom
+	   under the mobile query — and a box pinned on both sides of an axis
+	   stretches the whole way along it. */
+	inset-block-start: 14px;
+	inset-block-end: auto;
+	inset-inline-start: 14px;
+	inset-inline-end: auto;
+	margin: 0;
+}
+.msl-map__frame .msl-zoom--map .msl-zoom__btn {
+	inline-size: 40px;
+	block-size: 40px;
+}
+/* What was picked: a chip in the opposite corner, out of the way of the
+   controls and of the hint below. */
+.msl-mappick {
+	position: absolute;
+	inset-block-start: 14px;
+	inset-inline-end: 14px;
+	max-inline-size: min(280px, 62%);
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 10px 14px;
+	border-radius: 18px;
+	background: var(--msl-surface);
+	border: 1px solid var(--msl-border);
+	box-shadow: 0 10px 30px rgb(66 40 24 / 0.16);
+}
+.msl-mappick__spark {
+	inline-size: 8px;
+	block-size: 8px;
+	border-radius: 50%;
+	flex: none;
+	background: var(--msl-amber);
+	box-shadow: 0 0 10px 3px oklch(0.90 0.13 78 / 0.5);
+}
+.msl-mappick__body {
+	display: flex;
+	flex-direction: column;
+	min-inline-size: 0;
+}
+.msl-mappick__place {
+	font-weight: 700;
+	color: var(--msl-ink);
+	font-size: calc(15px * var(--msl-scale, 1));
+}
+.msl-mappick__count {
+	color: var(--msl-muted);
+	font-size: calc(13.5px * var(--msl-scale, 1));
+}
+.msl-page .msl-hint--map {
+	position: absolute;
+	inset-block-end: 12px;
+	inset-inline: 14px;
+	margin: 0;
+	text-align: center;
+	color: var(--msl-muted-2);
+	font-size: calc(13.5px * var(--msl-scale, 1));
+	pointer-events: none;
+}
+@media (max-width: 720px) {
+	.msl-mappick {
+		inset-block-start: auto;
+		inset-block-end: 46px;
+		inset-inline: 14px;
+		max-inline-size: none;
+	}
 }
 /* ==========================================================================
    11  Referral

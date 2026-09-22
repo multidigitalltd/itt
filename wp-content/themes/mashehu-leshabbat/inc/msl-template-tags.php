@@ -171,9 +171,12 @@ function msl_map_points( int $page_id ): array {
 		}
 
 		$points[] = array(
-			'lat'    => (float) ( $row['lat'] ?? 0 ),
-			'lng'    => (float) ( $row['lng'] ?? 0 ),
-			'weight' => (float) ( $row['weight'] ?? 1 ),
+			'lat'     => (float) ( $row['lat'] ?? 0 ),
+			'lng'     => (float) ( $row['lng'] ?? 0 ),
+			'weight'  => (float) ( $row['weight'] ?? 1 ),
+			// A point the campaign placed by hand can name its country too.
+			'country' => (string) ( $row['country'] ?? '' ),
+			'n'       => max( 0, (int) ( $row['n'] ?? 0 ) ),
 		);
 	}
 

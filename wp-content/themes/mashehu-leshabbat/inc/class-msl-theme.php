@@ -594,6 +594,9 @@ final class MSL_Theme {
 			'joinBase'  => esc_url_raw( home_url( '/join/' ) ),
 			'mapData'   => esc_url_raw( MSL_URI . 'assets/data/world-land.json?v=' . rawurlencode( self::asset_version( 'assets/data/world-land.json' ) ) ),
 			'mapPoints' => msl_map_points( $page_id ),
+			// How many lights came from each country, for the readout when
+			// somebody zooms into one.
+			'mapCountries' => class_exists( 'MSL_Joins' ) ? MSL_Joins::country_counts( $page_id ) : array(),
 			'i18n'      => MSL_I18N::dictionary( $page_id ),
 		);
 	}

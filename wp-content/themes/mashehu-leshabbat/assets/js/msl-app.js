@@ -47,6 +47,7 @@
 		artPick: null,
 		myPiece: -1,
 		wallPick: null,
+		mapPick: null,
 		last10: config.stats.last10,
 		countries: config.stats.countries,
 		pieces: {}
@@ -1214,6 +1215,122 @@
 				}
 
 				renderHints();
+			});
+		});
+	}
+
+	/* ------------------------------------------------------------------
+	 * The map
+	 *
+	 * The same three gestures as the artwork — drag, pinch, tap — plus the two
+	 * buttons, because a keyboard has no pinch. Tapping a light names the
+	 * country it is in and says how many candles are lit there, which is the
+	 * question the map has been inviting since it was first drawn and could not
+	 * answer.
+	 * --------------------------------------------------------------- */
+
+	function renderMapPick() {
+		var card = $('[data-msl-map-pick]');
+
+		if (!card) { return; }
+
+		var point = state.mapPick === null ? null : canvasEngine.mapPointAt(state.mapPick);
+
+		if (!point || !point.country) {
+			card.hidden = true;
+			return;
+		}
+
+		var total = (config.mapCountries || {})[point.country] || point.n || 0;
+		var place = $('[data-msl-map-place]');
+		var count = $('[data-msl-map-count]');
+
+		if (place) { place.textContent = point.country; }
+
+		if (count) {
+			count.textContent = 1 === total
+				? t('map.pick_one')
+				: format(count.dataset.mslTemplate || t('map.pick_count'), [num(total)]);
+		}
+
+		card.hidden = false;
+	}
+
+	function renderMapLevel() {
+		var level = $('[data-msl-map-level]');
+
+		if (level) {
+			/* One decimal, because the map zooms continuously rather than in
+			   steps, and "×2.6" is a truer answer than a rounded "×3". */
+			var z = canvasEngine.state.mapZoom || 1;
+			level.textContent = '×' + (z < 1.05 ? '1' : z.toFixed(1).replace(/\.0$/, ''));
+		}
+	}
+
+	function bindMap() {
+		var cv = $('[data-msl-map-surface]');
+
+		if (!cv || !canvasEngine.mapHitIndex) { return; }
+
+		var selectAt = function (clientX, clientY) {
+			var rect = cv.getBoundingClientRect();
+			var index = canvasEngine.mapHitIndex(cv, clientX - rect.left, clientY - rect.top);
+
+			state.mapPick = (index === null || state.mapPick === index) ? null : index;
+			canvasEngine.setState({ mapPick: state.mapPick });
+			renderMapPick();
+		};
+
+		/* Panning only once there is somewhere to pan to: at rest a finger
+		   dragged across the map has to scroll the page behind it, or the map
+		   becomes a trap halfway down a long page. */
+		bindGestures(cv, {
+			pan: function (dx, dy) {
+				if ((canvasEngine.state.mapZoom || 1) <= 1.001) { return false; }
+
+				canvasEngine.panMap(cv, dx, dy);
+
+				return true;
+			},
+			zoom: function (factor, cx, cy) {
+				var rect = cv.getBoundingClientRect();
+
+				canvasEngine.mapZoomAt(
+					cv,
+					factor,
+					(cx === undefined ? rect.width / 2 : cx - rect.left),
+					(cy === undefined ? rect.height / 2 : cy - rect.top)
+				);
+
+				renderMapLevel();
+			},
+			tap: selectAt
+		});
+
+		cv.addEventListener('wheel', function (event) {
+			if (!event.deltaY) { return; }
+
+			event.preventDefault();
+
+			var rect = cv.getBoundingClientRect();
+
+			canvasEngine.mapZoomAt(cv, event.deltaY < 0 ? 1.18 : 1 / 1.18, event.clientX - rect.left, event.clientY - rect.top);
+			renderMapLevel();
+		}, { passive: false });
+
+		$$('[data-msl-map-zoom]').forEach(function (button) {
+			button.addEventListener('click', function () {
+				canvasEngine.mapZoomAt(cv, button.dataset.mslMapZoom === 'in' ? 1.6 : 1 / 1.6, cv.clientWidth / 2, cv.clientHeight / 2);
+
+				/* All the way out is all the way out: the pick goes with it,
+				   because at ×1 a single dot is not something anybody chose. */
+				if ((canvasEngine.state.mapZoom || 1) <= 1.001) {
+					canvasEngine.resetMap();
+					state.mapPick = null;
+					renderMapPick();
+				}
+
+				renderMapLevel();
 			});
 		});
 	}
@@ -2507,6 +2624,7 @@
 
 		bindEvents();
 		bindArtView();
+		bindMap();
 		bindMyCandle();
 		bindWall();
 		bindShare();

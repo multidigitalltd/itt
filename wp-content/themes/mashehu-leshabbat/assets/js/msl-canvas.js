@@ -23,6 +23,11 @@ window.MSLCanvas = (function () {
 	   the composition has to read as two candles at level 0. */
 	var ZOOMS = [1, 2.8, 5, 8.5];
 
+	/* How far into the map it is worth going. Past this the coastlines are a
+	   handful of straight lines, because the geometry is 36KB and not a tile
+	   server. */
+	var MAP_MAX_ZOOM = 8;
+
 	var state = {
 		count: 0,
 		target: 1,
@@ -42,6 +47,13 @@ window.MSLCanvas = (function () {
 		wallZoom: 1,
 		wallPanX: 0,
 		wallPanY: 0,
+		/* The map's camera: a factor, and the point of the map that stays under
+		   the middle of the canvas while it zooms. Kept in the map's own 0..1
+		   space so it survives a resize — a pixel offset would not. */
+		mapZoom: 1,
+		mapFx: 0.5,
+		mapFy: 0.5,
+		mapPick: null,
 		still: false
 	};
 
@@ -1651,10 +1663,36 @@ window.MSLCanvas = (function () {
 		var tx = (W - k * (b[2] + b[0])) / 2;
 		var ty = (H - k * (b[3] + b[1])) / 2 - h * 0.05;
 
+		/*
+		 * Then the camera. The whole world is drawn as before and the result is
+		 * scaled about the focus point, which keeps this one function the only
+		 * place that knows where a longitude lands — the dots, the coastlines
+		 * and the hit test all go through it, so they cannot drift apart.
+		 */
+		var z = Math.max(1, state.mapZoom || 1);
+		var cx = state.mapFx * w;
+		var cy = state.mapFy * h;
+
 		return function (lon, lat) {
 			var p = naturalEarth1(lon, lat);
-			return [p[0] * 150 * k + tx, -p[1] * 150 * k + ty];
+			var x = p[0] * 150 * k + tx;
+			var y = -p[1] * 150 * k + ty;
+
+			return [(x - cx) * z + w / 2, (y - cy) * z + h / 2];
 		};
+	}
+
+	/*
+	 * Where the camera may sit. At zoom 1 it is the middle and nothing else; as
+	 * it zooms in, the edges of the world stay at the edges of the canvas, so
+	 * there is never blank space beside a coastline.
+	 */
+	function clampMap() {
+		var z = Math.max(1, state.mapZoom || 1);
+		var half = 0.5 / z;
+
+		state.mapFx = Math.min(1 - half, Math.max(half, state.mapFx));
+		state.mapFy = Math.min(1 - half, Math.max(half, state.mapFy));
 	}
 
 	function drawMap(cv) {
@@ -1710,8 +1748,82 @@ window.MSLCanvas = (function () {
 			g.fill();
 		});
 
+		/* The one somebody is looking at, ringed so it can be told from its
+		   neighbours at any zoom. */
+		if (null !== state.mapPick && mapPoints[state.mapPick]) {
+			p = project(mapPoints[state.mapPick].lng, mapPoints[state.mapPick].lat);
+
+			g.strokeStyle = rgba(state.accent, 0.95);
+			g.lineWidth = 1.6;
+			g.beginPath();
+			g.arc(p[0], p[1], 9, 0, TAU);
+			g.stroke();
+		}
+
 		g.globalCompositeOperation = 'source-over';
 		mapDrawn = true;
+	}
+
+	/* Which light is under a point on the map, or null. The threshold is in
+	   screen pixels and does not shrink as the map zooms in, because a finger
+	   does not get smaller. */
+	function mapHitIndex(cv, px, py) {
+		if (!cv || !land) { return null; }
+
+		var rc = cv.getBoundingClientRect();
+		var w = rc.width;
+		var h = rc.height;
+		var project = mapProjection(w, h);
+		var best = null;
+		var bd = 26 * 26;
+
+		for (var i = 0; i < mapPoints.length; i++) {
+			var p = project(mapPoints[i].lng, mapPoints[i].lat);
+			var dx = p[0] - px;
+			var dy = p[1] - py;
+			var d = dx * dx + dy * dy;
+
+			if (d < bd) { bd = d; best = i; }
+		}
+
+		return best;
+	}
+
+	/* The map's own zoom controls: a factor about a point of the canvas, so
+	   zooming with the wheel or a pinch keeps whatever is under the pointer
+	   where it is. */
+	function zoomMapAt(cv, factor, px, py) {
+		if (!cv) { return; }
+
+		var rc = cv.getBoundingClientRect();
+		var before = Math.max(1, state.mapZoom || 1);
+		var after = Math.min(MAP_MAX_ZOOM, Math.max(1, before * factor));
+
+		if (after === before) { return; }
+
+		/* The map coordinate under the pointer, which must not move. */
+		var ux = state.mapFx + (px - rc.width / 2) / (before * rc.width);
+		var uy = state.mapFy + (py - rc.height / 2) / (before * rc.height);
+
+		state.mapZoom = after;
+		state.mapFx = ux - (px - rc.width / 2) / (after * rc.width);
+		state.mapFy = uy - (py - rc.height / 2) / (after * rc.height);
+
+		clampMap();
+		mapDrawn = false;
+	}
+
+	function panMap(cv, dx, dy) {
+		if (!cv) { return; }
+
+		var rc = cv.getBoundingClientRect();
+		var z = Math.max(1, state.mapZoom || 1);
+
+		state.mapFx -= dx / (z * rc.width);
+		state.mapFy -= dy / (z * rc.height);
+
+		clampMap();
+		mapDrawn = false;
 	}
 
 	/* ------------------------------------------------------------------
@@ -1997,6 +2109,18 @@ window.MSLCanvas = (function () {
 		resetWall: function () { wallSeen = null; wallExtra = 0; flares = []; },
 		onFrame: function (fn) { listeners.push(fn); },
 		redrawMap: function () { mapDrawn = false; },
-		setMapPoints: function (points) { mapPoints = points || []; mapDrawn = false; }
+		setMapPoints: function (points) { mapPoints = points || []; mapDrawn = false; },
+		mapHitIndex: mapHitIndex,
+		mapPointAt: function (i) { return mapPoints[i] || null; },
+		mapZoomAt: zoomMapAt,
+		panMap: panMap,
+		mapMaxZoom: MAP_MAX_ZOOM,
+		resetMap: function () {
+			state.mapZoom = 1;
+			state.mapFx = 0.5;
+			state.mapFy = 0.5;
+			state.mapPick = null;
+			mapDrawn = false;
+		}
 	};
 }());

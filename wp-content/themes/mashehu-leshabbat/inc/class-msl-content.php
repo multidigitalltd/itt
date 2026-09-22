@@ -36,7 +36,16 @@ final class MSL_Content {
 	/**
 	 * The current copy revision.
 	 */
-	private const REVISION = 6;
+	private const REVISION = 7;
+
+	/**
+	 * The line under the first step of the join form, as it shipped before the
+	 * campaign replaced it with a sentence about taking something on.
+	 */
+	private const PICK_LINE_WAS = array(
+		'pick_sub_he' => "אפשר לבחור עד שלושה. כל אור נחשב.",
+		'pick_sub_en' => "Choose up to three. Every light counts.",
+	);
 
 	/**
 	 * The join form's "you can skip all of it" line, exactly as it shipped
@@ -118,6 +127,10 @@ final class MSL_Content {
 
 		if ( $done < 6 ) {
 			self::retire_skip_line();
+		}
+
+		if ( $done < 7 ) {
+			self::retire_pick_line();
 		}
 
 		update_option( self::REVISION_OPTION, self::REVISION, false );
@@ -468,6 +481,54 @@ final class MSL_Content {
 	}
 
 	/**
+	 * Revision 7 — the line under the first step of the join form.
+	 *
+	 * "Choose up to three. Every light counts." described the control. The
+	 * campaign wanted it to ask for something instead: one small undertaking
+	 * you can actually keep. A page saved before this holds the old sentence
+	 * of its own, so removing it from this file alone would change nothing on
+	 * the site that matters — see retire_skip_line(), which is the same story.
+	 */
+	private static function retire_pick_line(): void {
+		$key   = MSL_Meta::key( 'join' );
+		$fresh = self::section( 'join' );
+
+		$pages = get_posts(
+			array(
+				'post_type'        => 'page',
+				'post_status'      => 'any',
+				'numberposts'      => 200,
+				'fields'           => 'ids',
+				'meta_key'         => $key, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+				'suppress_filters' => false,
+			)
+		);
+
+		foreach ( $pages as $page_id ) {
+			$stored = get_post_meta( (int) $page_id, $key, true );
+
+			if ( ! is_array( $stored ) ) {
+				continue;
+			}
+
+			$touched = false;
+
+			foreach ( self::PICK_LINE_WAS as $field => $was ) {
+				if ( ! isset( $stored[ $field ] ) || trim( (string) $stored[ $field ] ) !== $was ) {
+					continue;
+				}
+
+				$stored[ $field ] = (string) ( $fresh[ $field ] ?? '' );
+				$touched          = true;
+			}
+
+			if ( $touched ) {
+				update_post_meta( (int) $page_id, $key, $stored );
+			}
+		}
+	}
+
+	/**
 	 * Defaults for one section.
 	 *
 	 * @param string $section Section key.
@@ -728,8 +789,8 @@ final class MSL_Content {
 			'join'     => array(
 				'pick_title_he'      => 'אז... מה האור שלך לשבת?',
 				'pick_title_en'      => 'So… what is your light?',
-				'pick_sub_he'        => 'אפשר לבחור עד שלושה. כל אור נחשב.',
-				'pick_sub_en'        => 'Choose up to three. Every light counts.',
+				'pick_sub_he'        => 'בחרו קבלה קטנה שלכם לכבוד שבת — משהו קטן שתוכלו לעמוד בו, ותדליקו אור נוסף לכבוד שבת קודש.',
+				'pick_sub_en'        => 'Choose one small undertaking of your own for Shabbat — something small you can keep — and light one more light in honour of the holy Shabbat.',
 				'options'            => self::options(),
 				'other_ph_he'        => 'מה האור שלך?',
 				'other_ph_en'        => 'What is your light?',

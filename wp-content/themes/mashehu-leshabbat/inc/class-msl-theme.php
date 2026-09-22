@@ -456,6 +456,12 @@ final class MSL_Theme {
 			),
 			'accent'  => self::accent( (string) $group['accent'] ),
 			'live'    => MSL_Groups::LIVE === $group['status'],
+			/*
+			 * What this group was opened for. Every candle in its artwork
+			 * carries this and no other, which is what lets the artwork answer
+			 * a tap without asking the server who lit that particular one.
+			 */
+			'ded'     => msl_group_dedication_pair( $group, MSL_Meta::get( 'groups', MSL_Importer::page_id( 'groups' ) ) ),
 		);
 	}
 

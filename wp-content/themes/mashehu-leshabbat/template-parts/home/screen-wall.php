@@ -42,6 +42,8 @@ $msl_stats   = MSL_Stats::all( (int) get_the_ID() );
 		<div class="msl-pick msl-pick--stack" data-msl-wall-pick hidden>
 			<span class="msl-pick__name" data-msl-pick-name></span>
 			<span class="msl-pick__sub" data-msl-pick-sub></span>
+			<?php // What the group this candle was lit through was opened for. Empty, and hidden, for a candle that came through no group. ?>
+			<span class="msl-pick__ded" data-msl-pick-ded hidden></span>
 		</div>
 
 		<p class="msl-hint" data-msl-wall-hint aria-live="polite"<?php msl_i18n( 'screens', 'wall_hint' ); ?>><?php msl_the( $msl_screens, 'wall_hint' ); ?></p>

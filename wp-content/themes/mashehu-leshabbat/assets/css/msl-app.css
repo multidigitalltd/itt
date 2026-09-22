@@ -1827,6 +1827,37 @@
 	letter-spacing: -0.035em;
 	margin-block-end: 6px;
 }
+/* ---------------------------------------------------------------------------
+   The dedication a group was opened for, stated in the join window
+   ------------------------------------------------------------------------ */
+
+/* The largest type in the window, because on a group's page this is the thing
+   somebody is agreeing to — and unlike the step it replaces, there is nothing
+   here to fill in. */
+.msl-gded {
+	margin: 10px 0 14px;
+	padding: 18px 20px;
+	border-radius: 20px;
+	background: var(--msl-gold-bg);
+	border: 1.5px solid var(--msl-border-active);
+	text-align: center;
+}
+.msl-gded__what {
+	display: block;
+	font-size: calc((16px) * var(--msl-scale, 1));
+	font-weight: 700;
+	color: var(--msl-chip-text);
+	margin-block-end: 4px;
+}
+.msl-gded__who {
+	display: block;
+	font-family: var(--msl-font-display);
+	font-weight: 900;
+	font-size: calc(clamp(26px, 5vw, 38px) * var(--msl-scale, 1));
+	line-height: 1.1;
+	letter-spacing: -0.03em;
+	color: var(--msl-ink);
+}
 .msl-step__sub {
 	font-size: calc((16px) * var(--msl-scale, 1));
 	color: var(--msl-muted);
@@ -2289,6 +2320,15 @@
 	font-size: calc((14.5px) * var(--msl-scale, 1));
 	font-weight: 400;
 	color: var(--msl-pick-sub);
+}
+/* What the group this candle was lit through was opened for. Its own line and
+   not part of the one above: a city and a small undertaking are details about
+   a person, and "for the healing of…" is the reason the candle is lit. */
+.msl-pick__ded {
+	margin-block-start: 3px;
+	font-size: calc((14.5px) * var(--msl-scale, 1));
+	font-weight: 700;
+	color: var(--msl-accent-text);
 }
 .msl-hint {
 	text-align: center;

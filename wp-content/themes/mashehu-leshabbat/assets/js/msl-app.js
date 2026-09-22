@@ -890,6 +890,19 @@
 		};
 	}
 
+	/*
+	 * A dedication arrives as its two halves — the key of the copy that says
+	 * "for the healing of", and the name. It is put together here rather than
+	 * on the server because the language switch happens in this browser with
+	 * no reload, and a sentence baked server-side would stay in the language
+	 * the page was cached in.
+	 */
+	function dedText(pair) {
+		if (!pair || !pair.name) { return ''; }
+
+		return (t(pair.key) + ' ' + pair.name).trim();
+	}
+
 	/* A named participant in the slice is the one worth showing; failing that,
 	   any record at all; failing that, none, and the card says so. */
 	function pickFrom(pieces) {
@@ -940,6 +953,7 @@
 
 		var name = $('[data-msl-pick-name]', container);
 		var sub = $('[data-msl-pick-sub]', container);
+		var ded = $('[data-msl-pick-ded]', container);
 		var label;
 		var detail;
 
@@ -956,6 +970,21 @@
 
 		if (name) { name.textContent = label; }
 		if (sub) { sub.textContent = detail; }
+
+		/*
+		 * What the group this candle was lit through was opened for. It has a
+		 * line of its own rather than being appended to the one above: a city
+		 * and a small undertaking are details about a person, and "for the
+		 * healing of Sarah bat Rachel" is the reason the candle is lit.
+		 *
+		 * The stand-in people invented for candles with no record have no
+		 * group and therefore no dedication, which is why this reads the
+		 * property rather than assuming it is there.
+		 */
+		if (ded) {
+			ded.textContent = dedText(person && person.ded);
+			ded.hidden = ded.textContent === '';
+		}
 
 		container.hidden = false;
 	}
@@ -1167,9 +1196,21 @@
 				artZ: canvasEngine.state.artZ === 0 ? 1 : canvasEngine.state.artZ
 			});
 
-			loadPieces(pieceWindow(index, canvasEngine.litCount()), function (person) {
-				if (state.artPick === index) { showPick($('[data-msl-art-pick]'), person); }
-			});
+			/*
+			 * On a group's page the artwork is the group's, and so is every
+			 * candle in it: the answer is on the page already. Asking the
+			 * pieces endpoint here would be worse than not asking — it maps a
+			 * cell to a position in the *campaign's* artwork, so on a group of
+			 * two hundred it would confidently name the campaign's first two
+			 * hundred participants, none of whom are in this group.
+			 */
+			if (config.group) {
+				showPick($('[data-msl-art-pick]'), { name: '', place: '', thing: '', ded: config.group.ded });
+			} else {
+				loadPieces(pieceWindow(index, canvasEngine.litCount()), function (person) {
+					if (state.artPick === index) { showPick($('[data-msl-art-pick]'), person); }
+				});
+			}
 
 			renderHints();
 		};

@@ -59,6 +59,26 @@ $msl_screens = MSL_Meta::get( 'screens' );
 	</div>
 
 	<div class="msl-screen__bottom">
+		<?php
+		/*
+		 * Tapping a candle here answers with what this group was opened for.
+		 * It does not name the person who lit it, and it does not ask the
+		 * server who that was: in a group's artwork the answer is the same for
+		 * every candle, and it is already on the page. Naming the person would
+		 * mean a second, group-scoped way of resolving a cell to a join — the
+		 * campaign's maps a cell to a position in the campaign's own artwork,
+		 * which on this page points at the wrong people entirely.
+		 */
+		?>
+		<div class="msl-pick" data-msl-art-pick hidden>
+			<span class="msl-pick__avatar" aria-hidden="true"></span>
+			<span class="msl-pick__body">
+				<span class="msl-pick__name" data-msl-pick-name></span>
+				<span class="msl-pick__sub" data-msl-pick-sub></span>
+				<span class="msl-pick__ded" data-msl-pick-ded hidden></span>
+			</span>
+		</div>
+
 		<p class="msl-hint" data-msl-art-hint aria-live="polite"<?php msl_i18n( 'screens', 'art_hint_zoom' ); ?>><?php msl_the( $msl_screens, 'art_hint_zoom' ); ?></p>
 
 		<?php if ( $msl_open ) : ?>

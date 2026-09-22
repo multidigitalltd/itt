@@ -140,7 +140,8 @@ $msl_state = array(
 
 		<div class="msl-gfund__panel" data-msl-rise>
 			<?php if ( '' !== $msl_ded ) : ?>
-				<p class="msl-gfund__ded"><?php echo esc_html( $msl_ded ); ?></p>
+				<?php // Two nodes, so the half that is copy changes with the language switch and the name does not. ?>
+				<p class="msl-gfund__ded"><?php echo msl_group_dedication_html( $msl_group, $msl_groups, 'msl-ded' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped inside. ?></p>
 			<?php endif; ?>
 
 			<h1 class="msl-heading msl-gfund__title"><?php echo esc_html( (string) $msl_group['title'] ); ?></h1>

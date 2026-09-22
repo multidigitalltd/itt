@@ -840,14 +840,26 @@ final class MSL_Joins {
 		$joins  = MSL_DB::joins_table();
 		$things = MSL_DB::things_table();
 
+		/*
+		 * The group a candle was lit through is joined in rather than copied
+		 * onto the row: a candle lit inside a group carries that group's
+		 * dedication, and the group is where that dedication lives. Written
+		 * onto each join instead, a family editing the name they opened the
+		 * group for would leave every candle already lit still saying the old
+		 * one.
+		 */
+		$groups = MSL_DB::groups_table();
+
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$rows = $wpdb->get_results(
 			$wpdb->prepare(
-				"SELECT j.piece_index, j.first_name, j.city, j.is_anonymous, t.thing_index, t.custom_label
+				"SELECT j.piece_index, j.first_name, j.city, j.is_anonymous, t.thing_index, t.custom_label,
+				        g.occasion, g.honouree
 				 FROM {$joins} j
 				 LEFT JOIN {$things} t ON t.join_id = j.id AND t.thing_index = (
 					 SELECT MIN(thing_index) FROM {$things} WHERE join_id = j.id
 				 )
+				 LEFT JOIN {$groups} g ON g.id = j.group_id
 				 WHERE j.page_id = %d AND j.piece_index BETWEEN %d AND %d
 				 ORDER BY j.piece_index ASC
 				 LIMIT 500",
@@ -858,7 +870,8 @@ final class MSL_Joins {
 			ARRAY_A
 		);
 
-		$out = array();
+		$out   = array();
+		$gcopy = MSL_Meta::get( 'groups', MSL_Importer::page_id( 'groups' ) );
 
 		foreach ( (array) $rows as $row ) {
 			$anonymous = 1 === (int) $row['is_anonymous'];
@@ -867,6 +880,25 @@ final class MSL_Joins {
 				'name'  => $anonymous ? '' : (string) $row['first_name'],
 				'place' => $anonymous ? '' : (string) $row['city'],
 				'thing' => self::thing_label( $options, (int) $row['thing_index'], (string) $row['custom_label'] ),
+				/*
+				 * The dedication is the group's, and it is not withheld from an
+				 * anonymous candle: what that person asked to keep back is
+				 * their own name, not what the group they joined was opened
+				 * for — which is already written across the top of its page.
+				 *
+				 * Sent as its two halves rather than as a finished sentence,
+				 * because the language switch happens in the browser with no
+				 * reload: the half that is copy is named by its key and gets
+				 * translated there, and the name beside it is a person's name
+				 * in any language.
+				 */
+				'ded'   => msl_group_dedication_pair(
+					array(
+						'occasion' => null === $row['occasion'] ? 0 : (int) $row['occasion'],
+						'honouree' => (string) $row['honouree'],
+					),
+					$gcopy
+				),
 			);
 		}
 

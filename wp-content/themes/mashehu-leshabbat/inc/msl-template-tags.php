@@ -906,12 +906,90 @@ function msl_group_pct( array $group ): int {
  * @return string
  */
 function msl_group_dedication( array $group, array $copy ): string {
-	$key  = MSL_Groups::OCCASIONS[ (int) $group['occasion' ] ] ?? '';
-	$name = trim( (string) $group['honouree'] );
+	$parts = msl_group_dedication_parts( $group, $copy );
+
+	return array() === $parts ? '' : trim( $parts['label'] . ' ' . $parts['name'] );
+}
+
+/**
+ * The same dedication, as its two halves.
+ *
+ * The halves are what callers actually need, because they are two different
+ * kinds of thing: "in the merit of" is copy, translated and editable in the
+ * panel, and the name beside it is a person's name, which is the same in every
+ * language. Anything that prints them as one sentence has to concatenate them
+ * itself and loses the ability to translate the first half on a language
+ * switch — which is exactly what the group card did.
+ *
+ * @param array<string, mixed> $group Group row.
+ * @param array<string, mixed> $copy  Resolved groups section.
+ * @return array{key: string, label: string, name: string}|array{} Empty when there is no dedication.
+ */
+function msl_group_dedication_parts( array $group, array $copy ): array {
+	$key  = MSL_Groups::OCCASIONS[ (int) ( $group['occasion'] ?? 0 ) ] ?? '';
+	$name = trim( (string) ( $group['honouree'] ?? '' ) );
 
 	if ( '' === $key || '' === $name ) {
+		return array();
+	}
+
+	return array(
+		'key'   => 'occ_' . $key,
+		'label' => msl_t( $copy, 'occ_' . $key ),
+		'name'  => $name,
+	);
+}
+
+/**
+ * The same two halves, shaped for the browser.
+ *
+ * The key is a full copy path rather than a bare field name, because that is
+ * what the browser's dictionary is keyed by and what its language switch looks
+ * things up with. Null — not an empty string — when there is no dedication, so
+ * "this candle came through no group" and "this group named nobody" are the
+ * same answer to the one question the card asks.
+ *
+ * @param array<string, mixed> $group Group row, or its two relevant columns.
+ * @param array<string, mixed> $copy  Resolved groups section.
+ * @return array{key: string, name: string}|null
+ */
+function msl_group_dedication_pair( array $group, array $copy ): ?array {
+	$parts = msl_group_dedication_parts( $group, $copy );
+
+	return array() === $parts ? null : array(
+		'key'  => 'groups.' . $parts['key'],
+		'name' => $parts['name'],
+	);
+}
+
+/**
+ * A group's dedication as markup, with the translatable half marked as such.
+ *
+ * Two elements and not one string: the language switch happens in the browser
+ * with no reload, and it works by replacing the text of nodes that name a copy
+ * key. A dedication printed as one string has no key to name — half of it is a
+ * person's name — so it stayed in Hebrew on an English page. Split, the half
+ * that is copy carries its key and changes, and the name stays the name.
+ *
+ * @param array<string, mixed> $group Group row.
+ * @param array<string, mixed> $copy  Resolved groups section.
+ * @param string               $class Class for the wrapper.
+ * @return string Empty when there is no dedication.
+ */
+function msl_group_dedication_html( array $group, array $copy, string $class = 'msl-ded' ): string {
+	$parts = msl_group_dedication_parts( $group, $copy );
+
+	if ( array() === $parts ) {
 		return '';
 	}
 
-	return trim( msl_t( $copy, 'occ_' . $key ) . ' ' . $name );
+	return sprintf(
+		'<span class="%s"><span class="%s__what" data-msl-i18n="groups.%s">%s</span> <span class="%s__who">%s</span></span>',
+		esc_attr( $class ),
+		esc_attr( $class ),
+		esc_attr( $parts['key'] ),
+		esc_html( $parts['label'] ),
+		esc_attr( $class ),
+		esc_html( $parts['name'] )
+	);
 }

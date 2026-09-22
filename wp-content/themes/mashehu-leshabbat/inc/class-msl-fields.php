@@ -631,6 +631,8 @@ final class MSL_Fields {
 					self::bi( 'text', 'ded_ph', 'שדה ההקדשה — טקסט מוביל' ),
 					self::bi( 'text', 'ded_field_label', 'שדה ההקדשה — תווית' ),
 					self::bi( 'textarea', 'ded_note', 'הערת המודרציה', 2 ),
+					self::bi( 'text', 'ded_group_title', 'שלב 2 בקבוצה — כותרת' ),
+					self::bi( 'textarea', 'ded_group_sub', 'שלב 2 בקבוצה — המשפט מתחת להקדשה', 2 ),
 					self::bi( 'text', 'ded_cta', 'שלב 2 — כפתור' ),
 					self::bi( 'text', 'skip', 'כפתור הדילוג' ),
 					self::bi( 'text', 'det_title', 'שלב 3 — כותרת' ),

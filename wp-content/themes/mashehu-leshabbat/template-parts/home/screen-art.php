@@ -78,6 +78,8 @@ $msl_stats   = MSL_Stats::all( (int) get_the_ID() );
 			<span class="msl-pick__body">
 				<span class="msl-pick__name" data-msl-pick-name></span>
 				<span class="msl-pick__sub" data-msl-pick-sub></span>
+				<?php // What the group this candle was lit through was opened for. Empty, and hidden, for a candle that came through no group. ?>
+				<span class="msl-pick__ded" data-msl-pick-ded hidden></span>
 			</span>
 		</div>
 

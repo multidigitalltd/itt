@@ -37,7 +37,7 @@ require MSL_DIR . 'template-parts/groups/pending-notice.php';
 						<span class="msl-gcard__title"><?php echo esc_html( (string) $msl_row['title'] ); ?></span>
 
 						<?php if ( '' !== msl_group_dedication( $msl_row, $msl_groups ) ) : ?>
-							<span class="msl-gcard__ded"><?php echo esc_html( msl_group_dedication( $msl_row, $msl_groups ) ); ?></span>
+							<span class="msl-gcard__ded"><?php echo msl_group_dedication_html( $msl_row, $msl_groups, 'msl-ded' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped inside. ?></span>
 						<?php endif; ?>
 
 						<span class="msl-gcard__bar" aria-hidden="true">

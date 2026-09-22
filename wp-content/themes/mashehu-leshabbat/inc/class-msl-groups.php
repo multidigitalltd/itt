@@ -302,6 +302,28 @@ final class MSL_Groups {
 	}
 
 	/**
+	 * The group this request is on, if it is on one.
+	 *
+	 * Held for the request because three separate things ask for it while one
+	 * page is built — the page itself, the data the browser is handed, and the
+	 * join window — and each one asking the database again is three identical
+	 * queries for one row. `false` is the "asked and there is none" marker, so
+	 * a page that is not a group page does not re-ask either.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	public static function current(): ?array {
+		static $found = null;
+
+		if ( null === $found ) {
+			$code  = self::requested_code();
+			$found = '' !== $code ? ( self::by_code( $code ) ?? false ) : false;
+		}
+
+		return is_array( $found ) ? $found : null;
+	}
+
+	/**
 	 * One group by its row id.
 	 *
 	 * @param int $id Row id.

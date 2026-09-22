@@ -23,6 +23,21 @@ defined( 'ABSPATH' ) || exit;
 $msl_options   = array_values( array_filter( (array) $msl['options'], 'is_array' ) );
 $msl_ded_types = array_values( array_filter( (array) $msl['ded_types'], 'is_array' ) );
 $msl_steps     = 3;
+
+/*
+ * On a group's page, the dedication is not a question. A group is opened for
+ * one person — for their healing, in their memory, in their merit — and every
+ * candle lit through it is lit for that. Asking the fiftieth cousin to pick a
+ * dedication from a list invites them to pick a different one, and then the
+ * group is fifty candles for fifty different things.
+ *
+ * So step two stops being a form and becomes the sentence it was always trying
+ * to collect. The group's own dedication is stated, in the largest type in the
+ * window, and there is nothing to choose.
+ */
+$msl_gcopy = MSL_Meta::get( 'groups', MSL_Importer::page_id( 'groups' ) );
+$msl_ggrp  = class_exists( 'MSL_Groups' ) ? MSL_Groups::current() : null;
+$msl_gded  = null !== $msl_ggrp ? msl_group_dedication_parts( $msl_ggrp, $msl_gcopy ) : array();
 ?>
 <div class="msl-modal" data-msl-modal="join" hidden>
 	<div class="msl-modal__backdrop" data-msl-dismiss></div>
@@ -85,35 +100,58 @@ $msl_steps     = 3;
 
 				<?php /* ---------- Step 2 ---------- */ ?>
 				<section class="msl-step" data-msl-step="2" hidden>
-					<h2 class="msl-step__title"<?php msl_i18n( 'join', 'ded_title' ); ?>><?php msl_the( $msl, 'ded_title' ); ?></h2>
-					<p class="msl-step__sub" id="msl-ded-sub"<?php msl_i18n( 'join', 'ded_sub' ); ?>><?php msl_the( $msl, 'ded_sub' ); ?></p>
+					<?php if ( array() !== $msl_gded ) : ?>
 
-					<fieldset class="msl-chips" aria-describedby="msl-ded-sub">
-						<legend class="msl-visually-hidden"<?php msl_i18n( 'join', 'ded_title' ); ?>><?php msl_the( $msl, 'ded_title' ); ?></legend>
+						<?php
+						/*
+						 * The group's dedication, stated rather than asked.
+						 * There is no control in this step at all on a group
+						 * page — which is also why nothing here needs a name:
+						 * the server does not read a dedication from a join
+						 * that came through a group, it reads it from the
+						 * group.
+						 */
+						?>
+						<h2 class="msl-step__title"<?php msl_i18n( 'join', 'ded_group_title' ); ?>><?php msl_the( $msl, 'ded_group_title' ); ?></h2>
 
-						<?php foreach ( $msl_ded_types as $msl_index => $msl_type ) : ?>
-							<div class="msl-chip">
-								<input type="radio"
-									class="msl-chip__input"
-									id="msl-ded-<?php echo esc_attr( (string) $msl_index ); ?>"
-									name="dedication"
-									value="<?php echo esc_attr( (string) $msl_index ); ?>"
-									data-msl-dedication>
-								<label class="msl-chip__label" for="msl-ded-<?php echo esc_attr( (string) $msl_index ); ?>"
-									<?php msl_i18n( 'join.ded_types.' . $msl_index, 'label' ); ?>><?php msl_the( $msl_type, 'label' ); ?></label>
-							</div>
-						<?php endforeach; ?>
-					</fieldset>
+						<p class="msl-gded">
+							<span class="msl-gded__what" data-msl-i18n="groups.<?php echo esc_attr( $msl_gded['key'] ); ?>"><?php echo esc_html( $msl_gded['label'] ); ?></span>
+							<span class="msl-gded__who"><?php echo esc_html( $msl_gded['name'] ); ?></span>
+						</p>
 
-					<p class="msl-field">
-						<label class="msl-field__label" for="msl-dedication-body"<?php msl_i18n( 'join', 'ded_field_label' ); ?>><?php msl_the( $msl, 'ded_field_label' ); ?></label>
-						<textarea class="msl-input msl-input--area" id="msl-dedication-body" name="dedication_body"
-							rows="3" maxlength="280"
-							placeholder="<?php echo esc_attr( msl_t( $msl, 'ded_ph' ) ); ?>"
-							aria-describedby="msl-ded-note"></textarea>
-					</p>
+						<p class="msl-step__sub"<?php msl_i18n( 'join', 'ded_group_sub' ); ?>><?php msl_the( $msl, 'ded_group_sub' ); ?></p>
 
-					<p class="msl-note" id="msl-ded-note"<?php msl_i18n( 'join', 'ded_note' ); ?>><?php msl_the( $msl, 'ded_note' ); ?></p>
+					<?php else : ?>
+						<h2 class="msl-step__title"<?php msl_i18n( 'join', 'ded_title' ); ?>><?php msl_the( $msl, 'ded_title' ); ?></h2>
+						<p class="msl-step__sub" id="msl-ded-sub"<?php msl_i18n( 'join', 'ded_sub' ); ?>><?php msl_the( $msl, 'ded_sub' ); ?></p>
+
+						<fieldset class="msl-chips" aria-describedby="msl-ded-sub">
+							<legend class="msl-visually-hidden"<?php msl_i18n( 'join', 'ded_title' ); ?>><?php msl_the( $msl, 'ded_title' ); ?></legend>
+
+							<?php foreach ( $msl_ded_types as $msl_index => $msl_type ) : ?>
+								<div class="msl-chip">
+									<input type="radio"
+										class="msl-chip__input"
+										id="msl-ded-<?php echo esc_attr( (string) $msl_index ); ?>"
+										name="dedication"
+										value="<?php echo esc_attr( (string) $msl_index ); ?>"
+										data-msl-dedication>
+									<label class="msl-chip__label" for="msl-ded-<?php echo esc_attr( (string) $msl_index ); ?>"
+										<?php msl_i18n( 'join.ded_types.' . $msl_index, 'label' ); ?>><?php msl_the( $msl_type, 'label' ); ?></label>
+								</div>
+							<?php endforeach; ?>
+						</fieldset>
+
+						<p class="msl-field">
+							<label class="msl-field__label" for="msl-dedication-body"<?php msl_i18n( 'join', 'ded_field_label' ); ?>><?php msl_the( $msl, 'ded_field_label' ); ?></label>
+							<textarea class="msl-input msl-input--area" id="msl-dedication-body" name="dedication_body"
+								rows="3" maxlength="280"
+								placeholder="<?php echo esc_attr( msl_t( $msl, 'ded_ph' ) ); ?>"
+								aria-describedby="msl-ded-note"></textarea>
+						</p>
+
+						<p class="msl-note" id="msl-ded-note"<?php msl_i18n( 'join', 'ded_note' ); ?>><?php msl_the( $msl, 'ded_note' ); ?></p>
+					<?php endif; ?>
 				</section>
 
 				<?php /* ---------- Step 3 ---------- */ ?>
@@ -209,8 +247,18 @@ $msl_steps     = 3;
 				<div class="msl-join__foot-group" hidden data-msl-foot="2">
 					<button type="button" class="msl-btn msl-btn--block msl-btn--ink" data-msl-next="3"
 						<?php msl_i18n( 'join', 'ded_cta' ); ?>><?php msl_the( $msl, 'ded_cta' ); ?></button>
-					<button type="button" class="msl-textbtn" data-msl-skip
-						<?php msl_i18n( 'join', 'skip' ); ?>><?php msl_the( $msl, 'skip' ); ?></button>
+					<?php
+					/*
+					 * "Skip" belongs to a step that asks something. Where the
+					 * dedication is the group's it asks nothing, and offering
+					 * to skip it would say the opposite of what the step says
+					 * — that this candle might be lit for something else.
+					 */
+					?>
+					<?php if ( array() === $msl_gded ) : ?>
+						<button type="button" class="msl-textbtn" data-msl-skip
+							<?php msl_i18n( 'join', 'skip' ); ?>><?php msl_the( $msl, 'skip' ); ?></button>
+					<?php endif; ?>
 				</div>
 
 				<button type="submit" class="msl-btn msl-btn--block msl-btn--ink" hidden data-msl-submit

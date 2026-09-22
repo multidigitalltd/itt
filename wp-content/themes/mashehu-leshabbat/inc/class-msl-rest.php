@@ -532,7 +532,30 @@ final class MSL_REST {
 			$dedication_kind = null;
 		}
 
-		$lang = sanitize_key( (string) $request->get_param( 'lang' ) );
+		$lang     = sanitize_key( (string) $request->get_param( 'lang' ) );
+		$group_id = self::group_id( (string) $request->get_param( 'group' ) );
+
+		/*
+		 * A candle lit through a group is lit for what that group was opened
+		 * for, and for nothing else. The form on a group's page therefore has
+		 * no dedication controls in it at all — but the form is not what makes
+		 * that true. This is: whatever arrives in these two fields is dropped
+		 * for a join that names a group with a dedication of its own, so the
+		 * answer is the group's however the request was made.
+		 *
+		 * Nothing is written in its place. The group already holds the
+		 * dedication, the join already holds the group, and a copy on every
+		 * one of a group's rows is the same sentence stored two hundred times
+		 * and a second thing to keep true when the family edits it.
+		 */
+		if ( $group_id > 0 && class_exists( 'MSL_Groups' ) ) {
+			$group = MSL_Groups::by_id( $group_id );
+
+			if ( null !== $group && '' !== msl_group_dedication( $group, MSL_Meta::get( 'groups', MSL_Importer::page_id( 'groups' ) ) ) ) {
+				$dedication_kind = null;
+				$request->set_param( 'dedication_body', '' );
+			}
+		}
 
 		return array(
 			'things'          => $things,
@@ -550,7 +573,7 @@ final class MSL_REST {
 			'referred_by'     => sanitize_key( (string) $request->get_param( 'referred_by' ) ),
 			'dedication'      => $dedication_kind,
 			'dedication_body' => mb_substr( sanitize_textarea_field( (string) $request->get_param( 'dedication_body' ) ), 0, 280 ),
-			'group_id'        => self::group_id( (string) $request->get_param( 'group' ) ),
+			'group_id'        => $group_id,
 		);
 	}
 

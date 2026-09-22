@@ -89,9 +89,6 @@ $msl_shapes   = MSL_Theme::ARTWORK_LABELS;
 					<?php foreach ( $msl_shapes as $msl_value => $msl_label ) : ?>
 						<option value="<?php echo esc_attr( $msl_value ); ?>"><?php echo esc_html( $msl_label ); ?></option>
 					<?php endforeach; ?>
-					<?php if ( MSL_Photo::available() ) : ?>
-						<option value="<?php echo esc_attr( MSL_Groups::PHOTO_ART ); ?>"<?php msl_i18n( 'groups', 'f_artwork_photo' ); ?>><?php msl_the( $msl_groups, 'f_artwork_photo' ); ?></option>
-					<?php endif; ?>
 				</select>
 			</p>
 		</div>
@@ -115,6 +112,21 @@ $msl_shapes   = MSL_Theme::ARTWORK_LABELS;
 					<input type="file" class="msl-input msl-input--file" id="msl-g-photo" name="msl_photo"
 						accept="image/jpeg,image/png,image/webp" aria-describedby="msl-g-photo-help">
 					<span class="msl-field__help" id="msl-g-photo-help"<?php msl_i18n( 'groups', 'f_photo_help' ); ?>><?php msl_the( $msl_groups, 'f_photo_help' ); ?></span>
+
+					<?php
+					/*
+					 * The second thing the same picture can do. It was an entry
+					 * in the list of shapes above, where nobody found it:
+					 * somebody who has just chosen a photograph is looking at
+					 * the photograph field, not back up at a dropdown of
+					 * menorahs. A checkbox attached to the upload is the whole
+					 * fix.
+					 */
+					?>
+					<label class="msl-photoart" for="msl-g-photoart">
+						<input type="checkbox" id="msl-g-photoart" name="photo_artwork" value="1">
+						<span<?php msl_i18n( 'groups', 'f_artwork_photo' ); ?>><?php msl_the( $msl_groups, 'f_artwork_photo' ); ?></span>
+					</label>
 				</p>
 			</div>
 		<?php endif; ?>

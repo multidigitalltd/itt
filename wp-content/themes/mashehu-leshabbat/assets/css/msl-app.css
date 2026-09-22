@@ -4768,8 +4768,12 @@ select.msl-input {
    an introduction and not the page: the numbers and the ask have to stay above
    the fold on a phone, and a portrait at its own aspect ratio pushes them off.
    object-fit keeps the face in the middle rather than squashing it. */
-.msl-gcover {
-	margin: 0 0 20px;
+/* `.msl-page .msl-gcover` and not `.msl-gcover`: the reset at the top of this
+   file zeroes the margin of every `figure` as `.msl-page figure`, which one
+   class on its own cannot outrank. Written the short way, the space below this
+   picture silently did not exist — measured at 10px where 34 was asked for. */
+.msl-page .msl-gcover {
+	margin: 0 0 34px;
 	border-radius: 30px;
 	overflow: hidden;
 	background: var(--msl-ink-panel);
@@ -4795,6 +4799,24 @@ select.msl-input {
 }
 .msl-gform__row--one {
 	grid-template-columns: minmax(0, 1fr);
+}
+/* The one checkbox in this form that is not a card: it belongs to the field
+   above it, and reads as a sentence next to its box. */
+.msl-page .msl-photoart {
+	display: flex;
+	align-items: flex-start;
+	gap: 10px;
+	margin-block-start: 12px;
+	font-size: calc(15px * var(--msl-scale, 1));
+	line-height: 1.5;
+	cursor: pointer;
+}
+.msl-photoart input {
+	inline-size: 18px;
+	block-size: 18px;
+	margin: 3px 0 0;
+	flex: none;
+	accent-color: var(--msl-amber);
 }
 .msl-gfund__grid {
 	display: grid;

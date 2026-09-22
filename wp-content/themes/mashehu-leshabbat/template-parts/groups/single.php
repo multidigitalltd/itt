@@ -202,6 +202,16 @@ $msl_state = array(
 		</section>
 	<?php endif; ?>
 
+	<?php
+	/*
+	 * Why the list looks the way it does, to the people who can change it.
+	 * Printed whether the list is on or off, because "off" is one of the
+	 * answers — and it is the one that cannot be told apart from "empty" by
+	 * looking at the page.
+	 */
+	require MSL_DIR . 'template-parts/groups/people-notice.php';
+	?>
+
 	<?php if ( $msl_show_people ) : ?>
 	<section class="msl-gfund__people" data-msl-rise aria-labelledby="msl-gfund-people">
 		<h2 class="msl-gfund__peoplehead" id="msl-gfund-people"<?php msl_i18n( 'groups', 'single_supporters' ); ?>><?php msl_the( $msl_groups, 'single_supporters' ); ?></h2>

@@ -864,11 +864,20 @@ final class MSL_Groups {
 
 			$clean['photo_id']  = (int) $photo['id'];
 			$clean['photo_art'] = (string) $photo['grid'];
+
+			/*
+			 * The artwork choice rides with the upload rather than sitting in
+			 * the list of shapes, because that is where the person is looking
+			 * when they make it. A ticked box with no picture, or with one the
+			 * server could not read, leaves the chosen shape alone: better a
+			 * menorah than an empty frame.
+			 */
+			if ( '' !== $clean['photo_art'] && isset( $_POST['photo_artwork'] ) ) {
+				$clean['artwork'] = self::PHOTO_ART;
+			}
 		}
 
 		if ( self::PHOTO_ART === ( $clean['artwork'] ?? '' ) && '' === ( $clean['photo_art'] ?? '' ) ) {
-			// Asked for a picture and sent none, or sent one this server could
-			// not read. Better a menorah than an empty frame.
 			$clean['artwork'] = 'rotate';
 		}
 

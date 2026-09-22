@@ -61,11 +61,15 @@ $msl_stats   = MSL_Stats::all( (int) get_the_ID() );
 	<div class="msl-invitecard" data-msl-invite-card hidden>
 		<p class="msl-invitecard__title" data-msl-invite-title
 			data-msl-template="<?php echo esc_attr( msl_t( $msl_screens, 'invite_title' ) ); ?>"
-			data-msl-anon="<?php echo esc_attr( msl_t( $msl_screens, 'invite_title_anon' ) ); ?>"></p>
+			data-msl-template-i18n="screens.invite_title"
+			data-msl-anon="<?php echo esc_attr( msl_t( $msl_screens, 'invite_title_anon' ) ); ?>"
+			data-msl-anon-i18n="screens.invite_title_anon"></p>
 
 		<p class="msl-invitecard__count" data-msl-invite-count
 			data-msl-template="<?php echo esc_attr( msl_t( $msl_screens, 'invite_count' ) ); ?>"
-			data-msl-first="<?php echo esc_attr( msl_t( $msl_screens, 'invite_first' ) ); ?>"></p>
+			data-msl-template-i18n="screens.invite_count"
+			data-msl-first="<?php echo esc_attr( msl_t( $msl_screens, 'invite_first' ) ); ?>"
+			data-msl-first-i18n="screens.invite_first"></p>
 	</div>
 
 	<div class="msl-screen__bottom">

@@ -183,6 +183,7 @@ $msl_state = array(
 
 				<a class="msl-btn msl-btn--whatsapp" data-msl-whatsapp
 					data-msl-template="<?php echo esc_attr( msl_t( $msl_groups, 'wa_message' ) ); ?>"
+					data-msl-template-i18n="groups.wa_message"
 					href="<?php echo esc_url( 'https://wa.me/?text=' . rawurlencode( $msl_wa ) ); ?>"
 					target="_blank" rel="noopener"
 					<?php msl_i18n( 'groups', 'single_share' ); ?>><?php msl_the( $msl_groups, 'single_share' ); ?></a>

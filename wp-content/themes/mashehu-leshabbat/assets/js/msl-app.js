@@ -112,6 +112,10 @@
 		return value === undefined ? '' : value;
 	}
 
+	/* Nodes carrying a copy key for an attribute rather than for their text.
+	   Adding a fourth kind means adding it here; the loop itself is generic. */
+	var ATTR_I18N = '[data-msl-template-i18n], [data-msl-anon-i18n], [data-msl-first-i18n]';
+
 	function applyLanguage() {
 		var dict = dictionary();
 
@@ -120,6 +124,35 @@
 		document.body.classList.toggle('msl-page--he', state.lang === 'he');
 		document.body.classList.toggle('msl-page--en', state.lang === 'en');
 
+		/*
+		 * Values that live in an attribute rather than in the text: a message
+		 * template, the two alternative sentences on the invitation card. Each
+		 * one names its own copy key in `data-msl-<name>-i18n`, and that is the
+		 * whole point of it existing.
+		 *
+		 * Without it the rule below had to guess, and it guessed that a node
+		 * with a template holds that template as its own text — true of "%d
+		 * people in the last ten minutes", false of the WhatsApp button, whose
+		 * text is "Send on WhatsApp" and whose template is the message being
+		 * sent. So every language pass overwrote the message with the button's
+		 * own label, and the link the message existed to carry disappeared:
+		 * WhatsApp opened with the words "Send on WhatsApp" and nothing else.
+		 * Measured in a browser before and after.
+		 */
+		$$(ATTR_I18N).forEach(function (node) {
+			Array.prototype.forEach.call(node.attributes, function (attr) {
+				var match = /^data-msl-(.+)-i18n$/.exec(attr.name);
+
+				if (!match) { return; }
+
+				var value = dict[attr.value];
+
+				if (value === undefined) { return; }
+
+				node.setAttribute('data-msl-' + match[1], value);
+			});
+		});
+
 		$$('[data-msl-i18n]').forEach(function (node) {
 			var value = dict[node.dataset.mslI18n];
 
@@ -127,8 +160,10 @@
 
 			/* Sentences with a number in them keep their template on the node,
 			   so the value can be re-interpolated rather than concatenated —
-			   the number does not sit in the same place in both languages. */
-			if (node.dataset.mslTemplate !== undefined) {
+			   the number does not sit in the same place in both languages. A
+			   node that names its template's key does not come through here:
+			   its text and its template are two different strings. */
+			if (node.dataset.mslTemplate !== undefined && node.dataset.mslTemplateI18n === undefined) {
 				node.dataset.mslTemplate = value;
 				return;
 			}

@@ -36,7 +36,15 @@ final class MSL_Content {
 	/**
 	 * The current copy revision.
 	 */
-	private const REVISION = 7;
+	private const REVISION = 8;
+
+	/**
+	 * The WhatsApp message, as it shipped before it said what the link shows.
+	 */
+	private const SHARE_MESSAGE_WAS = array(
+		'wa_message_he' => "הוספתי אור לשבת הקרובה. מה האור שלך? %s",
+		'wa_message_en' => "I added my light for this Shabbat. What is your light? %s",
+	);
 
 	/**
 	 * The line under the first step of the join form, as it shipped before the
@@ -171,6 +179,10 @@ final class MSL_Content {
 
 		if ( $done < 7 ) {
 			self::retire_pick_line();
+		}
+
+		if ( $done < 8 ) {
+			self::retire_share_message();
 		}
 
 		update_option( self::REVISION_OPTION, self::REVISION, false );
@@ -525,6 +537,42 @@ final class MSL_Content {
 	}
 
 	/**
+	 * Revision 8 — the message that goes out on WhatsApp.
+	 *
+	 * "I added my light. What is your light?" asked a question and said nothing
+	 * about the link underneath it. The link leads to the sender's own candle
+	 * in the artwork, which is the reason anybody sends it, so the message says
+	 * that now — and invites the reader to light one of their own.
+	 */
+	private static function retire_share_message(): void {
+		$key   = MSL_Meta::key( 'referral' );
+		$fresh = self::section( 'referral' );
+
+		foreach ( self::pages_with( $key ) as $page_id ) {
+			$stored = get_post_meta( (int) $page_id, $key, true );
+
+			if ( ! is_array( $stored ) ) {
+				continue;
+			}
+
+			$touched = false;
+
+			foreach ( self::SHARE_MESSAGE_WAS as $field => $was ) {
+				if ( ! isset( $stored[ $field ] ) || trim( (string) $stored[ $field ] ) !== $was ) {
+					continue;
+				}
+
+				$stored[ $field ] = (string) ( $fresh[ $field ] ?? '' );
+				$touched          = true;
+			}
+
+			if ( $touched ) {
+				update_post_meta( (int) $page_id, $key, $stored );
+			}
+		}
+	}
+
+	/**
 	 * Defaults for one section.
 	 *
 	 * @param string $section Section key.
@@ -751,8 +799,8 @@ final class MSL_Content {
 				'your_link_en'  => 'Your personal link',
 				'wa_send_he'    => 'שליחה ב-WhatsApp',
 				'wa_send_en'    => 'Send on WhatsApp',
-				'wa_message_he' => 'הוספתי אור לשבת הקרובה. מה האור שלך? %s',
-				'wa_message_en' => 'I added my light for this Shabbat. What is your light? %s',
+				'wa_message_he' => 'הוספתי אור לשבת. זה הנר שלי ביצירה — אפשר לראות אותו, ולהדליק אחד גם: %s',
+				'wa_message_en' => 'I added my light for Shabbat. This is my candle in the artwork — you can see it, and light one too: %s',
 				'share_more_he' => 'שיתוף נוסף',
 				'share_more_en' => 'More ways to share',
 				'copy_btn_he'   => 'העתקת קישור',

@@ -59,6 +59,7 @@ $msl_shown    = '' !== $msl_own ? (string) preg_replace( '#^https?://#', '', unt
 			<div class="msl-invite__actions">
 				<a class="msl-btn msl-btn--whatsapp" data-msl-whatsapp
 					data-msl-template="<?php echo esc_attr( msl_t( $msl_referral, 'wa_message' ) ); ?>"
+					data-msl-template-i18n="referral.wa_message"
 					href="<?php echo esc_url( 'https://wa.me/?text=' . rawurlencode( sprintf( msl_t( $msl_referral, 'wa_message' ), $msl_own ) ) ); ?>"
 					target="_blank" rel="noopener"
 					<?php msl_i18n( 'referral', 'wa_send' ); ?>><?php msl_the( $msl_referral, 'wa_send' ); ?></a>

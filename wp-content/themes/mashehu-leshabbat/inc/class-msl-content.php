@@ -36,7 +36,16 @@ final class MSL_Content {
 	/**
 	 * The current copy revision.
 	 */
-	private const REVISION = 5;
+	private const REVISION = 6;
+
+	/**
+	 * The join form's "you can skip all of it" line, exactly as it shipped
+	 * before it was retired, so a page still holding it can be cleared.
+	 */
+	private const SKIP_LINE_WAS = array(
+		'det_optional_he' => 'אפשר לדלג על הכול — מי שלא ממלא מצטרף בעילום שם, והנר נדלק בדיוק אותו דבר.',
+		'det_optional_en' => 'You can skip all of it — leave it blank and you join anonymously, and the candle is lit just the same.',
+	);
 
 	/**
 	 * The privacy paragraph about groups, exactly as it shipped before
@@ -105,6 +114,10 @@ final class MSL_Content {
 
 		if ( $done < 5 ) {
 			self::show_who_lit();
+		}
+
+		if ( $done < 6 ) {
+			self::retire_skip_line();
 		}
 
 		update_option( self::REVISION_OPTION, self::REVISION, false );
@@ -399,6 +412,58 @@ final class MSL_Content {
 			$stored['show_people'] = 1;
 
 			update_post_meta( (int) $page_id, $key, $stored );
+		}
+	}
+
+	/**
+	 * Revision 6 — the "you can skip all of it" line in the join form.
+	 *
+	 * It was taken out of this file in 1.19.0, and it kept appearing: the copy
+	 * here is only what a page starts with, and a page that had already saved
+	 * the sentence went on holding its own copy of it for ever. Deleting a
+	 * default removes it from new installs and from nobody else — which is
+	 * exactly the gap this whole revision mechanism exists to close, and this
+	 * is the second time that has caught me out.
+	 *
+	 * Only the retired sentence is cleared, word for word, in either language.
+	 * A campaign that wrote its own line there keeps it, and a campaign that
+	 * types one back in after this keeps that too, because this runs once.
+	 */
+	private static function retire_skip_line(): void {
+		$key = MSL_Meta::key( 'join' );
+
+		$pages = get_posts(
+			array(
+				'post_type'        => 'page',
+				'post_status'      => 'any',
+				'numberposts'      => 200,
+				'fields'           => 'ids',
+				'meta_key'         => $key, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+				'suppress_filters' => false,
+			)
+		);
+
+		foreach ( $pages as $page_id ) {
+			$stored = get_post_meta( (int) $page_id, $key, true );
+
+			if ( ! is_array( $stored ) ) {
+				continue;
+			}
+
+			$touched = false;
+
+			foreach ( self::SKIP_LINE_WAS as $field => $was ) {
+				if ( ! isset( $stored[ $field ] ) || trim( (string) $stored[ $field ] ) !== $was ) {
+					continue;
+				}
+
+				$stored[ $field ] = '';
+				$touched          = true;
+			}
+
+			if ( $touched ) {
+				update_post_meta( (int) $page_id, $key, $stored );
+			}
 		}
 	}
 

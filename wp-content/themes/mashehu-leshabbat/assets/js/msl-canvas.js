@@ -573,64 +573,235 @@ window.MSLCanvas = (function () {
 		}
 
 		/*
-		 * The Temple: a portico of pillars under a pediment, on its steps.
+		 * The Temple, on the lines of the drawing the campaign sent: the
+		 * courtyard wall with its towers across the bottom, the gate through
+		 * it, the steps, and the Sanctuary rising behind — pillars, frieze,
+		 * and the row of spikes along the roof.
 		 *
-		 * Drawn as the front elevation and nothing else. A three-quarter view
-		 * would need shading to read, and shading is exactly what a field of
-		 * candles cannot do — every cell here is either a flame or nothing.
+		 * Still a front elevation and nothing else. The drawing is a
+		 * three-quarter view, and a three-quarter view needs shading to read;
+		 * shading is exactly what a field of candles cannot do, because every
+		 * cell here is either a flame or nothing. What carries the likeness
+		 * instead are the two things that belong to this building and to no
+		 * other: **the spiked roofline** and **the walled courtyard with its
+		 * towers**. A portico on steps — which is what stood here before — is
+		 * every temple ever drawn.
 		 */
 		if (kind === 'temple') {
-			var tBase = 0.812;
-			var tFloor = 0.700;        /* where the pillars stand */
-			var tCap = 0.470;          /* where they finish */
-			var tHalf = 0.330;
+			/*
+			 * Every measurement here is in grid cells, not in taste. The field
+			 * is 76 across, so one cell is about 0.013 of the frame: a stroke
+			 * thinner than that lands on some cells and misses others, and a
+			 * gap narrower than two of them does not read as a gap at all.
+			 * The first pass drew each pillar as two lit edges 0.012 apart —
+			 * under one cell — and four pillars came out as one bright slab.
+			 * One stroke per thing, and dark between them.
+			 */
+			var tGround = 0.820;
+			var tWallTop = 0.702;
+			var tWallHalf = 0.400;
 
-			/* Three steps, each a little wider than the one above it. */
-			for (i = 0; i < 3; i++) {
-				var stepTop = tFloor + i * 0.038;
-				var stepHalf = tHalf + 0.026 + i * 0.030;
+			if (Math.abs(y - tGround) <= 0.009 && Math.abs(x - 0.5) <= tWallHalf + 0.030) { return { heat: 0.24 }; }
 
-				if (y > stepTop && y <= stepTop + 0.038 && Math.abs(x - 0.5) <= stepHalf) {
-					return { heat: 0.24 };
+			/* ---- The courtyard wall, and the gate through the middle ---- */
+			dx = Math.abs(x - 0.5);
+
+			if (dx <= tWallHalf && y > tWallTop && y < tGround) {
+				/* The gateway is drawn by what is lit around it, the way the
+				   gate in the walls of Jerusalem is. */
+				if (dx <= 0.062) {
+					return Math.abs(dx - 0.062) <= 0.010 ? { heat: 0.44 } : null;
+				}
+
+				if (Math.abs(y - tWallTop) <= 0.010) { return { heat: 0.32 }; }
+				if (Math.abs(dx - tWallHalf) <= 0.010) { return { heat: 0.30 }; }
+				if (r() < 0.07) { return { heat: 0.13 }; }
+
+				return null;
+			}
+
+			/* ---- The towers: the two corners and two inside them ---- */
+			var towers = [-0.400, -0.196, 0.196, 0.400];
+			var tTowerHalf = 0.042;
+			var tTowerTop = 0.626;
+
+			for (i = 0; i < towers.length; i++) {
+				cx = 0.5 + towers[i];
+				d = Math.abs(x - cx);
+
+				if (y > tTowerTop - 0.030 && y < tGround && d <= tTowerHalf + 0.004) {
+					/* Three merlons on the cap. */
+					if (y < tTowerTop) {
+						return d < 0.011 || Math.abs(d - 0.030) < 0.011 ? { heat: 0.38 } : null;
+					}
+
+					if (Math.abs(y - tTowerTop) <= 0.010) { return { heat: 0.40 }; }
+					if (Math.abs(d - tTowerHalf) <= 0.010) { return { heat: 0.34 }; }
+					if (r() < 0.06) { return { heat: 0.13 }; }
+
+					return null;
 				}
 			}
 
-			if (Math.abs(y - tBase) <= 0.009 && Math.abs(x - 0.5) <= tHalf + 0.120) { return { heat: 0.26 }; }
+			/* ---- The Sanctuary behind the wall ---- */
+			var tHHalf = 0.210;
+			var tFloor = 0.624;
+			var tCap = 0.406;
 
-			/* Six pillars, fluted by the gaps between their own strokes. */
-			var pillars = [-0.268, -0.161, -0.054, 0.054, 0.161, 0.268];
+			/* The steps up to its doorway. */
+			for (i = 0; i < 3; i++) {
+				var stepTop = tFloor + i * 0.026;
+
+				if (Math.abs(y - stepTop) <= 0.009 && dx <= 0.058 + i * 0.030) { return { heat: 0.28 }; }
+			}
+
+			if (Math.abs(y - tFloor) <= 0.010 && dx <= tHHalf) { return { heat: 0.30 }; }
+			if (y > tCap && y < tFloor && Math.abs(dx - 0.204) <= 0.011) { return { heat: 0.34 }; }
+
+			/* Four pillars, one stroke each, with a capital and a base. */
+			var pillars = [0.155, 0.055];
 
 			for (i = 0; i < pillars.length; i++) {
-				cx = 0.5 + pillars[i];
+				d = Math.abs(dx - pillars[i]);
 
-				if (y > tCap && y < tFloor && Math.abs(x - cx) <= 0.026) {
-					/* The outer edge of each shaft is lit and its middle is
-					   left darker, which is what makes six pillars read as six
-					   and not as one wide band. */
-					return Math.abs(x - cx) > 0.013 ? { heat: 0.34 } : null;
-				}
-
-				/* Base and capital. */
-				if (Math.abs(y - tCap) <= 0.016 && Math.abs(x - cx) <= 0.036) { return { heat: 0.40 }; }
-				if (Math.abs(y - tFloor) <= 0.014 && Math.abs(x - cx) <= 0.036) { return { heat: 0.34 }; }
+				if (y > tCap && y < tFloor && d <= 0.011) { return { heat: 0.36 }; }
+				if (Math.abs(y - tCap) <= 0.013 && d <= 0.030) { return { heat: 0.44 }; }
+				if (Math.abs(y - tFloor) <= 0.012 && d <= 0.030) { return { heat: 0.34 }; }
 			}
 
-			/* The entablature and the pediment above it. */
-			if (y > 0.406 && y <= 0.446 && Math.abs(x - 0.5) <= tHalf) { return { heat: 0.38 }; }
-			if (onPath(x, y, [[0.5 - tHalf, 0.406], [0.5, 0.276], [0.5 + tHalf, 0.406]], 0.016, false)) { return { heat: 0.44 }; }
-
-			/* The doorway, a tall opening in the middle, left dark. */
-			if (y > 0.520 && y < tFloor && Math.abs(x - 0.5) <= 0.054) {
-				return Math.abs(Math.abs(x - 0.5) - 0.054) < 0.012 || Math.abs(y - 0.520) < 0.012
-					? { heat: 0.36 }
-					: null;
+			/* The doorway, tall and left dark, between the middle two. */
+			if (dx <= 0.046 && y > 0.468 && y < tFloor) {
+				return Math.abs(dx - 0.046) <= 0.010 || Math.abs(y - 0.468) <= 0.011 ? { heat: 0.42 } : null;
 			}
 
-			m = flame(x, y, 0.5, 0.150, 0.096, 0.018);
+			/* The architrave. */
+			if (dx <= tHHalf && Math.abs(y - tCap) <= 0.010) { return { heat: 0.38 }; }
+
+			/*
+			 * The cornice the spikes stand on, one line and not two: a cornice
+			 * and an eaves 0.020 apart is a cell and a half, and they came out
+			 * as one thick bar with nothing between them.
+			 */
+			var tEave = 0.344;
+
+			if (Math.abs(y - tEave) <= 0.011 && dx <= tHHalf + 0.026) { return { heat: 0.42 }; }
+
+			/*
+			 * The spikes along the roof — the one line in the whole drawing
+			 * that says which building this is. Solid rather than outlined (an
+			 * outlined spike this size is two dots that never meet), and spaced
+			 * six cells apart: at three they were one bumpy ridge, because each
+			 * one's glow reached its neighbour.
+			 */
+			if (y > 0.262 && y <= tEave - 0.012 && dx <= tHHalf + 0.014) {
+				var span = 0.078;
+				var u = ((x - (0.5 - tHHalf - 0.014)) % span) / span;
+
+				if (Math.abs(u - 0.5) <= 0.40 * (y - 0.262) / (tEave - 0.274)) { return { heat: 0.46 }; }
+			}
+
+			m = flame(x, y, 0.5, 0.146, 0.084, 0.017);
 
 			if (m) { return m; }
 
-			m = haze(x, y, 0.5, 0.215, 0.090, 0.250, 0.14, r);
+			m = haze(x, y, 0.5, 0.206, 0.084, 0.240, 0.13, r);
+
+			if (m) { return m; }
+
+			return dust(y, r);
+		}
+
+		/*
+		 * A crown: a jewelled band, five points rising from it, and a flame at
+		 * the tip of each.
+		 *
+		 * The points are drawn as the dips between them rather than as five
+		 * separate triangles — a crown's silhouette is one unbroken line that
+		 * rises and falls, and five triangles standing side by side read as
+		 * five hats. The line is a cosine through the dips, which is also what
+		 * makes the outer points lean outward on their own.
+		 */
+		if (kind === 'crown') {
+			var kBase = 0.694;        /* the bottom of the band */
+			var kBand = 0.594;        /* the top of it, where the points start */
+			var kHalf = 0.300;
+			var kPeaks = 5;
+
+			/* The rim, and the row of stones set into it. */
+			if (Math.abs(y - kBase) <= 0.012 && Math.abs(x - 0.5) <= kHalf) { return { heat: 0.34 }; }
+			if (Math.abs(y - kBand) <= 0.010 && Math.abs(x - 0.5) <= kHalf) { return { heat: 0.30 }; }
+
+			if (y > kBand && y < kBase) {
+				/* Both ends of the band, so it closes rather than trailing off. */
+				if (Math.abs(Math.abs(x - 0.5) - kHalf) <= 0.010) { return { heat: 0.32 }; }
+
+				for (i = 0; i < 4; i++) {
+					cx = 0.5 + (-0.225 + i * 0.150);
+
+					if (Math.hypot(x - cx, y - (kBase + kBand) / 2) <= 0.020) { return { heat: 0.62 }; }
+				}
+
+				if (r() < 0.09) { return { heat: 0.15 }; }
+			}
+
+			/*
+			 * The rising line. At each x it is the height of the arch between
+			 * the two dips it falls between; the middle point is the tallest
+			 * and the outer ones are cut shorter, which is what stops a crown
+			 * from looking like a fence.
+			 */
+			if (y <= kBand && Math.abs(x - 0.5) <= kHalf) {
+				var span = (2 * kHalf) / kPeaks;
+				var k = Math.floor((x - (0.5 - kHalf)) / span);
+
+				k = Math.max(0, Math.min(kPeaks - 1, k));
+
+				var rise = 0.162 + 0.100 * Math.cos((k - (kPeaks - 1) / 2) * Math.PI / (kPeaks - 1));
+				var mid = (0.5 - kHalf) + (k + 0.5) * span;
+				var t = (x - mid) / (span / 2);          /* -1 at a dip, 0 at a tip */
+				/*
+				 * The exponent is what decides whether these are points or
+				 * domes. Below 1 the curve flattens at the top and five fat
+				 * candles is what it drew; above 1 it comes to a point, which
+				 * is what a crown does.
+				 */
+				var th = t * Math.PI / 2;
+				var c = Math.max(0, Math.cos(th));
+				var top = kBand - rise * Math.pow(c, 1.55);
+
+				/*
+				 * The test measures straight up and down, and a stroke that is
+				 * 0.010 tall is thinner than 0.010 across wherever the line is
+				 * steep — which near the dips it very much is, and the sides of
+				 * each point came out dashed. Widening by the slope restores an
+				 * even thickness; the cap is there because the slope runs to
+				 * about six at the dips and an uncapped correction would turn
+				 * them into blobs.
+				 */
+				var slope = rise * 1.55 * (Math.PI / 2) / (span / 2) * Math.pow(c, 0.55) * Math.abs(Math.sin(th));
+
+				if (Math.abs(y - top) <= 0.010 * Math.min(2.4, Math.hypot(1, slope))) { return { heat: 0.46 }; }
+
+				/* A stone at every tip. */
+				if (Math.abs(t) < 0.14 && Math.hypot(x - mid, y - (top - 0.024)) <= 0.015) {
+					return { heat: 0.74 };
+				}
+
+				/*
+				 * One flame, over the tallest point. Five of them buried the
+				 * shape under five white blobs — the crown is the drawing here,
+				 * and the flame is the signature every artwork ends on.
+				 */
+				if (k === (kPeaks - 1) / 2) {
+					m = flame(x, y, mid, top - 0.112, 0.074, 0.016);
+
+					if (m) { return m; }
+				}
+
+				if (y > top && r() < 0.045) { return { heat: 0.14 }; }
+			}
+
+			m = haze(x, y, 0.5, 0.470, 0.160, 0.320, 0.13, r);
 
 			if (m) { return m; }
 

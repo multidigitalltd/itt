@@ -418,6 +418,7 @@ final class MSL_Fields {
 							'jerusalem' => 'חומות ירושלים',
 							'temple'    => 'בית המקדש',
 							'hearts'    => 'לבבות',
+							'crown'     => 'כתר',
 							'israel'    => 'מפת ישראל',
 							'light'     => 'נקודת אור',
 						),

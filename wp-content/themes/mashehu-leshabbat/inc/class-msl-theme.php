@@ -219,7 +219,7 @@ final class MSL_Theme {
 	 *
 	 * @var array<int, string>
 	 */
-	public const ARTWORKS = array( 'candles', 'star', 'menorah', 'tablets', 'kiddush', 'jerusalem', 'temple', 'hearts', 'israel', 'light' );
+	public const ARTWORKS = array( 'candles', 'star', 'menorah', 'tablets', 'kiddush', 'jerusalem', 'temple', 'hearts', 'crown', 'israel', 'light' );
 
 	/**
 	 * The shapes as a person picks them, the weekly rotation included.
@@ -242,6 +242,7 @@ final class MSL_Theme {
 		'jerusalem' => 'חומות ירושלים',
 		'temple'    => 'בית המקדש',
 		'hearts'    => 'לבבות',
+		'crown'     => 'כתר',
 		'israel'    => 'מפת ישראל',
 		'light'     => 'נקודת אור',
 	);

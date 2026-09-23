@@ -2307,6 +2307,7 @@
 		 * "could not send" and nothing ever reaches the server at all.
 		 */
 		var dedicationBody = $('#msl-dedication-body');
+		var weeks = $$('[data-msl-week-option]').filter(function (input) { return input.checked; })[0];
 
 		return {
 			things: chosen().map(function (input) { return Number(input.value); }),
@@ -2319,6 +2320,8 @@
 			is_anonymous: $('#msl-anon').checked ? 1 : 0,
 			dedication: dedication ? Number(dedication.value) : null,
 			dedication_body: dedicationBody ? dedicationBody.value.trim() : '',
+			/* How many Shabbatot the undertaking is for. */
+			reminder_weeks: weeks ? Number(weeks.value) : 0,
 			lang: state.lang,
 			referred_by: readCookie(config.cookies.ref),
 			/* Empty everywhere but a group's own page. The server resolves the
@@ -2459,9 +2462,23 @@
 		var dedication = $('[data-msl-my-dedication]');
 
 		if (dedication) {
-			var kind = $$('[data-msl-dedication]').filter(function (input) { return input.checked; })[0];
-			var body = ($('#msl-dedication-body') || {}).value || '';
-			var line = [kind ? $('label[for="' + kind.id + '"]').textContent.trim() : '', body.trim()].filter(Boolean).join(' ');
+			var line;
+
+			if (config.group) {
+				/*
+				 * A candle lit through a group is lit for what that group was
+				 * opened for, and the card somebody shares should say so —
+				 * it is the whole reason they were asked. Reading the chips
+				 * here instead would find nothing: on a group's page there are
+				 * no chips, and the line came out empty.
+				 */
+				line = dedText(config.group.ded);
+			} else {
+				var kind = $$('[data-msl-dedication]').filter(function (input) { return input.checked; })[0];
+				var body = ($('#msl-dedication-body') || {}).value || '';
+
+				line = [kind ? $('label[for="' + kind.id + '"]').textContent.trim() : '', body.trim()].filter(Boolean).join(' ');
+			}
 
 			dedication.textContent = line;
 			dedication.hidden = line === '';

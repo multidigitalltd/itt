@@ -747,6 +747,8 @@ function msl_hero_candles( int $count ): void {
 
 	$n = static fn( float $v ): string => rtrim( rtrim( number_format( $v, 2, '.', '' ), '0' ), '.' );
 
+	$paired = array();
+
 	echo '<div class="msl-hero__candles" aria-hidden="true" data-msl-candles>';
 
 	for ( $i = 0; $i < $count; $i++ ) {
@@ -772,9 +774,26 @@ function msl_hero_candles( int $count ): void {
 		 */
 		$depth = $inset <= 20 ? 'outer' : ( $inset <= 40 ? 'mid' : 'inner' );
 
+		/*
+		 * One candle on each side is marked, and it is the first of that side
+		 * in this list. On a phone those two are the only ones kept, and they
+		 * stand either side of the headline the way the whole field does on a
+		 * wide screen. Marking them here rather than counting in CSS is what
+		 * makes it survive the campaign changing how many candles it shows:
+		 * nth-child(10) is the second side's first candle only while the count
+		 * happens to be fourteen.
+		 */
+		$pair = '';
+
+		if ( ! in_array( $side, $paired, true ) ) {
+			$paired[] = $side;
+			$pair     = ' data-msl-hero-pair="' . $side . '"';
+		}
+
 		printf(
-			'<span class="msl-hero__candle" data-msl-candle data-msl-depth="%s" style="position:absolute;%s:%dpx;top:%d%%;opacity:1;transform:translate(0px,0px) scale(1);transition:opacity 1.1s ease,transform 1.4s cubic-bezier(.2,.8,.2,1);cursor:pointer;">',
+			'<span class="msl-hero__candle" data-msl-candle data-msl-depth="%s"%s style="position:absolute;%s:%dpx;top:%d%%;opacity:1;transform:translate(0px,0px) scale(1);transition:opacity 1.1s ease,transform 1.4s cubic-bezier(.2,.8,.2,1);cursor:pointer;">',
 			esc_attr( $depth ),
+			$pair, // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- built from a literal pair of values just above.
 			'start' === $side ? 'inset-inline-start' : 'inset-inline-end',
 			(int) $inset,
 			(int) $top

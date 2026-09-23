@@ -208,6 +208,7 @@ final class MSL_Joins {
 		$table      = MSL_DB::joins_table();
 		$referrer   = self::is_code( (string) $data['referred_by'] ) ? (string) $data['referred_by'] : '';
 		$reminder   = '' !== (string) $data['phone'] || '' !== (string) $data['email'];
+		$weeks      = in_array( (int) ( $data['reminder_weeks'] ?? 0 ), MSL_Reminders::WEEKS, true ) ? (int) $data['reminder_weeks'] : 0;
 		$coordinate = self::locate( (string) $data['city'], (string) $data['country'] );
 
 		/*
@@ -256,6 +257,19 @@ final class MSL_Joins {
 					'reminder_phone' => '' !== (string) $data['phone'] ? self::protect( (string) $data['phone'] ) : null,
 					'reminder_email' => '' !== (string) $data['email'] ? self::protect( (string) $data['email'] ) : null,
 					/*
+					 * How many Shabbatot this undertaking is for, and when the
+					 * first letter about it is due. The length is kept whether
+					 * or not an address was given — it is what the person
+					 * decided, not a setting for the mail — but nothing falls
+					 * due without somewhere to send it, which is what keeps the
+					 * queue to rows that can actually be written to.
+					 */
+					'reminder_weeks' => $weeks,
+					'reminders_sent' => 0,
+					'remind_at'      => $weeks > 0 && '' !== (string) $data['email']
+						? gmdate( 'Y-m-d H:i:s', (int) MSL_Reminders::first_due( $page_id ) )
+						: null,
+					/*
 					 * A light lit inside a group is a light in the main artwork
 					 * too. That is this one column: the row is an ordinary join
 					 * that the main counter, the map and the wall all pick up
@@ -265,7 +279,7 @@ final class MSL_Joins {
 					'group_id'       => (int) ( $data['group_id'] ?? 0 ),
 					'created_at'     => current_time( 'mysql', true ),
 				),
-				array( '%s', '%d', '%d', '%s', '%s', '%s', '%f', '%f', '%d', '%s', '%s', '%s', '%s', '%s', '%s', '%d', '%s', '%s', '%d', '%s' )
+				array( '%s', '%d', '%d', '%s', '%s', '%s', '%f', '%f', '%d', '%s', '%s', '%s', '%s', '%s', '%s', '%d', '%s', '%s', '%d', '%d', '%s', '%d', '%s' )
 			);
 
 			$wpdb->suppress_errors( $suppress );

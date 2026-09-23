@@ -24,7 +24,7 @@ final class MSL_DB {
 	/**
 	 * Bumped whenever the schema below changes.
 	 */
-	private const SCHEMA_VERSION = '9';
+	private const SCHEMA_VERSION = '10';
 
 	/**
 	 * Option holding the installed schema version.
@@ -187,6 +187,21 @@ final class MSL_DB {
 				reminder_optin TINYINT(1) NOT NULL DEFAULT 0,
 				reminder_phone VARCHAR(255) NULL,
 				reminder_email VARCHAR(255) NULL,
+				/*
+				 * How long the undertaking is for, and how far through it this
+				 * person is. reminder_weeks is what they chose; reminders_sent
+				 * counts the letters that have gone out, and it runs one past
+				 * reminder_weeks — that last increment is the letter that asks
+				 * whether they want to take something on again. Holding the
+				 * closing letter in the same counter means there is no second
+				 * column to keep in step with the first.
+				 *
+				 * remind_at is when the next letter is due, so a job that runs
+				 * late still sends rather than skipping the week it missed.
+				 */
+				reminder_weeks SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+				reminders_sent SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+				remind_at DATETIME NULL,
 				group_id BIGINT UNSIGNED NOT NULL DEFAULT 0,
 				created_at DATETIME NOT NULL,
 				PRIMARY KEY  (id),
@@ -197,6 +212,7 @@ final class MSL_DB {
 				KEY referred_by (referred_by),
 				KEY page_country (page_id, country(40)),
 				KEY page_city (page_id, city(40)),
+				KEY due (remind_at),
 				KEY dedup_ip (page_id, ip_hash, created_at),
 				KEY dedup_email (page_id, email_hash),
 				KEY dedup_phone (page_id, phone_hash),

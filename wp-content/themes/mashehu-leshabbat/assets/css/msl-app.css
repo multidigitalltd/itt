@@ -809,6 +809,127 @@
 	gap: 14px;
 	flex: none;
 }
+/* The sign-in link: an icon and a word, the word hidden on a phone. */
+.msl-header__signin {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+}
+.msl-header__signin-icon {
+	display: none;
+	line-height: 0;
+}
+
+/* ---------------------------------------------------------------------------
+   The header on a phone
+   ------------------------------------------------------------------------ */
+
+/*
+ * It was 180px tall against 73 on the desktop, on three wrapped rows: the menu
+ * and the mark, then the call to action and the language, then the countdown
+ * across the full width. A quarter of a phone screen, permanently, above every
+ * page.
+ *
+ * Now: one row with everything small on it, and the call to action alone on a
+ * second. `display: contents` on the actions is what allows that — it lifts the
+ * language toggle, the account control and the button out of their own flex box
+ * so the header's row can order them one by one, rather than having to move the
+ * whole group at once.
+ *
+ * Every selector here names `.msl-header` as well, and that is not decoration:
+ * the components it overrides are written further down this file at the same
+ * specificity, and a plain `.msl-countdown { display: none }` up here loses to
+ * the `.msl-countdown` below it and does nothing at all. Measured — the first
+ * attempt left the countdown exactly where it was and made the header taller.
+ */
+@media (max-width: 720px) {
+	/*
+	 * A grid and not a wrapping flex row. Wrapping decides for itself what
+	 * falls to the next line, and at 320px what fell was the sign-in control —
+	 * a third row, which is the thing being removed. Named areas say instead
+	 * that the first row holds all four small controls whatever the width, and
+	 * `minmax(0, 1fr)` on the middle column is what lets the site's name give
+	 * way rather than push somebody off the end.
+	 */
+	.msl-header .msl-header__inner {
+		display: grid;
+		grid-template-columns: auto minmax(0, 1fr) auto auto;
+		grid-template-areas:
+			"menu brand lang account"
+			"cta  cta   cta  cta";
+		align-items: center;
+		row-gap: 10px;
+		column-gap: 8px;
+		padding-block: 10px;
+	}
+
+	/* Lifts the actions out of their own box so the grid can place each one. */
+	.msl-header .msl-header__actions {
+		display: contents;
+	}
+
+	.msl-header .msl-menu { grid-area: menu; }
+	.msl-header .msl-langtoggle {
+		grid-area: lang;
+		min-inline-size: 44px;
+		padding-inline: 10px;
+	}
+	.msl-header .msl-account,
+	.msl-header .msl-header__signin { grid-area: account; }
+	.msl-header .msl-header__cta { grid-area: cta; }
+
+	.msl-header .msl-brand {
+		grid-area: brand;
+		min-inline-size: 0;
+		overflow: hidden;
+	}
+
+	.msl-header .msl-brand__word {
+		min-inline-size: 0;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	/* Desktop only, at the campaign's request: on a phone it was a full-width
+	   band of its own and the third of the three rows. The same countdown is
+	   in the Shabbat times card further down the page. */
+	.msl-header .msl-countdown {
+		display: none;
+	}
+
+	/*
+	 * An icon, at a size a finger can actually hit. 44x19 is what it measured
+	 * when only the icon was left in it, which is under the smallest target
+	 * WCAG 2.2 will accept, never mind a comfortable one.
+	 */
+	.msl-header .msl-header__signin {
+		inline-size: 44px;
+		block-size: 44px;
+		padding: 0;
+		gap: 0;
+		justify-content: center;
+	}
+
+	.msl-header .msl-header__signin-icon {
+		display: block;
+	}
+
+	/* Hidden, not removed: the link keeps its accessible name, and keeps it in
+	   whichever language the switch is on. */
+	.msl-header .msl-header__signin-word {
+		position: absolute;
+		inline-size: 1px;
+		block-size: 1px;
+		margin: -1px;
+		padding: 0;
+		overflow: hidden;
+		clip-path: inset(50%);
+		white-space: nowrap;
+		border: 0;
+	}
+}
+
 .msl-langtoggle {
 	block-size: 40px;
 	min-inline-size: 52px;
@@ -1945,6 +2066,27 @@
 .msl-anon__input:focus-visible + .msl-anon__label {
 	outline: 3px solid var(--msl-accent-text);
 	outline-offset: 3px;
+}
+/* ---------------------------------------------------------------------------
+   For how many Shabbatot
+   ------------------------------------------------------------------------ */
+
+/* A fieldset with no border of its own: the chips are the visible grouping,
+   and a box drawn round them inside the step's own box reads as a second
+   subject. */
+.msl-weeks {
+	border: 0;
+	padding: 0;
+	margin: 18px 0 0;
+	min-inline-size: 0;
+}
+.msl-weeks > .msl-field__label {
+	margin-block-end: 10px;
+}
+.msl-weeks__row {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
 }
 .msl-chips {
 	display: flex;
@@ -3639,58 +3781,65 @@ html.msl-a11y-scaled .msl-panel__title {
  * take those three properties back.
  */
 @media (max-width: 720px) {
+	/*
+	 * A candle either side of the headline, as on a wide screen.
+	 *
+	 * The candles used to be a row underneath the whole hero, which was the
+	 * cure for them landing under the text. The campaign wants them back
+	 * beside the headline, so the hero becomes three columns instead: a candle,
+	 * the words, a candle. The words are in the middle column and physically
+	 * cannot overlap the outer two, which is what the row below was avoiding —
+	 * this avoids it by construction rather than by moving things out of the
+	 * way.
+	 *
+	 * `display: contents` on the candle box is what lets two of its children be
+	 * placed in a grid they are not direct children of. Only the marked pair is
+	 * kept; the rest of the field is a wide-screen luxury and on a phone it is
+	 * eleven more things competing for 334 pixels.
+	 */
 	.msl-hero {
-		display: flex;
-		flex-direction: column;
+		display: grid;
+		grid-template-columns: auto minmax(0, 1fr) auto;
+		align-items: center;
+		column-gap: 6px;
 		padding-block-end: 34px;
 	}
 
+	/*
+	 * The row is named as well as the column, on all three. Auto-placement
+	 * fills forward: the two candles take columns 1 and 3 of row 1, the cursor
+	 * has passed column 2 by then, and the words were dropped into row 2 —
+	 * underneath the candles, which is the layout this was replacing. Measured
+	 * at 109px of empty hero above the headline before the rows were pinned.
+	 */
 	.msl-hero__content {
-		order: 1;
+		grid-column: 2;
+		grid-row: 1;
 	}
 
 	.msl-hero__candles {
-		order: 2;
-		position: relative;
-		inset: auto;
-		display: flex;
-		flex-wrap: wrap;
-		align-items: flex-end;
-		justify-content: center;
-		gap: 10px 20px;
-		min-block-size: 152px;
-		margin-block-start: 30px;
-		padding-inline: 16px;
-		opacity: 1;
+		display: contents;
 	}
 
-	.msl-hero__candles > .msl-hero__candle {
+	.msl-hero__candle {
+		display: none;
+	}
+
+	/*
+	 * The two that stay. The inline style on each one pins it to an edge and to
+	 * a percentage down the hero, which is the wide-screen scatter; in a grid
+	 * cell all three of those have to be let go, and !important is the only way
+	 * to reach an inline style from a stylesheet.
+	 */
+	.msl-hero__candle[data-msl-hero-pair] {
+		display: block;
 		position: static !important;
 		inset: auto !important;
 		top: auto !important;
 	}
 
-	/* The inner column stays away: in a row it only adds width, and width is
-	   the one thing a phone has none of. */
-	.msl-hero__candle[data-msl-depth="mid"] {
-		display: block;
-	}
-}
-
-/*
- * One row, not two. Nine candles wrap at 390px and the two that fall to the
- * second line read as an accident rather than as a shelf, so the narrowest
- * screens keep the five that fit.
- */
-@media (max-width: 520px) {
-	.msl-hero__candle[data-msl-depth="mid"] {
-		display: none;
-	}
-
-	.msl-hero__candles {
-		gap: 18px;
-		min-block-size: 148px;
-	}
+	.msl-hero__candle[data-msl-hero-pair="start"] { grid-column: 1; grid-row: 1; }
+	.msl-hero__candle[data-msl-hero-pair="end"] { grid-column: 3; grid-row: 1; }
 }
 
 /*

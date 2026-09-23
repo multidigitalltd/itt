@@ -44,6 +44,7 @@ final class MSL_Panel {
 		add_action( 'admin_menu', array( self::class, 'move_first' ), 12 );
 		add_action( 'admin_post_msl_save_content', array( self::class, 'handle_save' ) );
 		add_action( 'admin_post_msl_zmanim_recheck', array( self::class, 'handle_zmanim_recheck' ) );
+		add_action( 'admin_post_msl_send_reminders', array( self::class, 'handle_send_reminders' ) );
 		add_action( 'admin_post_msl_copy_rerun', array( self::class, 'handle_copy_rerun' ) );
 		add_action( 'admin_enqueue_scripts', array( self::class, 'assets' ) );
 	}
@@ -329,6 +330,7 @@ final class MSL_Panel {
 
 		self::render_login_notice();
 		self::render_zmanim_notice( $page_id );
+		self::render_reminder_notice( $page_id );
 		self::render_copy_notice();
 
 		$inputs = self::input_count( $page_id );
@@ -569,6 +571,100 @@ final class MSL_Panel {
 	 *
 	 * @return string
 	 */
+	/**
+	 * What the reminder queue is doing.
+	 *
+	 * This whole feature fails silently by its nature: a letter that is never
+	 * written looks exactly like a letter nobody answered. So the panel prints
+	 * the numbers rather than leaving anybody to assume them — how many people
+	 * are waiting, how many are overdue, and when the job is next due to wake.
+	 *
+	 * **The overdue count is the one that matters.** WordPress's own cron only
+	 * fires when somebody visits the site; on a quiet site it can sleep for
+	 * days, and a number that stays high here is that, visible, instead of a
+	 * silence nobody could explain.
+	 *
+	 * @param int $page_id Campaign page.
+	 */
+	private static function render_reminder_notice( int $page_id ): void {
+		if ( ! class_exists( 'MSL_Reminders' ) || ! MSL_DB::ready() ) {
+			return;
+		}
+
+		$state = MSL_Reminders::status( $page_id );
+
+		if ( 0 === $state['waiting'] && 0 === $state['finished'] ) {
+			return;
+		}
+
+		$next = $state['next_run'] > 0
+			? sprintf(
+				/* translators: %s: how long from now, e.g. "12 minutes". */
+				__( 'הבדיקה הבאה בעוד %s.', 'mashehu-leshabbat' ),
+				human_time_diff( $state['next_run'] )
+			)
+			: __( 'המשימה המתוזמנת אינה רשומה — כניסה אחת לאתר תרשום אותה מחדש.', 'mashehu-leshabbat' );
+
+		printf(
+			'<div class="notice notice-%s"><p><strong>%s</strong> %s</p><p>%s %s</p>%s</div>',
+			esc_attr( $state['due'] > 0 ? 'warning' : 'success' ),
+			esc_html__( 'תזכורות לפני שבת:', 'mashehu-leshabbat' ),
+			esc_html(
+				sprintf(
+					/* translators: 1: people waiting, 2: people whose undertaking is over. */
+					__( '%1$s ממתינים למכתב הבא, %2$s סיימו את הקבלה שלקחו.', 'mashehu-leshabbat' ),
+					msl_num( $state['waiting'] ),
+					msl_num( $state['finished'] )
+				)
+			),
+			esc_html(
+				$state['due'] > 0
+					? sprintf(
+						/* translators: %s: how many letters are overdue. */
+						__( '%s מכתבים היו אמורים לצאת כבר.', 'mashehu-leshabbat' ),
+						msl_num( $state['due'] )
+					)
+					: __( 'אין מכתבים שמחכים.', 'mashehu-leshabbat' )
+			),
+			esc_html( $next ),
+			sprintf(
+				'<p>%s <span class="description">%s</span></p>',
+				sprintf(
+					'<a class="button" href="%s">%s</a>',
+					esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=msl_send_reminders' ), 'msl_send_reminders' ) ),
+					esc_html__( 'לשלוח עכשיו את מה שממתין', 'mashehu-leshabbat' )
+				),
+				esc_html__( 'שולח עד 200 מכתבים בלחיצה. שימושי כדי לבדוק שהשרת בכלל מצליח לשלוח מייל.', 'mashehu-leshabbat' )
+			)
+		);
+	}
+
+	/**
+	 * Send the waiting letters, by hand.
+	 */
+	public static function handle_send_reminders(): void {
+		if ( ! current_user_can( 'edit_pages' ) ) {
+			wp_die( esc_html__( 'אין הרשאה.', 'mashehu-leshabbat' ) );
+		}
+
+		check_admin_referer( 'msl_send_reminders' );
+
+		$done = MSL_Reminders::run();
+
+		wp_safe_redirect(
+			add_query_arg(
+				array(
+					'page'          => self::SLUG,
+					'msl_sent'      => (int) $done['sent'],
+					'msl_closing'   => (int) $done['closing'],
+					'msl_skipped'   => (int) $done['skipped'],
+				),
+				admin_url( 'admin.php' )
+			)
+		);
+		exit;
+	}
+
 	private static function zmanim_recheck_button(): string {
 		return sprintf(
 			'<a class="button" href="%s">%s</a>',

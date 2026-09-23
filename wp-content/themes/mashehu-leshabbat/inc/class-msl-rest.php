@@ -571,6 +571,13 @@ final class MSL_REST {
 			'is_anonymous'    => (int) ( (bool) $request->get_param( 'is_anonymous' ) || '' === $first_name ),
 			'lang'            => in_array( $lang, MSL_I18N::LANGS, true ) ? $lang : 'he',
 			'referred_by'     => sanitize_key( (string) $request->get_param( 'referred_by' ) ),
+			/*
+			 * How many Shabbatot the undertaking is for. Anything that is not
+			 * one of the offered lengths becomes none — a number arriving from
+			 * outside the form must not be able to sign somebody up for a
+			 * year's correspondence.
+			 */
+			'reminder_weeks'  => (int) $request->get_param( 'reminder_weeks' ),
 			'dedication'      => $dedication_kind,
 			'dedication_body' => mb_substr( sanitize_textarea_field( (string) $request->get_param( 'dedication_body' ) ), 0, 280 ),
 			'group_id'        => $group_id,

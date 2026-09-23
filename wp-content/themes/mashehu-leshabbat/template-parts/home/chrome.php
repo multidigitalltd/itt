@@ -120,8 +120,26 @@ $msl_has_nav  = array() !== msl_nav_rows( $msl_nav );
 					 * Google only when there is no personal area to offer.
 					 */
 					?>
-					<a class="msl-btn msl-btn--quiet msl-header__signin" href="<?php echo esc_url( MSL_Account::available() ? MSL_Account::page_url() : MSL_Auth::sign_in_url() ); ?>"
-						<?php msl_i18n( 'auth', 'sign_in' ); ?>><?php msl_the( $msl_auth, 'sign_in' ); ?></a>
+					<?php
+					/*
+					 * An icon and a word. Below 720px the word is hidden the
+					 * accessible way rather than removed, so the link keeps its
+					 * name — and keeps it in whichever language the switch is
+					 * on, which an aria-label written once on the server would
+					 * not. The icon is the visible half on a phone, where the
+					 * header has no room for a second worded button.
+					 */
+					?>
+					<a class="msl-btn msl-btn--quiet msl-header__signin" href="<?php echo esc_url( MSL_Account::available() ? MSL_Account::page_url() : MSL_Auth::sign_in_url() ); ?>">
+						<span class="msl-header__signin-icon" aria-hidden="true">
+							<svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor"
+								stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+								<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+								<circle cx="12" cy="7" r="4"></circle>
+							</svg>
+						</span>
+						<span class="msl-header__signin-word"<?php msl_i18n( 'auth', 'sign_in' ); ?>><?php msl_the( $msl_auth, 'sign_in' ); ?></span>
+					</a>
 				<?php endif; ?>
 			<?php endif; ?>
 

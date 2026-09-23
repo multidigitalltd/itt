@@ -96,6 +96,40 @@ $msl_gded  = null !== $msl_ggrp ? msl_group_dedication_parts( $msl_ggrp, $msl_gc
 						<label class="msl-field__label" for="msl-custom-label"<?php msl_i18n( 'join', 'other_ph' ); ?>><?php msl_the( $msl, 'other_ph' ); ?></label>
 						<input type="text" class="msl-input" id="msl-custom-label" name="custom_label" maxlength="140">
 					</p>
+
+					<?php
+					/*
+					 * For how long. It belongs next to the undertaking and not
+					 * next to the address, because it is part of what somebody
+					 * is deciding to do rather than a setting for the post —
+					 * "two Shabbatot" is the size of the thing they are taking
+					 * on. The letters need an address, and the note below says
+					 * so; the answer is kept either way, because it is theirs.
+					 *
+					 * Radios and not a number box: the question is how much to
+					 * take on, and a box that accepts 37 invites somebody to
+					 * promise something they will not keep.
+					 */
+					?>
+					<fieldset class="msl-field msl-weeks" data-msl-weeks>
+						<legend class="msl-field__label"<?php msl_i18n( 'join', 'weeks_title' ); ?>><?php msl_the( $msl, 'weeks_title' ); ?></legend>
+
+						<div class="msl-weeks__row">
+							<?php foreach ( MSL_Reminders::WEEKS as $msl_n ) : ?>
+								<div class="msl-chip">
+									<input type="radio" class="msl-chip__input" name="reminder_weeks"
+										id="msl-weeks-<?php echo esc_attr( (string) $msl_n ); ?>"
+										value="<?php echo esc_attr( (string) $msl_n ); ?>"
+										<?php checked( 1, $msl_n ); ?>
+										data-msl-week-option>
+									<label class="msl-chip__label" for="msl-weeks-<?php echo esc_attr( (string) $msl_n ); ?>"
+										<?php msl_i18n( 'join', 'weeks_' . $msl_n ); ?>><?php msl_the( $msl, 'weeks_' . $msl_n ); ?></label>
+								</div>
+							<?php endforeach; ?>
+						</div>
+
+						<span class="msl-field__help"<?php msl_i18n( 'join', 'weeks_help' ); ?>><?php msl_the( $msl, 'weeks_help' ); ?></span>
+					</fieldset>
 				</section>
 
 				<?php /* ---------- Step 2 ---------- */ ?>

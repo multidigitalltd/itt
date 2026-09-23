@@ -2299,6 +2299,14 @@
 
 	function collect(nonce) {
 		var dedication = $$('[data-msl-dedication]').filter(function (input) { return input.checked; })[0];
+		/*
+		 * Not every step 2 has a box to type in. On a group's page the
+		 * dedication is the group's and that step holds no controls at all, so
+		 * reading .value straight off it throws here — before the request is
+		 * built, inside the promise, where the failure surfaces as the generic
+		 * "could not send" and nothing ever reaches the server at all.
+		 */
+		var dedicationBody = $('#msl-dedication-body');
 
 		return {
 			things: chosen().map(function (input) { return Number(input.value); }),
@@ -2310,7 +2318,7 @@
 			phone: $('#msl-phone').value.trim(),
 			is_anonymous: $('#msl-anon').checked ? 1 : 0,
 			dedication: dedication ? Number(dedication.value) : null,
-			dedication_body: $('#msl-dedication-body').value.trim(),
+			dedication_body: dedicationBody ? dedicationBody.value.trim() : '',
 			lang: state.lang,
 			referred_by: readCookie(config.cookies.ref),
 			/* Empty everywhere but a group's own page. The server resolves the

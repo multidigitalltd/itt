@@ -777,17 +777,30 @@
  * little dot it replaces. Capped by width as well, because a wide logo at a
  * fixed height is what pushes the menu off a phone.
  */
+/*
+ * The logo fits the box it is in, not the window.
+ *
+ * It used to be capped in `vw` — a share of the *viewport* — while the space
+ * it actually has is whatever is left in the header after the menu, the
+ * language toggle, the sign-in control and, on a wide screen, the countdown.
+ * Those are not the same number, and at 320, 360, 390 and again at 900 the
+ * picture was wider than its own box. Measured: 166px of logo in a 98px box.
+ *
+ * `max-inline-size: 100%` is the fix, and `block-size: auto` with a cap on the
+ * height is what makes it a fit rather than a squash: whichever limit binds
+ * first wins and the proportions are kept either way.
+ */
 .msl-logo__image {
-	block-size: 58px;
+	block-size: auto;
+	max-block-size: 58px;
 	inline-size: auto;
-	max-inline-size: min(300px, 46vw);
+	max-inline-size: 100%;
 	object-fit: contain;
 	display: block;
 }
 @media (max-width: 720px) {
 	.msl-logo__image {
-		block-size: 46px;
-		max-inline-size: 52vw;
+		max-block-size: 46px;
 	}
 }
 /* Visible to a screen reader, and to nobody else. Used for the site name when
@@ -878,10 +891,14 @@
 	.msl-header .msl-header__signin { grid-area: account; }
 	.msl-header .msl-header__cta { grid-area: cta; }
 
+	/*
+	 * No `overflow: hidden` here. The picture is bounded by its own box now, so
+	 * nothing should be spilling — and hiding the spill is exactly how a logo
+	 * that did not fit came out neatly cut off instead of visibly wrong.
+	 */
 	.msl-header .msl-brand {
 		grid-area: brand;
 		min-inline-size: 0;
-		overflow: hidden;
 	}
 
 	.msl-header .msl-brand__word {
@@ -913,6 +930,32 @@
 
 	.msl-header .msl-header__signin-icon {
 		display: block;
+	}
+
+	/*
+	 * The narrowest phones buy the logo its room back.
+	 *
+	 * At 320px the row is three 44px controls and a 28px gutter either side,
+	 * which leaves the brand 98 of 254 — and a wordmark in 98px is 25px tall.
+	 * Trimming the header's own padding and the controls (the header's, not the
+	 * page's: the gutter below the header is the design's and stays) gives it
+	 * about half as much again, which is the difference between a logo and a
+	 * smudge.
+	 */
+	@media (max-width: 400px) {
+		.msl-header .msl-header__inner {
+			padding-inline: 14px;
+			column-gap: 6px;
+		}
+
+		.msl-header .msl-langtoggle,
+		.msl-header .msl-header__signin,
+		.msl-header .msl-menu__toggle {
+			inline-size: 40px;
+			min-inline-size: 40px;
+			block-size: 40px;
+			padding-inline: 0;
+		}
 	}
 
 	/* Hidden, not removed: the link keeps its accessible name, and keeps it in

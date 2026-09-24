@@ -388,7 +388,7 @@
 	function pollStats() {
 		if (document.hidden) { return; }
 
-		window.fetch(config.rest.stats, { credentials: 'same-origin' })
+		window.fetch(config.rest.stats, { credentials: 'same-origin', cache: 'no-store' })
 			.then(function (r) { return r.ok ? r.json() : null; })
 			.then(function (data) {
 				if (!data) { return; }
@@ -456,7 +456,7 @@
 	}
 
 	function landOnInvite(code) {
-		window.fetch(config.rest.referral + '/' + code, { credentials: 'same-origin' })
+		window.fetch(config.rest.referral + '/' + code, { credentials: 'same-origin', cache: 'no-store' })
 			.then(function (r) { return r.ok ? r.json() : null; })
 			.then(function (data) {
 				if (!data) { return; }
@@ -506,7 +506,7 @@
 	function pollFeed() {
 		if (document.hidden) { return; }
 
-		window.fetch(config.rest.feed, { credentials: 'same-origin' })
+		window.fetch(config.rest.feed, { credentials: 'same-origin', cache: 'no-store' })
 			.then(function (r) { return r.ok ? r.json() : null; })
 			.then(function (data) {
 				if (!data || !data.rows || data.rows.length < 6) { return; }
@@ -691,7 +691,7 @@
 	function pollReferral() {
 		if (!state.refCode) { return; }
 
-		window.fetch(config.rest.referral + '/' + state.refCode, { credentials: 'same-origin' })
+		window.fetch(config.rest.referral + '/' + state.refCode, { credentials: 'same-origin', cache: 'no-store' })
 			.then(function (r) { return r.ok ? r.json() : null; })
 			.then(function (data) {
 				if (!data) { return; }
@@ -928,7 +928,7 @@
 			return;
 		}
 
-		window.fetch(config.rest.pieces + '?from=' + win.from + '&to=' + win.to, { credentials: 'same-origin' })
+		window.fetch(config.rest.pieces + '?from=' + win.from + '&to=' + win.to, { credentials: 'same-origin', cache: 'no-store' })
 			.then(function (r) { return r.ok ? r.json() : null; })
 			.then(function (data) {
 				state.pieces[key] = pickFrom(data && data.pieces) || standIn(win.from);
@@ -2781,8 +2781,35 @@
 		window.setInterval(walkCounter, 200);
 		window.setInterval(pollReferral, 30000);
 
+		/*
+		 * A phone that has been in a pocket has not been polling: the timers
+		 * above are throttled or stopped outright while a tab is hidden, and a
+		 * page brought back from the browser's back/forward store resumes with
+		 * whatever number was on it when it was put away. Eight seconds of that
+		 * is nothing; ten minutes of it is the campaign showing one number on
+		 * the phone and another on the desk. So the moment a page is looked at
+		 * again, it asks.
+		 */
+		document.addEventListener('visibilitychange', function () {
+			if (!document.hidden) { catchUp(); }
+		});
+
+		window.addEventListener('pageshow', function (event) {
+			if (event.persisted) { catchUp(); }
+		});
+
 		pollStats();
 		pollFeed();
+	}
+
+	/* Everything that goes stale while nobody is looking. */
+	function catchUp() {
+		pollStats();
+		pollFeed();
+		renderCountdown();
+		renderAgo();
+
+		if (state.refCode) { pollReferral(); }
 	}
 
 	if (document.readyState === 'loading') {

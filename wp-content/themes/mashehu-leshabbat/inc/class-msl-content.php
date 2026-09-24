@@ -39,6 +39,109 @@ final class MSL_Content {
 	private const REVISION = 9;
 
 	/**
+	 * Every field whose value is the visible name of a control.
+	 *
+	 * A paragraph the campaign cleared on purpose should stay cleared — that is
+	 * an editorial decision and the site has to respect it. The name of a button
+	 * is not that kind of value. A button with nothing written on it is a beige
+	 * pill in the corner of a picture that nobody can guess the meaning of,
+	 * which is what a group's page showed after its copy was saved with this one
+	 * blank. So for these, and only these, an empty saved value is treated as
+	 * absent and the shipped words come back.
+	 *
+	 * The list is not maintained by hand — check23 reads the templates and
+	 * fails if a control is named here that is not one, or if one of them is
+	 * missing.
+	 *
+	 * @var array<int, string> "section.key", without the language suffix.
+	 */
+	public const CONTROLS = array(
+		'account.copy_cta',
+		'account.f_email',
+		'account.f_name',
+		'account.f_password',
+		'account.f_password_current',
+		'account.f_password_new',
+		'account.forgot_cta',
+		'account.forgot_send',
+		'account.group_manage',
+		'account.group_view',
+		'account.groups_open',
+		'account.login_cta',
+		'account.manage_back',
+		'account.manage_save',
+		'account.password_cta',
+		'account.register_cta',
+		'account.reset_cta',
+		'account.signout',
+		'auth.area_cta',
+		'auth.invite_cta',
+		'auth.invite_dismiss',
+		'auth.link_join_cta',
+		'auth.link_locked_cta',
+		'auth.remind_cta',
+		'auth.remind_dismiss',
+		'auth.remind_email',
+		'auth.remind_name',
+		'auth.sign_in',
+		'auth.sign_out',
+		'chrome.brand',
+		'chrome.cta',
+		'groupcta.cta',
+		'groupcta.cta_all',
+		'groups.back_home',
+		'groups.card_cta',
+		'groups.f_artwork_week',
+		'groups.f_email',
+		'groups.f_honouree',
+		'groups.f_occasion',
+		'groups.f_owner',
+		'groups.f_photo',
+		'groups.f_story',
+		'groups.f_target',
+		'groups.f_title',
+		'groups.open_cta',
+		'groups.single_back',
+		'groups.single_cta',
+		'groups.single_lights',
+		'groups.single_open_art',
+		'groups.single_opened_by',
+		'groups.single_pct',
+		'groups.single_share',
+		'groups.single_target',
+		'groups.submit',
+		'join.anon_label',
+		'join.ded_cta',
+		'join.ded_field_label',
+		'join.other_ph',
+		'join.ph_city',
+		'join.ph_country',
+		'join.ph_email',
+		'join.ph_name',
+		'join.ph_phone',
+		'join.pick_cta',
+		'join.skip',
+		'join.submit_cta',
+		'nav.menu_open',
+		'navcards.art_card',
+		'navcards.art_card_sub',
+		'navcards.wall_line1',
+		'navcards.wall_line2',
+		'referral.copy_btn',
+		'referral.share_more',
+		'referral.wa_send',
+		'screens.back',
+		'screens.back_home',
+		'screens.light_mine',
+		'screens.wow_cta',
+		'stage.enter_art',
+		'stage.wall',
+		'zmanim.pick_apply',
+		'zmanim.pick_cta',
+		'zmanim.pick_label',
+	);
+
+	/**
 	 * The WhatsApp message, as it shipped before it said what the link shows.
 	 */
 	private const SHARE_MESSAGE_WAS = array(

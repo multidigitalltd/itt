@@ -5262,12 +5262,50 @@ select.msl-input {
    is what it opens, and it is a button rather than a click on the canvas: the
    canvas is aria-hidden, and a surface that is the only way in is a way in a
    keyboard cannot find. */
+/*
+ * The way into the artwork.
+ *
+ * It used to be a small light pill in the corner of a large dark picture, and
+ * on a phone that is what it looked like: a beige lozenge with no obvious job.
+ * It sits at the foot of the picture now, across the middle, dark on dark with
+ * a lit edge, carrying an arrow that leaves its frame — a door, at the bottom
+ * of the thing it opens.
+ */
 .msl-page .msl-gfund__open {
 	position: absolute;
-	inset-block-end: 14px;
-	inset-inline-end: 14px;
-	padding: 9px 16px;
-	font-size: calc(14px * var(--msl-scale, 1));
+	inset-block-end: 16px;
+	inset-inline: 16px;
+	margin-inline: auto;
+	inline-size: fit-content;
+	max-inline-size: calc(100% - 32px);
+	display: inline-flex;
+	align-items: center;
+	gap: 9px;
+	padding: 11px 20px;
+	font-size: calc(15px * var(--msl-scale, 1));
+	font-weight: 600;
+	color: var(--msl-surface-warm);
+	background: rgba(24, 15, 8, 0.72);
+	border: 1px solid rgba(240, 225, 205, 0.5);
+	-webkit-backdrop-filter: blur(6px);
+	backdrop-filter: blur(6px);
+	box-shadow: 0 8px 22px rgba(0, 0, 0, 0.32);
+}
+.msl-page .msl-gfund__open:hover,
+.msl-page .msl-gfund__open:focus-visible {
+	color: var(--msl-ink);
+	background: var(--msl-surface-warm);
+	border-color: var(--msl-surface-warm);
+}
+.msl-gfund__open-icon {
+	inline-size: 18px;
+	block-size: 18px;
+	flex: none;
+}
+.msl-gfund__open-word {
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
 }
 .msl-gfund__panel {
 	padding: 32px 30px 28px;

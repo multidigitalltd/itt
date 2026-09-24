@@ -225,15 +225,17 @@ final class MSL_REST {
 		$page_id = MSL_Importer::page_id();
 		$stats   = MSL_Stats::all( $page_id );
 
-		return new WP_REST_Response(
-			array(
-				'participants' => $stats['participants'],
-				'countries'    => $stats['countries'],
-				'cities'       => $stats['cities'],
-				'dedications'  => $stats['dedications'],
-				'pct'          => $stats['pct'],
-				'last10'       => $stats['last10'],
-				'closed'       => 1 === (int) MSL_Meta::get( 'campaign', $page_id )['closed'],
+		return self::uncached(
+			new WP_REST_Response(
+				array(
+					'participants' => $stats['participants'],
+					'countries'    => $stats['countries'],
+					'cities'       => $stats['cities'],
+					'dedications'  => $stats['dedications'],
+					'pct'          => $stats['pct'],
+					'last10'       => $stats['last10'],
+					'closed'       => 1 === (int) MSL_Meta::get( 'campaign', $page_id )['closed'],
+				)
 			)
 		);
 	}
@@ -246,8 +248,10 @@ final class MSL_REST {
 	public static function feed(): WP_REST_Response {
 		$page_id = MSL_Importer::page_id();
 
-		return new WP_REST_Response(
-			array( 'rows' => MSL_Joins::feed( $page_id, MSL_Meta::get( 'join', $page_id ) ) )
+		return self::uncached(
+			new WP_REST_Response(
+				array( 'rows' => MSL_Joins::feed( $page_id, MSL_Meta::get( 'join', $page_id ) ) )
+			)
 		);
 	}
 
@@ -264,8 +268,10 @@ final class MSL_REST {
 		// recent joins in the window are the ones that survive the trim.
 		$from    = max( (int) $request->get_param( 'from' ), $to - 500 );
 
-		return new WP_REST_Response(
-			array( 'pieces' => MSL_Joins::pieces( $page_id, MSL_Meta::get( 'join', $page_id ), $from, $to ) )
+		return self::uncached(
+			new WP_REST_Response(
+				array( 'pieces' => MSL_Joins::pieces( $page_id, MSL_Meta::get( 'join', $page_id ), $from, $to ) )
+			)
 		);
 	}
 
@@ -340,17 +346,19 @@ final class MSL_REST {
 		$page_id = MSL_Importer::page_id();
 		$next    = self::next_milestone( $page_id, $count );
 
-		return new WP_REST_Response(
-			array(
-				'count' => $count,
-				'next'  => $next,
-				// So that "my candle" still works on a device that kept the
-				// code cookie but lost the rest of the join.
-				'piece' => MSL_Joins::piece_for_code( $page_id, $code ),
-				// For somebody arriving on this code's shared link: whose light
-				// they are being shown. Empty when that person joined without
-				// a name.
-				'name'  => MSL_Joins::name_for_code( $page_id, $code ),
+		return self::uncached(
+			new WP_REST_Response(
+				array(
+					'count' => $count,
+					'next'  => $next,
+					// So that "my candle" still works on a device that kept the
+					// code cookie but lost the rest of the join.
+					'piece' => MSL_Joins::piece_for_code( $page_id, $code ),
+					// For somebody arriving on this code's shared link: whose
+					// light they are being shown. Empty when that person joined
+					// without a name.
+					'name'  => MSL_Joins::name_for_code( $page_id, $code ),
+				)
 			)
 		);
 	}
@@ -370,7 +378,7 @@ final class MSL_REST {
 	public static function session(): WP_REST_Response {
 		nocache_headers();
 
-		return new WP_REST_Response( array( 'signedIn' => null !== MSL_Auth::current() ) );
+		return self::uncached( new WP_REST_Response( array( 'signedIn' => null !== MSL_Auth::current() ) ) );
 	}
 
 	/**
@@ -640,6 +648,22 @@ final class MSL_REST {
 	 * visitor's nonce, or one visitor's join result, to the next visitor.
 	 *
 	 * @param WP_REST_Response $response Response.
+	 * @return WP_REST_Response
+	 */
+	/**
+	 * Mark a response as one nothing may keep a copy of.
+	 *
+	 * Every live number on the site goes through here, and the reason is not
+	 * freshness for its own sake. Two people looking at the campaign together
+	 * have to see the same figure, and a response with no cache headers on it
+	 * is one any layer between the database and the phone may store and hand
+	 * out again: the browser's own cache, a caching plugin — several of which
+	 * keep a separate copy for phones and for desktops — or a CDN edge. Two
+	 * devices then sit on two different stored copies and disagree for as long
+	 * as those copies live, which is exactly what was reported: 151 on one
+	 * screen and 155 on the other, at the same moment, neither moving.
+	 *
+	 * @param WP_REST_Response $response Response to mark.
 	 * @return WP_REST_Response
 	 */
 	private static function uncached( WP_REST_Response $response ): WP_REST_Response {

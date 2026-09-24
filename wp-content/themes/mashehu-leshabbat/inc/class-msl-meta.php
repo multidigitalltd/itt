@@ -77,6 +77,45 @@ final class MSL_Meta {
 	 * @param int|null $post_id Page ID. Defaults to the queried object.
 	 * @return array<string, mixed>
 	 */
+	/**
+	 * Give back the shipped words to a control that was saved without any.
+	 *
+	 * An empty value is an editorial decision for a paragraph and a fault for a
+	 * button: whatever put it there — a truncated save, a cleared field, a
+	 * field that was blank in the editor when everything around it was saved —
+	 * the result is a control with nothing written on it, which is unusable and
+	 * unexplainable. Only the fields MSL_Content::CONTROLS names are treated
+	 * this way, so prose the campaign meant to remove stays removed.
+	 *
+	 * @param string               $section  Section key.
+	 * @param array<string, mixed> $resolved Values as resolved so far.
+	 * @param array<string, mixed> $defaults The shipped copy.
+	 * @return array<string, mixed>
+	 */
+	private static function name_controls( string $section, array $resolved, array $defaults ): array {
+		foreach ( MSL_Content::CONTROLS as $control ) {
+			if ( ! str_starts_with( $control, $section . '.' ) ) {
+				continue;
+			}
+
+			$key = substr( $control, strlen( $section ) + 1 );
+
+			foreach ( array( $key, $key . '_he', $key . '_en' ) as $field ) {
+				if ( ! isset( $defaults[ $field ] ) || ! is_string( $defaults[ $field ] ) ) {
+					continue;
+				}
+
+				if ( '' === $defaults[ $field ] || '' !== trim( (string) ( $resolved[ $field ] ?? '' ) ) ) {
+					continue;
+				}
+
+				$resolved[ $field ] = $defaults[ $field ];
+			}
+		}
+
+		return $resolved;
+	}
+
 	public static function get( string $section, ?int $post_id = null ): array {
 		$post_id ??= self::home_of( $section );
 		$cache_key = $post_id . ':' . $section;
@@ -92,6 +131,7 @@ final class MSL_Meta {
 		// Keys the page has actually saved win; the rest fall back to the
 		// approved copy, which also covers fields added by a later theme update.
 		$resolved = array_merge( $defaults, array_intersect_key( $stored, $defaults ) );
+		$resolved = self::name_controls( $section, $resolved, $defaults );
 
 		self::$cache[ $cache_key ] = $resolved;
 

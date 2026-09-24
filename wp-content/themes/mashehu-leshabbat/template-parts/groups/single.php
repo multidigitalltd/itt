@@ -132,10 +132,21 @@ $msl_state = array(
 			 * The way into the artwork itself. A real button and not the canvas:
 			 * the canvas is `aria-hidden`, and a decorative surface that turns
 			 * out to be the only door is a door a keyboard cannot find.
+			 *
+			 * The icon is not decoration either. This button sits on a picture
+			 * with nothing else near it, so the one thing that has to be
+			 * unmistakable is that it is a way in — and an arrow leaving its
+			 * own frame says that before anybody has read the words.
 			 */
 			?>
-			<button type="button" class="msl-btn msl-btn--light msl-gfund__open" data-msl-goto="art"
-				<?php msl_i18n( 'groups', 'single_open_art' ); ?>><?php msl_the( $msl_groups, 'single_open_art' ); ?></button>
+			<button type="button" class="msl-btn msl-btn--light msl-gfund__open" data-msl-goto="art">
+				<svg class="msl-gfund__open-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+					<path d="M14 4h6v6M20 4l-8 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+					<path d="M18 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+				</svg>
+				<?php // The attribute names the span and not the button: the language switch writes textContent, which on the button would take the icon with it. ?>
+				<span class="msl-gfund__open-word"<?php msl_i18n( 'groups', 'single_open_art' ); ?>><?php msl_the( $msl_groups, 'single_open_art' ); ?></span>
+			</button>
 		</div>
 
 		<div class="msl-gfund__panel" data-msl-rise>

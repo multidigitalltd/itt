@@ -46,6 +46,7 @@ final class MSL_Panel {
 		add_action( 'admin_post_msl_zmanim_recheck', array( self::class, 'handle_zmanim_recheck' ) );
 		add_action( 'admin_post_msl_send_reminders', array( self::class, 'handle_send_reminders' ) );
 		add_action( 'admin_post_msl_copy_rerun', array( self::class, 'handle_copy_rerun' ) );
+		add_action( 'admin_post_msl_db_repair', array( self::class, 'handle_db_repair' ) );
 		add_action( 'admin_enqueue_scripts', array( self::class, 'assets' ) );
 	}
 
@@ -328,6 +329,15 @@ final class MSL_Panel {
 			);
 		}
 
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		if ( isset( $_GET['msl_db_fix'] ) && 0 === (int) $_GET['msl_db_fix'] ) {
+			printf(
+				'<div class="notice notice-success is-dismissible"><p>%s</p></div>',
+				esc_html__( 'הטבלאות עודכנו. אפשר להדליק נר.', 'mashehu-leshabbat' )
+			);
+		}
+
+		self::render_table_notice();
 		self::render_login_notice();
 		self::render_zmanim_notice( $page_id );
 		self::render_reminder_notice( $page_id );
@@ -637,6 +647,61 @@ final class MSL_Panel {
 				esc_html__( 'שולח עד 200 מכתבים בלחיצה. שימושי כדי לבדוק שהשרת בכלל מצליח לשלוח מייל.', 'mashehu-leshabbat' )
 			)
 		);
+	}
+
+	/**
+	 * Whether the database can take a join at all.
+	 *
+	 * Every other notice on this screen is about the campaign. This one is
+	 * about the floor it stands on: the insert that lights a candle names every
+	 * column of the joins table, so a single column that is not there is the
+	 * whole site answering "השליחה נכשלה" to everybody, with nothing in any
+	 * screen to say why. It happened. This is so that it cannot happen quietly
+	 * a second time.
+	 */
+	private static function render_table_notice(): void {
+		$missing = MSL_DB::missing();
+
+		if ( array() === $missing ) {
+			return;
+		}
+
+		printf(
+			'<div class="notice notice-error"><p><strong>%s</strong> %s</p><p><code>%s</code></p><p>%s <span class="description">%s</span></p></div>',
+			esc_html__( 'הטבלאות אינן מעודכנות:', 'mashehu-leshabbat' ),
+			esc_html__( 'חסרים במסד הנתונים שדות שהאתר כותב אליהם, ולכן הדלקת נר תיכשל.', 'mashehu-leshabbat' ),
+			esc_html( implode( ', ', $missing ) ),
+			sprintf(
+				'<a class="button button-primary" href="%s">%s</a>',
+				esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=msl_db_repair' ), 'msl_db_repair' ) ),
+				esc_html__( 'לתקן את הטבלאות עכשיו', 'mashehu-leshabbat' )
+			),
+			esc_html__( 'מוסיף את השדות החסרים. אינו נוגע בשורות קיימות ואינו מוחק דבר.', 'mashehu-leshabbat' )
+		);
+	}
+
+	/**
+	 * Put the tables right, by hand.
+	 */
+	public static function handle_db_repair(): void {
+		if ( ! current_user_can( 'edit_pages' ) ) {
+			wp_die( esc_html__( 'אין הרשאה.', 'mashehu-leshabbat' ) );
+		}
+
+		check_admin_referer( 'msl_db_repair' );
+
+		MSL_DB::install();
+
+		wp_safe_redirect(
+			add_query_arg(
+				array(
+					'page'       => self::SLUG,
+					'msl_db_fix' => count( MSL_DB::missing() ),
+				),
+				admin_url( 'admin.php' )
+			)
+		);
+		exit;
 	}
 
 	/**

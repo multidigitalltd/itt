@@ -227,6 +227,59 @@ final class MSL_Joins {
 		$inserted = false;
 		$piece    = 0;
 
+		/*
+		 * Two passes, and the second one only ever runs after a repair.
+		 *
+		 * Ten failed inserts are what the position race looks like; they are
+		 * also what a table missing a column looks like, and the two are told
+		 * apart by the only thing that can tell them apart — putting the table
+		 * right and trying once more. A candle should not be lost because an
+		 * upgrade did not finish, and waiting for somebody to open wp-admin is
+		 * not a fix when the person is standing at the form now.
+		 */
+		for ( $pass = 0; $pass < 2 && ! $inserted; $pass++ ) {
+			if ( $pass > 0 ) {
+				MSL_DB::install();
+			}
+
+			$inserted = self::attempt_insert( $table, $uuid, $page_id, $code, $referrer, $weeks, $coordinate, $reminder, $ip_hash, $phone_hash, $email_hash, $data, $piece );
+		}
+
+		if ( ! $inserted ) {
+			return new WP_Error( 'msl_insert_failed', 'generic' );
+		}
+
+		$join_id = (int) $wpdb->insert_id;
+
+		self::store_things( $join_id, (array) $data['things'], (string) $data['custom_label'] );
+		self::store_dedication( $join_id, $page_id, $data['dedication'], (string) $data['dedication_body'] );
+
+		return self::finish( $page_id, $piece, $code, $uuid, $referrer, $data );
+	}
+
+	/**
+	 * One run at the ten positions, returning whether a row was written.
+	 *
+	 * @param string                    $table      Joins table.
+	 * @param string                    $uuid       Row uuid.
+	 * @param int                       $page_id    Campaign page.
+	 * @param string                    $code       Referral code.
+	 * @param string                    $referrer   Referring code, or ''.
+	 * @param int                       $weeks      Shabbatot the undertaking runs for.
+	 * @param array<int, float|null>    $coordinate Latitude and longitude.
+	 * @param bool                      $reminder   Whether anything can be sent.
+	 * @param string                    $ip_hash    Hashed address.
+	 * @param string                    $phone_hash Hashed phone.
+	 * @param string                    $email_hash Hashed email.
+	 * @param array<string, mixed>      $data       Validated submission.
+	 * @param int                       $piece      Position written, by reference.
+	 * @return bool
+	 */
+	private static function attempt_insert( string $table, string $uuid, int $page_id, string $code, string $referrer, int $weeks, array $coordinate, bool $reminder, string $ip_hash, string $phone_hash, string $email_hash, array $data, int &$piece ): bool {
+		global $wpdb;
+
+		$inserted = false;
+
 		for ( $attempt = 0; $attempt < 10 && ! $inserted; $attempt++ ) {
 			$piece = MSL_Stats::next_piece_index( $page_id );
 
@@ -285,15 +338,21 @@ final class MSL_Joins {
 			$wpdb->suppress_errors( $suppress );
 		}
 
-		if ( ! $inserted ) {
-			return new WP_Error( 'msl_insert_failed', 'generic' );
-		}
+		return (bool) $inserted;
+	}
 
-		$join_id = (int) $wpdb->insert_id;
-
-		self::store_things( $join_id, (array) $data['things'], (string) $data['custom_label'] );
-		self::store_dedication( $join_id, $page_id, $data['dedication'], (string) $data['dedication_body'] );
-
+	/**
+	 * Everything that follows a written row.
+	 *
+	 * @param int                  $page_id  Campaign page.
+	 * @param int                  $piece    Position written.
+	 * @param string               $code     Referral code.
+	 * @param string               $uuid     Row uuid.
+	 * @param string               $referrer Referring code, or ''.
+	 * @param array<string, mixed> $data     Validated submission.
+	 * @return array<string, mixed>
+	 */
+	private static function finish( int $page_id, int $piece, string $code, string $uuid, string $referrer, array $data ): array {
 		MSL_Stats::flush( $page_id );
 		MSL_Groups::flush( (int) ( $data['group_id'] ?? 0 ) );
 

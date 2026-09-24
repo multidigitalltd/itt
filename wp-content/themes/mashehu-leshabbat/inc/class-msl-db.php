@@ -24,12 +24,21 @@ final class MSL_DB {
 	/**
 	 * Bumped whenever the schema below changes.
 	 */
-	private const SCHEMA_VERSION = '10';
+	private const SCHEMA_VERSION = '11';
 
 	/**
 	 * Option holding the installed schema version.
 	 */
 	private const OPTION = 'msl_db_version';
+
+	/**
+	 * Option holding what the last install could not put right.
+	 *
+	 * Written on every install, emptied when there is nothing wrong, and read
+	 * by the panel — the only way anyone running the site can see that the
+	 * database is the reason a candle would not light.
+	 */
+	private const MISSING_OPTION = 'msl_db_missing';
 
 	/**
 	 * Hook the installer.
@@ -141,12 +150,12 @@ final class MSL_DB {
 	}
 
 	/**
-	 * Run dbDelta over the schema.
+	 * The tables, as they should be.
+	 *
+	 * @return array<int, string> One CREATE TABLE statement per table.
 	 */
-	public static function install(): void {
+	private static function schema(): array {
 		global $wpdb;
-
-		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 
 		$charset = $wpdb->get_charset_collate();
 		$joins   = self::joins_table();
@@ -155,6 +164,30 @@ final class MSL_DB {
 		$people  = self::people_table();
 		$remind  = self::reminders_table();
 		$groups  = self::groups_table();
+
+		/*
+		 * Nothing below may carry a comment inside the statement, in any of the
+		 * forms SQL accepts. dbDelta does not parse SQL. It cuts what it is
+		 * given into statements at every semicolon and then reads each line of
+		 * what is left as a column definition — so one semicolon inside a
+		 * comment ends the CREATE TABLE there, and every column below it is
+		 * simply never seen. A new site is unharmed, because a new site gets
+		 * the statement itself and MySQL reads comments properly; the damage
+		 * falls only on a site that already has the table, where the missing
+		 * columns are never added and nothing says so.
+		 *
+		 * That is what happened to reminder_weeks, reminders_sent and remind_at
+		 * in 1.44.0: one semicolon, in a sentence, in a comment, and every
+		 * candle lit on an upgraded site failed on a column that was not there.
+		 * Explanations belong out here instead.
+		 *
+		 * The reminder columns: reminder_weeks is how long the undertaking is
+		 * for; reminders_sent counts the letters gone out and runs one past it,
+		 * that last increment being the letter asking whether they would like to
+		 * take something on again — one counter rather than two to keep in step.
+		 * remind_at is when the next letter is due, so a job that runs late
+		 * still sends rather than skipping the week it missed.
+		 */
 
 		// Note the deliberate omissions: no full name, no address, no free-text
 		// beyond the dedication, and no raw phone/email/IP — only salted hashes,
@@ -187,18 +220,6 @@ final class MSL_DB {
 				reminder_optin TINYINT(1) NOT NULL DEFAULT 0,
 				reminder_phone VARCHAR(255) NULL,
 				reminder_email VARCHAR(255) NULL,
-				/*
-				 * How long the undertaking is for, and how far through it this
-				 * person is. reminder_weeks is what they chose; reminders_sent
-				 * counts the letters that have gone out, and it runs one past
-				 * reminder_weeks — that last increment is the letter that asks
-				 * whether they want to take something on again. Holding the
-				 * closing letter in the same counter means there is no second
-				 * column to keep in step with the first.
-				 *
-				 * remind_at is when the next letter is due, so a job that runs
-				 * late still sends rather than skipping the week it missed.
-				 */
 				reminder_weeks SMALLINT UNSIGNED NOT NULL DEFAULT 0,
 				reminders_sent SMALLINT UNSIGNED NOT NULL DEFAULT 0,
 				remind_at DATETIME NULL,
@@ -313,11 +334,153 @@ final class MSL_DB {
 			) {$charset};",
 		);
 
-		foreach ( $sql as $statement ) {
+		return $sql;
+	}
+
+	/**
+	 * Create or upgrade the tables, and prove it worked.
+	 *
+	 * dbDelta is trusted to do the work and then checked, because it has been
+	 * wrong here before and a schema that is wrong is not a cosmetic fault: the
+	 * insert that lights a candle names every column, so one missing column is
+	 * every candle on the site refusing to light. Anything dbDelta did not
+	 * manage is added directly, and the version is recorded only once the
+	 * tables actually match — a site left half-upgraded tries again on the next
+	 * admin screen instead of believing itself finished.
+	 */
+	public static function install(): void {
+		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+
+		$schema = self::schema();
+
+		foreach ( $schema as $statement ) {
 			dbDelta( $statement );
 		}
 
+		self::repair( $schema );
+
+		$missing = self::missing( $schema );
+
+		update_option( self::MISSING_OPTION, $missing, false );
+
+		if ( array() !== $missing ) {
+			return;
+		}
+
 		update_option( self::OPTION, self::SCHEMA_VERSION, false );
+	}
+
+	/**
+	 * Add, directly, any column the schema asks for that the table has not got.
+	 *
+	 * @param array<int, string> $schema Statements from schema().
+	 */
+	private static function repair( array $schema ): void {
+		global $wpdb;
+
+		foreach ( self::wanted( $schema ) as $table => $columns ) {
+			$have = self::present( $table );
+
+			if ( array() === $have ) {
+				// No table at all, or no answer from the database. Creating it
+				// is dbDelta's job and adding columns to a table that is not
+				// there would only produce a second kind of error.
+				continue;
+			}
+
+			foreach ( $columns as $name => $definition ) {
+				if ( in_array( $name, $have, true ) ) {
+					continue;
+				}
+
+				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery -- identifiers and a definition, both from the schema above; neither can carry anything a visitor typed.
+				$wpdb->query( "ALTER TABLE {$table} ADD COLUMN {$definition}" );
+			}
+		}
+	}
+
+	/**
+	 * Columns the schema asks for that the database has not got.
+	 *
+	 * @param array<int, string>|null $schema Statements, or null to read them.
+	 * @return array<int, string> "table.column", ready to be shown to a human.
+	 */
+	public static function missing( ?array $schema = null ): array {
+		$schema  = null === $schema ? self::schema() : $schema;
+		$missing = array();
+
+		foreach ( self::wanted( $schema ) as $table => $columns ) {
+			$have = self::present( $table );
+
+			if ( array() === $have ) {
+				$missing[] = $table;
+				continue;
+			}
+
+			foreach ( array_keys( $columns ) as $name ) {
+				if ( ! in_array( $name, $have, true ) ) {
+					$missing[] = $table . '.' . $name;
+				}
+			}
+		}
+
+		return $missing;
+	}
+
+	/**
+	 * The columns each statement asks for.
+	 *
+	 * Read from the statements themselves rather than listed a second time, so
+	 * a column added to the schema is covered by this the moment it is written.
+	 *
+	 * @param array<int, string> $schema Statements from schema().
+	 * @return array<string, array<string, string>> Table => column => definition.
+	 */
+	private static function wanted( array $schema ): array {
+		$wanted = array();
+
+		foreach ( $schema as $statement ) {
+			if ( ! preg_match( '/CREATE TABLE\s+(\S+)\s*\((.*)\)[^)]*$/s', $statement, $found ) ) {
+				continue;
+			}
+
+			$table             = $found[1];
+			$wanted[ $table ] = array();
+
+			foreach ( explode( "\n", $found[2] ) as $line ) {
+				$line = trim( $line, " \t\r\n," );
+
+				if ( ! preg_match( '/^([a-z_][a-z0-9_]*)\s+(.+)$/i', $line, $field ) ) {
+					continue;
+				}
+
+				// PRIMARY KEY, UNIQUE KEY, KEY: shaped like a column and not one.
+				if ( in_array( strtolower( $field[1] ), array( 'primary', 'unique', 'key', 'index', 'fulltext', 'spatial', 'constraint', 'foreign' ), true ) ) {
+					continue;
+				}
+
+				$wanted[ $table ][ strtolower( $field[1] ) ] = $line;
+			}
+		}
+
+		return $wanted;
+	}
+
+	/**
+	 * The columns a table actually has.
+	 *
+	 * @param string $table Table name.
+	 * @return array<int, string> Lowercased column names; empty when there is no such table.
+	 */
+	private static function present( string $table ): array {
+		global $wpdb;
+
+		$suppress = $wpdb->suppress_errors( true );
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, WordPress.DB.DirectDatabaseQuery -- table name from the schema above; SHOW COLUMNS takes no placeholders.
+		$columns  = $wpdb->get_col( "SHOW COLUMNS FROM {$table}" );
+		$wpdb->suppress_errors( $suppress );
+
+		return array_map( 'strtolower', array_map( 'strval', (array) $columns ) );
 	}
 
 	/**

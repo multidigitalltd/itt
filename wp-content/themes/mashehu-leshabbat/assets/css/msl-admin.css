@@ -1,0 +1,367 @@
+/*
+ * The page editor.
+ *
+ * Every section of the design is a meta box on the page itself, and each box is
+ * a plain stack of core WordPress fields. The only real work here is making the
+ * Hebrew/English pairs read as pairs rather than as twice as many fields.
+ */
+
+.msl-fields {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.msl-field {
+	margin: 0 0 14px;
+}
+
+.msl-field > label,
+.msl-label {
+	display: block;
+	margin-bottom: 4px;
+}
+
+/* The English half of a pair sits tucked under its Hebrew half, so a long
+   section still reads as a list of strings rather than a wall of inputs. */
+.msl-field--en {
+	margin-top: -10px;
+	margin-bottom: 18px;
+	padding-inline-start: 14px;
+	border-inline-start: 3px solid #dcdcde;
+}
+
+.msl-field--en > label strong {
+	font-weight: 400;
+	color: #646970;
+}
+
+.msl-help {
+	display: block;
+	margin-top: 4px;
+}
+
+.msl-input-number {
+	width: 12rem;
+}
+
+.msl-image {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	flex-wrap: wrap;
+}
+
+.msl-image__preview {
+	max-width: 120px;
+	height: auto;
+	border-radius: 8px;
+	border: 1px solid #dcdcde;
+	background: #f6f7f7;
+}
+
+.msl-image__preview.is-empty {
+	display: none;
+}
+
+.msl-repeater {
+	margin: 0 0 20px;
+	padding: 14px;
+	border: 1px solid #dcdcde;
+	border-radius: 8px;
+	background: #fbfbfb;
+}
+
+.msl-repeater__title {
+	margin: 0 0 8px;
+	font-size: 14px;
+}
+
+.msl-repeater__rows {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	margin-bottom: 12px;
+}
+
+.msl-row {
+	border: 1px solid #dcdcde;
+	border-radius: 6px;
+	background: #fff;
+}
+
+.msl-row__head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	padding: 8px 12px;
+	background: #f6f7f7;
+	border-bottom: 1px solid #dcdcde;
+}
+
+.msl-row__summary {
+	font-weight: 600;
+}
+
+.msl-row__remove {
+	color: #b32d2e;
+}
+
+.msl-row__body {
+	padding: 12px;
+}
+
+.msl-row__body .msl-field:last-child {
+	margin-bottom: 0;
+}
+
+.msl-checkbox {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+}
+
+/* The overview screen. */
+
+.msl-admin__cards {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+	gap: 12px;
+	margin: 18px 0 24px;
+}
+
+.msl-admin__card {
+	padding: 18px 20px;
+	border: 1px solid #dcdcde;
+	border-radius: 8px;
+	background: #fff;
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.msl-admin__card strong {
+	font-size: 28px;
+	line-height: 1.1;
+	font-variant-numeric: tabular-nums;
+}
+
+.msl-admin__card span {
+	color: #646970;
+}
+
+.msl-admin table {
+	max-width: 60rem;
+	margin-bottom: 24px;
+}
+
+/*
+ * The content panel.
+ *
+ * A section list on one side and one section at a time on the other. The
+ * sections that are not open stay in the DOM — they are part of the same form
+ * and the same save — so they are hidden, not unmounted.
+ */
+
+.msl-panel__bar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px 20px;
+	margin: 12px 0 16px;
+	padding: 10px 14px;
+	background: #fff;
+	border: 1px solid #c3c4c7;
+	border-radius: 4px;
+}
+
+.msl-panel__bar p {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	margin: 0;
+}
+
+.msl-panel__search {
+	flex: 1 1 260px;
+}
+
+.msl-panel__search input {
+	flex: 1 1 auto;
+	min-inline-size: 0;
+}
+
+.msl-panel__hits {
+	color: #646970;
+	font-size: 12px;
+	white-space: nowrap;
+}
+
+.msl-panel__langs-label {
+	color: #646970;
+	font-size: 12px;
+}
+
+.msl-panel__links {
+	margin-inline-start: auto;
+}
+
+.msl-panel__body {
+	display: flex;
+	align-items: flex-start;
+	gap: 20px;
+}
+
+.msl-panel__nav {
+	flex: 0 0 240px;
+	position: sticky;
+	/* Clears the admin bar; the panel is long and the list has to stay put. */
+	inset-block-start: 46px;
+	background: #fff;
+	border: 1px solid #c3c4c7;
+	border-radius: 4px;
+	overflow: hidden;
+}
+
+.msl-panel__nav ul {
+	margin: 0;
+	list-style: none;
+}
+
+.msl-panel__nav li {
+	margin: 0;
+}
+
+.msl-panel__tab {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	inline-size: 100%;
+	padding: 9px 14px;
+	border: 0;
+	border-block-end: 1px solid #f0f0f1;
+	background: none;
+	font-size: 13px;
+	text-align: start;
+	cursor: pointer;
+}
+
+.msl-panel__tab:hover {
+	background: #f6f7f7;
+}
+
+.msl-panel__tab.is-active {
+	background: #2271b1;
+	color: #fff;
+	font-weight: 600;
+}
+
+.msl-panel__tab-label {
+	flex: 1 1 auto;
+}
+
+.msl-panel__tab-hits {
+	flex: 0 0 auto;
+	min-inline-size: 20px;
+	padding: 1px 6px;
+	border-radius: 9px;
+	background: #d63638;
+	color: #fff;
+	font-size: 11px;
+	text-align: center;
+}
+
+.msl-panel__tab.is-empty {
+	opacity: 0.45;
+}
+
+.msl-panel__main {
+	flex: 1 1 auto;
+	min-inline-size: 0;
+	padding: 4px 20px 20px;
+	background: #fff;
+	border: 1px solid #c3c4c7;
+	border-radius: 4px;
+}
+
+.msl-panel__title {
+	margin: 14px 0 18px;
+	padding-block-end: 10px;
+	border-block-end: 1px solid #f0f0f1;
+	font-size: 16px;
+}
+
+.msl-panel__empty {
+	color: #646970;
+}
+
+/* The save bar tracks the bottom of the window: with twelve sections in one
+   form, a button at the end of the document is a button nobody reaches. */
+.msl-panel__save {
+	position: sticky;
+	inset-block-end: 0;
+	z-index: 10;
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	margin-block-start: 16px;
+	padding: 12px 16px;
+	background: #fff;
+	border: 1px solid #c3c4c7;
+	border-radius: 4px;
+	box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.msl-panel__saved {
+	color: #b32d2e;
+	font-size: 13px;
+}
+
+.msl-field.is-hidden {
+	display: none;
+}
+
+@media screen and (max-width: 782px) {
+	.msl-panel__body {
+		display: block;
+	}
+
+	.msl-panel__nav {
+		position: static;
+		margin-block-end: 14px;
+	}
+}
+
+/*
+ * Values that are not Hebrew.
+ *
+ * An English sentence, a hex colour or a clock time typed into an RTL input
+ * comes back with its punctuation at the wrong end — "#FFB25C" reads "FFB25C#"
+ * and an English line ends up with its full stop leading. The value is stored
+ * correctly either way; it is only unreadable while being edited, which is
+ * exactly when it matters.
+ */
+.msl-field--en input,
+.msl-field--en textarea,
+.msl-field--url input,
+.msl-field--ltr input,
+.msl-field--number input {
+	direction: ltr;
+	text-align: start;
+}
+
+/* A group the campaign put up itself, told apart at a glance from the ones
+   strangers opened — the whole point of the mark is that it is noticed before
+   launch rather than after. */
+.msl-admin__badge {
+	display: inline-block;
+	margin-inline-start: 6px;
+	padding: 1px 8px;
+	border-radius: 999px;
+	background: #F3E4CB;
+	color: #6B4A22;
+	font-size: 11px;
+	font-weight: 600;
+	vertical-align: middle;
+}

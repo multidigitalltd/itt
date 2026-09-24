@@ -1,0 +1,1068 @@
+<?php
+/**
+ * The admin screens.
+ *
+ * Three things the client actually needs on a Friday: how the campaign is doing,
+ * a queue for approving dedications, and an export. Every list paginates with
+ * LIMIT/OFFSET against an indexed column — a table with a quarter of a million
+ * rows will hang any unbounded query — and the export streams rather than
+ * building the whole file in memory.
+ *
+ * @package Mashehu_LeShabbat
+ */
+
+declare( strict_types = 1 );
+
+defined( 'ABSPATH' ) || exit;
+
+/**
+ * Admin menu, overview, moderation and export.
+ */
+final class MSL_Admin {
+
+	/**
+	 * Capability required for every screen here.
+	 */
+	private const CAP = 'manage_options';
+
+	/**
+	 * Rows per page in the list views.
+	 */
+	private const PER_PAGE = 50;
+
+	/**
+	 * Hook the admin.
+	 */
+	public static function init(): void {
+		add_action( 'admin_menu', array( self::class, 'menu' ) );
+		add_action( 'admin_post_msl_moderate', array( self::class, 'handle_moderation' ) );
+		add_action( 'admin_post_msl_group_decision', array( self::class, 'handle_group_decision' ) );
+		add_action( 'admin_post_msl_group_edit', array( self::class, 'handle_group_edit' ) );
+		add_action( 'admin_post_msl_group_delete', array( self::class, 'handle_group_delete' ) );
+		add_action( 'admin_post_msl_export', array( self::class, 'handle_export' ) );
+	}
+
+	/**
+	 * Register the menu.
+	 */
+	public static function menu(): void {
+		add_menu_page(
+			__( 'אור לשבת', 'mashehu-leshabbat' ),
+			__( 'אור לשבת', 'mashehu-leshabbat' ),
+			self::CAP,
+			'msl-overview',
+			array( self::class, 'render_overview' ),
+			'dashicons-visibility',
+			26
+		);
+
+		add_submenu_page(
+			'msl-overview',
+			__( 'סקירה', 'mashehu-leshabbat' ),
+			__( 'סקירה', 'mashehu-leshabbat' ),
+			self::CAP,
+			'msl-overview',
+			array( self::class, 'render_overview' )
+		);
+
+		add_submenu_page(
+			'msl-overview',
+			__( 'הצטרפויות', 'mashehu-leshabbat' ),
+			__( 'הצטרפויות', 'mashehu-leshabbat' ),
+			self::CAP,
+			'msl-joins',
+			array( self::class, 'render_joins' )
+		);
+
+		add_submenu_page(
+			'msl-overview',
+			__( 'הקדשות לאישור', 'mashehu-leshabbat' ),
+			self::moderation_label(),
+			self::CAP,
+			'msl-moderation',
+			array( self::class, 'render_moderation' )
+		);
+
+		add_submenu_page(
+			'msl-overview',
+			__( 'קבוצות', 'mashehu-leshabbat' ),
+			self::groups_label(),
+			self::CAP,
+			'msl-groups',
+			array( self::class, 'render_groups' )
+		);
+	}
+
+	/**
+	 * The groups menu label, carrying the waiting count as a bubble.
+	 *
+	 * @return string
+	 */
+	private static function groups_label(): string {
+		$pending = MSL_Groups::pending_count( MSL_Importer::page_id() );
+
+		if ( 0 === $pending ) {
+			return __( 'קבוצות', 'mashehu-leshabbat' );
+		}
+
+		return sprintf(
+			/* translators: %d: groups awaiting a decision. */
+			__( 'קבוצות %s', 'mashehu-leshabbat' ),
+			'<span class="awaiting-mod"><span class="pending-count">' . absint( $pending ) . '</span></span>'
+		);
+	}
+
+	/**
+	 * The moderation menu label, carrying the pending count as a bubble.
+	 *
+	 * @return string
+	 */
+	private static function moderation_label(): string {
+		$pending = self::pending_count();
+
+		if ( 0 === $pending ) {
+			return __( 'הקדשות לאישור', 'mashehu-leshabbat' );
+		}
+
+		return sprintf(
+			'%s <span class="awaiting-mod"><span class="pending-count">%d</span></span>',
+			__( 'הקדשות לאישור', 'mashehu-leshabbat' ),
+			$pending
+		);
+	}
+
+	/**
+	 * How many dedications are waiting for review.
+	 *
+	 * @return int
+	 */
+	private static function pending_count(): int {
+		global $wpdb;
+
+		if ( ! MSL_DB::ready() ) {
+			return 0;
+		}
+
+		$table = MSL_DB::dedications_table();
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		return (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$table} WHERE status = %s", 'pending' ) );
+	}
+
+	/* ---------------------------------------------------------------------
+	 * Overview
+	 * ------------------------------------------------------------------ */
+
+	/**
+	 * Render the live overview.
+	 */
+	public static function render_overview(): void {
+		self::guard();
+
+		$page_id = MSL_Importer::page_id();
+		$stats   = MSL_Stats::all( $page_id );
+		$cards   = array(
+			__( 'משתתפים', 'mashehu-leshabbat' )        => msl_num( $stats['participants'] ),
+			__( 'הצטרפויות באתר', 'mashehu-leshabbat' ) => msl_num( $stats['joins'] ),
+			__( 'מדינות', 'mashehu-leshabbat' )         => msl_num( $stats['countries'] ),
+			__( 'ערים', 'mashehu-leshabbat' )           => msl_num( $stats['cities'] ),
+			__( 'הקדשות מאושרות', 'mashehu-leshabbat' ) => msl_num( $stats['dedications'] ),
+			__( 'אחוז השלמה', 'mashehu-leshabbat' )     => $stats['pct'] . '%',
+			__( 'נרשמו לתזכורת', 'mashehu-leshabbat' )  => msl_num( MSL_Joins::reminder_count( $page_id ) ),
+			__( 'ב-10 הדקות האחרונות', 'mashehu-leshabbat' ) => msl_num( $stats['last10'] ),
+		);
+		?>
+		<div class="wrap msl-admin">
+			<h1><?php esc_html_e( 'אור לשבת — סקירה', 'mashehu-leshabbat' ); ?></h1>
+
+			<?php if ( 0 === $page_id ) : ?>
+				<div class="notice notice-error"><p><?php esc_html_e( 'עמוד הקמפיין לא נמצא. אפשר ליצור אותו מחדש ב"כלים ← עמודי אור לשבת".', 'mashehu-leshabbat' ); ?></p></div>
+			<?php endif; ?>
+
+			<div class="msl-admin__cards">
+				<?php foreach ( $cards as $label => $value ) : ?>
+					<div class="msl-admin__card">
+						<strong><?php echo esc_html( (string) $value ); ?></strong>
+						<span><?php echo esc_html( (string) $label ); ?></span>
+					</div>
+				<?php endforeach; ?>
+			</div>
+
+			<p>
+				<?php if ( 0 !== $page_id ) : ?>
+					<a class="button button-primary" href="<?php echo esc_url( (string) get_edit_post_link( $page_id ) ); ?>">
+						<?php esc_html_e( 'עריכת תוכן הקמפיין', 'mashehu-leshabbat' ); ?>
+					</a>
+				<?php endif; ?>
+				<a class="button" href="<?php echo esc_url( admin_url( 'admin.php?page=msl-joins' ) ); ?>">
+					<?php esc_html_e( 'רשימת ההצטרפויות', 'mashehu-leshabbat' ); ?>
+				</a>
+			</p>
+
+			<h2><?php esc_html_e( 'התפלגות לפי מדינה', 'mashehu-leshabbat' ); ?></h2>
+			<?php self::render_breakdown( $page_id, 'country' ); ?>
+
+			<h2><?php esc_html_e( 'התפלגות לפי עיר', 'mashehu-leshabbat' ); ?></h2>
+			<?php self::render_breakdown( $page_id, 'city' ); ?>
+		</div>
+		<?php
+	}
+
+	/**
+	 * A top-20 breakdown table.
+	 *
+	 * @param int    $page_id Page ID.
+	 * @param string $column  Indexed column to group by: 'country' or 'city'.
+	 */
+	private static function render_breakdown( int $page_id, string $column ): void {
+		global $wpdb;
+
+		if ( ! MSL_DB::ready() || ! in_array( $column, array( 'country', 'city' ), true ) ) {
+			return;
+		}
+
+		$table = MSL_DB::joins_table();
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $column is checked against a literal allowlist above.
+		$rows = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT {$column} AS label, COUNT(*) AS n FROM {$table}
+				 WHERE page_id = %d AND {$column} <> ''
+				 GROUP BY {$column} ORDER BY n DESC LIMIT 20",
+				$page_id
+			),
+			ARRAY_A
+		);
+
+		if ( array() === (array) $rows ) {
+			echo '<p>' . esc_html__( 'אין עדיין נתונים.', 'mashehu-leshabbat' ) . '</p>';
+
+			return;
+		}
+		?>
+		<table class="widefat striped">
+			<tbody>
+			<?php foreach ( (array) $rows as $row ) : ?>
+				<tr>
+					<td><?php echo esc_html( (string) $row['label'] ); ?></td>
+					<td style="width:8rem"><?php echo esc_html( msl_num( (int) $row['n'] ) ); ?></td>
+				</tr>
+			<?php endforeach; ?>
+			</tbody>
+		</table>
+		<?php
+	}
+
+	/* ---------------------------------------------------------------------
+	 * Joins
+	 * ------------------------------------------------------------------ */
+
+	/**
+	 * Render the paginated join list.
+	 */
+	public static function render_joins(): void {
+		global $wpdb;
+
+		self::guard();
+
+		$page_id = MSL_Importer::page_id();
+		$paged   = max( 1, (int) ( $_GET['paged'] ?? 1 ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$offset  = ( $paged - 1 ) * self::PER_PAGE;
+		$rows    = array();
+		$total   = 0;
+
+		if ( MSL_DB::ready() ) {
+			$table = MSL_DB::joins_table();
+
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+			$total = (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$table} WHERE page_id = %d", $page_id ) );
+
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+			$rows = (array) $wpdb->get_results(
+				$wpdb->prepare(
+					"SELECT piece_index, first_name, city, country, is_anonymous, lang, referral_code, referred_by, reminder_optin, created_at
+					 FROM {$table} WHERE page_id = %d ORDER BY id DESC LIMIT %d OFFSET %d",
+					$page_id,
+					self::PER_PAGE,
+					$offset
+				),
+				ARRAY_A
+			);
+		}
+
+		$pages = (int) ceil( $total / self::PER_PAGE );
+		?>
+		<div class="wrap msl-admin">
+			<h1><?php esc_html_e( 'הצטרפויות', 'mashehu-leshabbat' ); ?></h1>
+
+			<p>
+				<?php
+				printf(
+					/* translators: %s: number of joins. */
+					esc_html__( 'סך הכול %s הצטרפויות שנרשמו באתר.', 'mashehu-leshabbat' ),
+					esc_html( msl_num( $total ) )
+				);
+				?>
+			</p>
+
+			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+				<?php wp_nonce_field( 'msl_export' ); ?>
+				<input type="hidden" name="action" value="msl_export">
+				<p>
+					<button type="submit" class="button"><?php esc_html_e( 'ייצוא CSV', 'mashehu-leshabbat' ); ?></button>
+					<span class="description"><?php esc_html_e( 'הייצוא כולל שם ועיר רק של מי שלא ביקש עילום שם, ולעולם לא טלפון, מייל או כתובת IP.', 'mashehu-leshabbat' ); ?></span>
+				</p>
+			</form>
+
+			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+				<?php wp_nonce_field( 'msl_export' ); ?>
+				<input type="hidden" name="action" value="msl_export">
+				<input type="hidden" name="set" value="reminders">
+				<p>
+					<button type="submit" class="button"><?php esc_html_e( 'ייצוא רשימת התזכורות', 'mashehu-leshabbat' ); ?></button>
+					<span class="description"><?php esc_html_e( 'כתובות של מי שביקש תזכורת לפני שבת. התבנית אוספת ושומרת אותן, אבל אינה שולחת — אין בה מנגנון דיוור. הקובץ נועד להימסר למערכת הדיוור שלכם.', 'mashehu-leshabbat' ); ?></span>
+				</p>
+			</form>
+
+			<table class="widefat striped">
+				<thead>
+				<tr>
+					<th><?php esc_html_e( 'מיקום ביצירה', 'mashehu-leshabbat' ); ?></th>
+					<th><?php esc_html_e( 'שם', 'mashehu-leshabbat' ); ?></th>
+					<th><?php esc_html_e( 'עיר', 'mashehu-leshabbat' ); ?></th>
+					<th><?php esc_html_e( 'מדינה', 'mashehu-leshabbat' ); ?></th>
+					<th><?php esc_html_e( 'שפה', 'mashehu-leshabbat' ); ?></th>
+					<th><?php esc_html_e( 'הוזמן על ידי', 'mashehu-leshabbat' ); ?></th>
+					<th><?php esc_html_e( 'תזכורת', 'mashehu-leshabbat' ); ?></th>
+					<th><?php esc_html_e( 'מועד', 'mashehu-leshabbat' ); ?></th>
+				</tr>
+				</thead>
+				<tbody>
+				<?php if ( array() === $rows ) : ?>
+					<tr><td colspan="8"><?php esc_html_e( 'אין עדיין הצטרפויות.', 'mashehu-leshabbat' ); ?></td></tr>
+				<?php endif; ?>
+				<?php foreach ( $rows as $row ) : ?>
+					<?php $anon = 1 === (int) $row['is_anonymous']; ?>
+					<tr>
+						<td><?php echo esc_html( msl_num( (int) $row['piece_index'] ) ); ?></td>
+						<td><?php echo esc_html( $anon ? __( 'בעילום שם', 'mashehu-leshabbat' ) : (string) $row['first_name'] ); ?></td>
+						<td><?php echo esc_html( (string) $row['city'] ); ?></td>
+						<td><?php echo esc_html( (string) $row['country'] ); ?></td>
+						<td><?php echo esc_html( (string) $row['lang'] ); ?></td>
+						<td><?php echo esc_html( '' !== (string) $row['referred_by'] ? (string) $row['referred_by'] : '—' ); ?></td>
+						<td><?php echo esc_html( 1 === (int) $row['reminder_optin'] ? __( 'כן', 'mashehu-leshabbat' ) : '—' ); ?></td>
+						<td><?php echo esc_html( (string) $row['created_at'] ); ?></td>
+					</tr>
+				<?php endforeach; ?>
+				</tbody>
+			</table>
+
+			<?php if ( $pages > 1 ) : ?>
+				<div class="tablenav"><div class="tablenav-pages">
+					<?php
+					echo wp_kses_post(
+						(string) paginate_links(
+							array(
+								'base'      => add_query_arg( 'paged', '%#%' ),
+								'format'    => '',
+								'current'   => $paged,
+								'total'     => $pages,
+								'prev_text' => '‹',
+								'next_text' => '›',
+							)
+						)
+					);
+					?>
+				</div></div>
+			<?php endif; ?>
+		</div>
+		<?php
+	}
+
+	/* ---------------------------------------------------------------------
+	 * Moderation
+	 * ------------------------------------------------------------------ */
+
+	/**
+	 * Render the dedication queue.
+	 */
+	public static function render_moderation(): void {
+		global $wpdb;
+
+		self::guard();
+
+		$page_id = MSL_Importer::page_id();
+		$types   = array_values( (array) ( MSL_Meta::get( 'join', $page_id )['ded_types'] ?? array() ) );
+		$rows    = array();
+
+		if ( MSL_DB::ready() ) {
+			$deds  = MSL_DB::dedications_table();
+			$joins = MSL_DB::joins_table();
+
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+			$rows = (array) $wpdb->get_results(
+				$wpdb->prepare(
+					"SELECT d.id, d.kind, d.body, d.status, d.created_at, j.first_name, j.city, j.is_anonymous
+					 FROM {$deds} d
+					 LEFT JOIN {$joins} j ON j.id = d.join_id
+					 WHERE d.page_id = %d AND d.status = %s
+					 ORDER BY d.id ASC LIMIT %d",
+					$page_id,
+					'pending',
+					self::PER_PAGE
+				),
+				ARRAY_A
+			);
+		}
+		?>
+		<div class="wrap msl-admin">
+			<h1><?php esc_html_e( 'הקדשות לאישור', 'mashehu-leshabbat' ); ?></h1>
+
+			<p><?php esc_html_e( 'הקדשה לא מוצגת באתר לפני אישור. דחייה משאירה את ההצטרפות עצמה על כנה — רק ההקדשה לא תוצג.', 'mashehu-leshabbat' ); ?></p>
+
+			<?php if ( array() === $rows ) : ?>
+				<p><strong><?php esc_html_e( 'אין הקדשות שממתינות לאישור.', 'mashehu-leshabbat' ); ?></strong></p>
+			<?php else : ?>
+				<table class="widefat striped">
+					<thead>
+					<tr>
+						<th><?php esc_html_e( 'סוג', 'mashehu-leshabbat' ); ?></th>
+						<th><?php esc_html_e( 'ההקדשה', 'mashehu-leshabbat' ); ?></th>
+						<th><?php esc_html_e( 'מי הוסיף', 'mashehu-leshabbat' ); ?></th>
+						<th><?php esc_html_e( 'מועד', 'mashehu-leshabbat' ); ?></th>
+						<th><?php esc_html_e( 'פעולה', 'mashehu-leshabbat' ); ?></th>
+					</tr>
+					</thead>
+					<tbody>
+					<?php foreach ( $rows as $row ) : ?>
+						<?php
+						$kind = $types[ (int) $row['kind'] ] ?? array();
+						$who  = 1 === (int) $row['is_anonymous']
+							? __( 'בעילום שם', 'mashehu-leshabbat' )
+							: trim( (string) $row['first_name'] . ' · ' . (string) $row['city'], ' ·' );
+						?>
+						<tr>
+							<td><?php echo esc_html( is_array( $kind ) ? MSL_I18N::value( $kind, 'label' ) : '—' ); ?></td>
+							<td><?php echo esc_html( (string) $row['body'] ); ?></td>
+							<td><?php echo esc_html( $who ); ?></td>
+							<td><?php echo esc_html( (string) $row['created_at'] ); ?></td>
+							<td>
+								<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="display:inline">
+									<?php wp_nonce_field( 'msl_moderate' ); ?>
+									<input type="hidden" name="action" value="msl_moderate">
+									<input type="hidden" name="id" value="<?php echo absint( $row['id'] ); ?>">
+									<button type="submit" name="decision" value="approved" class="button button-primary"><?php esc_html_e( 'אישור', 'mashehu-leshabbat' ); ?></button>
+									<button type="submit" name="decision" value="rejected" class="button"><?php esc_html_e( 'דחייה', 'mashehu-leshabbat' ); ?></button>
+								</form>
+							</td>
+						</tr>
+					<?php endforeach; ?>
+					</tbody>
+				</table>
+			<?php endif; ?>
+		</div>
+		<?php
+	}
+
+	/**
+	 * The groups screen: everything someone opened, and what to do about it.
+	 *
+	 * A group's text is written by a stranger and published under the project's
+	 * name, so this is the screen that decides whether it is. Closing a group
+	 * that is already public is kept separate from rejecting one: the candles
+	 * lit in it stay in the artwork either way, and the difference is only
+	 * whether the page still invites more.
+	 */
+	public static function render_groups(): void {
+		self::guard();
+
+		$page_id = MSL_Importer::page_id();
+		$states  = array(
+			MSL_Groups::PENDING  => __( 'ממתינה', 'mashehu-leshabbat' ),
+			MSL_Groups::LIVE     => __( 'באוויר', 'mashehu-leshabbat' ),
+			MSL_Groups::CLOSED   => __( 'סגורה', 'mashehu-leshabbat' ),
+			MSL_Groups::REJECTED => __( 'נדחתה', 'mashehu-leshabbat' ),
+		);
+
+		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- read-only navigation on a capability-gated screen.
+		$filter = isset( $_GET['status'] ) ? sanitize_key( wp_unslash( $_GET['status'] ) ) : MSL_Groups::PENDING;
+		$edit   = isset( $_GET['edit'] ) ? absint( wp_unslash( $_GET['edit'] ) ) : 0;
+		$adding = isset( $_GET['new'] );
+		// phpcs:enable WordPress.Security.NonceVerification.Recommended
+
+		$filter = 'all' === $filter || isset( $states[ $filter ] ) ? $filter : MSL_Groups::PENDING;
+		$rows   = 'all' === $filter
+			? MSL_Groups::every( $page_id, self::PER_PAGE )
+			: MSL_Groups::archive( $page_id, self::PER_PAGE, 0, $filter );
+		$copy   = MSL_Meta::get( 'groups', MSL_Importer::page_id( 'groups' ) );
+
+		// The editor takes over the screen: one thing on it at a time, and the
+		// list is one click away behind the cancel.
+		if ( $adding || $edit > 0 ) {
+			self::render_group_editor( $edit, $filter );
+
+			return;
+		}
+		?>
+		<div class="wrap msl-admin">
+			<h1><?php esc_html_e( 'קבוצות', 'mashehu-leshabbat' ); ?></h1>
+
+			<?php
+			// phpcs:disable WordPress.Security.NonceVerification.Recommended -- read-only display of the redirect this screen itself sent.
+			if ( isset( $_GET['msl_saved'] ) ) :
+				?>
+				<div class="notice notice-success is-dismissible"><p><?php esc_html_e( 'הקבוצה נשמרה.', 'mashehu-leshabbat' ); ?></p></div>
+			<?php endif; ?>
+
+			<?php if ( isset( $_GET['msl_error'] ) ) : ?>
+				<div class="notice notice-error"><p><?php esc_html_e( 'הקבוצה לא נשמרה. חובה למלא שם לקבוצה.', 'mashehu-leshabbat' ); ?></p></div>
+			<?php endif; ?>
+			<?php // phpcs:enable WordPress.Security.NonceVerification.Recommended ?>
+
+			<p><?php esc_html_e( 'קבוצה נפתחת בידי גולש והטקסט שבה מוצג תחת השם של המיזם. כל עוד היא ממתינה, רואה אותה רק מי שפתח אותה. הנרות שנדלקו בקבוצה נספרים ליצירה הכללית בכל מצב — אישור או דחייה אינם משנים את המונה.', 'mashehu-leshabbat' ); ?></p>
+
+			<p>
+				<a class="button button-primary" href="<?php echo esc_url( admin_url( 'admin.php?page=msl-groups&new=1' ) ); ?>"><?php esc_html_e( 'פתיחת קבוצה חדשה', 'mashehu-leshabbat' ); ?></a>
+			</p>
+
+			<ul class="subsubsub">
+				<?php foreach ( $states as $msl_key => $msl_label ) : ?>
+					<li>
+						<a href="<?php echo esc_url( admin_url( 'admin.php?page=msl-groups&status=' . $msl_key ) ); ?>"
+							<?php echo $msl_key === $filter ? 'class="current"' : ''; ?>>
+							<?php echo esc_html( $msl_label ); ?>
+							<span class="count">(<?php echo absint( MSL_Groups::total( $page_id, $msl_key ) ); ?>)</span>
+						</a>
+					</li>
+				<?php endforeach; ?>
+				<li>
+					<a href="<?php echo esc_url( admin_url( 'admin.php?page=msl-groups&status=all' ) ); ?>"
+						<?php echo 'all' === $filter ? 'class="current"' : ''; ?>><?php esc_html_e( 'הכול', 'mashehu-leshabbat' ); ?></a>
+				</li>
+			</ul>
+
+			<?php if ( array() === $rows ) : ?>
+				<p><strong><?php esc_html_e( 'אין קבוצות במצב הזה.', 'mashehu-leshabbat' ); ?></strong></p>
+			<?php else : ?>
+				<table class="widefat striped">
+					<thead>
+					<tr>
+						<th><?php esc_html_e( 'הקבוצה', 'mashehu-leshabbat' ); ?></th>
+						<th><?php esc_html_e( 'הקדשה', 'mashehu-leshabbat' ); ?></th>
+						<th><?php esc_html_e( 'נרות', 'mashehu-leshabbat' ); ?></th>
+						<th><?php esc_html_e( 'מי פתח', 'mashehu-leshabbat' ); ?></th>
+						<th><?php esc_html_e( 'מועד', 'mashehu-leshabbat' ); ?></th>
+						<th><?php esc_html_e( 'פעולה', 'mashehu-leshabbat' ); ?></th>
+					</tr>
+					</thead>
+					<tbody>
+					<?php foreach ( $rows as $row ) : ?>
+						<tr>
+							<td>
+								<strong><a href="<?php echo esc_url( MSL_Groups::url( (string) $row['code'] ) ); ?>" target="_blank" rel="noopener"><?php echo esc_html( (string) $row['title'] ); ?></a></strong>
+								<?php if ( true === $row['is_demo'] ) : ?>
+									<span class="msl-admin__badge"><?php esc_html_e( 'לדוגמה', 'mashehu-leshabbat' ); ?></span>
+								<?php endif; ?>
+								<?php if ( '' !== trim( (string) $row['story'] ) ) : ?>
+									<p class="description"><?php echo esc_html( wp_trim_words( (string) $row['story'], 30 ) ); ?></p>
+								<?php endif; ?>
+								<p class="row-actions">
+									<span><a href="<?php echo esc_url( admin_url( 'admin.php?page=msl-groups&status=' . $filter . '&edit=' . absint( $row['id'] ) ) ); ?>"><?php esc_html_e( 'עריכה', 'mashehu-leshabbat' ); ?></a></span>
+								</p>
+							</td>
+							<td><?php echo esc_html( msl_group_dedication( $row, $copy ) ?: '—' ); ?></td>
+							<td>
+								<?php echo esc_html( msl_num( (int) $row['count'] ) . ' / ' . msl_num( (int) $row['target'] ) ); ?>
+								<?php if ( (int) $row['seed_count'] > 0 ) : ?>
+									<br><span class="description">
+										<?php
+										printf(
+											/* translators: %s: the opening count set by hand. */
+											esc_html__( 'מתוכם %s מספר פתיחה', 'mashehu-leshabbat' ),
+											esc_html( msl_num( (int) $row['seed_count'] ) )
+										);
+										?>
+									</span>
+								<?php endif; ?>
+							</td>
+							<td>
+								<?php echo esc_html( '' !== $row['owner_name'] ? (string) $row['owner_name'] : '—' ); ?>
+								<?php
+								$msl_mail = MSL_Groups::owner_email( (int) $row['id'] );
+
+								if ( '' !== $msl_mail ) :
+									?>
+									<br><span class="description"><?php echo esc_html( $msl_mail ); ?></span>
+								<?php endif; ?>
+							</td>
+							<td><?php echo esc_html( (string) $row['created_at'] ); ?></td>
+							<td>
+								<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="display:inline">
+									<?php wp_nonce_field( 'msl_group_decision' ); ?>
+									<input type="hidden" name="action" value="msl_group_decision">
+									<input type="hidden" name="id" value="<?php echo absint( $row['id'] ); ?>">
+									<input type="hidden" name="status" value="<?php echo esc_attr( $filter ); ?>">
+
+									<?php if ( MSL_Groups::LIVE !== $row['status'] ) : ?>
+										<button type="submit" name="decision" value="<?php echo esc_attr( MSL_Groups::LIVE ); ?>" class="button button-primary"><?php esc_html_e( 'אישור', 'mashehu-leshabbat' ); ?></button>
+									<?php endif; ?>
+
+									<?php if ( MSL_Groups::LIVE === $row['status'] ) : ?>
+										<button type="submit" name="decision" value="<?php echo esc_attr( MSL_Groups::CLOSED ); ?>" class="button"><?php esc_html_e( 'סגירה', 'mashehu-leshabbat' ); ?></button>
+									<?php endif; ?>
+
+									<?php if ( MSL_Groups::REJECTED !== $row['status'] ) : ?>
+										<button type="submit" name="decision" value="<?php echo esc_attr( MSL_Groups::REJECTED ); ?>" class="button"><?php esc_html_e( 'דחייה', 'mashehu-leshabbat' ); ?></button>
+									<?php endif; ?>
+								</form>
+							</td>
+						</tr>
+					<?php endforeach; ?>
+					</tbody>
+				</table>
+			<?php endif; ?>
+		</div>
+		<?php
+	}
+
+	/**
+	 * The form that opens or edits one group from the dashboard.
+	 *
+	 * The same fields the public form has, plus the opening count, which only
+	 * the campaign is allowed to set. The public form does not carry that field
+	 * and create() does not read it, so there is no path from a visitor's POST
+	 * to a group that starts with a number somebody did not earn.
+	 *
+	 * @param int    $id   Group to edit, or 0 to open a new one.
+	 * @param string $back Status filter to return to.
+	 */
+	private static function render_group_editor( int $id, string $back ): void {
+		$group = $id > 0 ? MSL_Groups::by_id( $id ) : null;
+
+		if ( $id > 0 && null === $group ) {
+			echo '<div class="wrap msl-admin"><h1>' . esc_html__( 'קבוצות', 'mashehu-leshabbat' ) . '</h1>';
+			echo '<div class="notice notice-error"><p>' . esc_html__( 'הקבוצה לא נמצאה.', 'mashehu-leshabbat' ) . '</p></div></div>';
+
+			return;
+		}
+
+		$copy    = MSL_Meta::get( 'groups', MSL_Importer::page_id( 'groups' ) );
+		$list    = admin_url( 'admin.php?page=msl-groups&status=' . rawurlencode( $back ) );
+		$value   = static fn( string $key, $fallback = '' ) => null !== $group ? $group[ $key ] : $fallback;
+		$shapes  = MSL_Theme::ARTWORK_LABELS;
+		?>
+		<div class="wrap msl-admin">
+			<h1><?php echo esc_html( null !== $group ? __( 'עריכת קבוצה', 'mashehu-leshabbat' ) : __( 'קבוצה חדשה', 'mashehu-leshabbat' ) ); ?></h1>
+
+			<p><?php esc_html_e( 'קבוצה שנפתחת כאן עולה לאוויר מיד ואינה ממתינה לאישור — הטקסט שבה נכתב על ידכם ולא על ידי גולש.', 'mashehu-leshabbat' ); ?></p>
+
+			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+				<?php wp_nonce_field( 'msl_group_edit' ); ?>
+				<input type="hidden" name="action" value="msl_group_edit">
+				<input type="hidden" name="id" value="<?php echo absint( $id ); ?>">
+				<input type="hidden" name="back" value="<?php echo esc_attr( $back ); ?>">
+
+				<table class="form-table" role="presentation">
+					<tr>
+						<th scope="row"><label for="msl-ge-title"><?php esc_html_e( 'שם הקבוצה', 'mashehu-leshabbat' ); ?></label></th>
+						<td><input type="text" class="regular-text" id="msl-ge-title" name="title" maxlength="120" required
+							value="<?php echo esc_attr( (string) $value( 'title' ) ); ?>"></td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="msl-ge-occasion"><?php esc_html_e( 'לכבוד מה', 'mashehu-leshabbat' ); ?></label></th>
+						<td>
+							<select id="msl-ge-occasion" name="occasion">
+								<option value="0"><?php echo esc_html( msl_t( $copy, 'occ_none' ) ); ?></option>
+								<?php foreach ( MSL_Groups::OCCASIONS as $msl_index => $msl_key ) : ?>
+									<option value="<?php echo esc_attr( (string) $msl_index ); ?>"
+										<?php selected( (int) $value( 'occasion', 0 ), $msl_index ); ?>>
+										<?php echo esc_html( msl_t( $copy, 'occ_' . $msl_key ) ); ?>
+									</option>
+								<?php endforeach; ?>
+							</select>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="msl-ge-honouree"><?php esc_html_e( 'שם האדם', 'mashehu-leshabbat' ); ?></label></th>
+						<td><input type="text" class="regular-text" id="msl-ge-honouree" name="honouree" maxlength="120"
+							value="<?php echo esc_attr( (string) $value( 'honouree' ) ); ?>"></td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="msl-ge-story"><?php esc_html_e( 'כמה מילים', 'mashehu-leshabbat' ); ?></label></th>
+						<td>
+							<textarea class="large-text" rows="4" id="msl-ge-story" name="story"
+								maxlength="<?php echo absint( MSL_Groups::MAX_STORY ); ?>"><?php echo esc_textarea( (string) $value( 'story' ) ); ?></textarea>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="msl-ge-target"><?php esc_html_e( 'היעד', 'mashehu-leshabbat' ); ?></label></th>
+						<td>
+							<input type="number" id="msl-ge-target" name="target" class="small-text"
+								min="<?php echo absint( MSL_Groups::MIN_TARGET ); ?>" max="<?php echo absint( MSL_Groups::MAX_TARGET ); ?>"
+								value="<?php echo absint( $value( 'target', 100 ) ); ?>">
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="msl-ge-seed"><?php esc_html_e( 'מספר פתיחה', 'mashehu-leshabbat' ); ?></label></th>
+						<td>
+							<input type="number" id="msl-ge-seed" name="seed_count" class="small-text" min="0"
+								max="<?php echo absint( MSL_Groups::MAX_TARGET ); ?>"
+								value="<?php echo absint( $value( 'seed_count', 0 ) ); ?>">
+							<p class="description"><?php esc_html_e( 'כמה נרות הקבוצה מציגה עוד לפני שנרשמו בה הצטרפויות אמיתיות. המספר מוצג בכרטיס הקבוצה ובפס ההתקדמות שלה בלבד — הוא אינו נספר במונה הראשי, ביצירה הכללית ולא במפה, שסופרים אנשים.', 'mashehu-leshabbat' ); ?></p>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="msl-ge-names"><?php esc_html_e( 'המצטרפים שמוצגים', 'mashehu-leshabbat' ); ?></label></th>
+						<td>
+							<textarea class="large-text code" rows="8" id="msl-ge-names" name="seed_names"
+								dir="rtl"><?php echo esc_textarea( (string) $value( 'seed_names' ) ); ?></textarea>
+							<p class="description">
+								<?php esc_html_e( 'שורה לכל אדם. אפשר לכתוב רק שם, או "שם | עיר". שורה שבה יש מקף אחד במקום השם — למשל "-" או "- | חיפה" — מוצגת כמי שביקש שלא להופיע בשם.', 'mashehu-leshabbat' ); ?>
+							</p>
+							<p class="description">
+								<?php esc_html_e( 'הרשימה הזאת היא תצוגה בלבד, בדיוק כמו מספר הפתיחה: היא מופיעה רק ברשימה שבעמוד הקבוצה, ואינה נספרת במונה הראשי, ביצירה, בקיר הנרות או במפה. מי שבאמת מצטרף מופיע לפניה.', 'mashehu-leshabbat' ); ?>
+							</p>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="msl-ge-artwork"><?php esc_html_e( 'צורת היצירה', 'mashehu-leshabbat' ); ?></label></th>
+						<td>
+							<select id="msl-ge-artwork" name="artwork">
+								<?php foreach ( $shapes as $msl_shape => $msl_label ) : ?>
+									<option value="<?php echo esc_attr( $msl_shape ); ?>" <?php selected( (string) $value( 'artwork', 'rotate' ), $msl_shape ); ?>>
+										<?php echo esc_html( $msl_label ); ?>
+									</option>
+								<?php endforeach; ?>
+							</select>
+						</td>
+					</tr>
+					<?php if ( (int) $value( 'photo_id', 0 ) > 0 ) : ?>
+						<tr>
+							<th scope="row"><?php esc_html_e( 'התמונה', 'mashehu-leshabbat' ); ?></th>
+							<td>
+								<?php echo wp_get_attachment_image( (int) $value( 'photo_id', 0 ), 'medium', false, array( 'style' => 'max-width:220px;height:auto;border-radius:10px' ) ); ?>
+								<p class="description">
+									<?php esc_html_e( 'הועלתה על ידי מי שפתח את הקבוצה, ומוצגת בראש עמוד הקבוצה. להסרה: למחוק אותה במדיה — העמוד ימשיך לעבוד בלעדיה.', 'mashehu-leshabbat' ); ?>
+								</p>
+							</td>
+						</tr>
+					<?php endif; ?>
+					<tr>
+						<th scope="row"><label for="msl-ge-accent"><?php esc_html_e( 'צבע האור', 'mashehu-leshabbat' ); ?></label></th>
+						<td><input type="text" id="msl-ge-accent" name="accent" class="regular-text" placeholder="#FFB25C"
+							value="<?php echo esc_attr( (string) $value( 'accent' ) ); ?>"></td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="msl-ge-owner"><?php esc_html_e( 'מי פתח', 'mashehu-leshabbat' ); ?></label></th>
+						<td><input type="text" id="msl-ge-owner" name="owner_name" class="regular-text" maxlength="80"
+							value="<?php echo esc_attr( (string) $value( 'owner_name' ) ); ?>"></td>
+					</tr>
+				</table>
+
+				<p class="submit">
+					<button type="submit" class="button button-primary"><?php esc_html_e( 'שמירה', 'mashehu-leshabbat' ); ?></button>
+					<a class="button" href="<?php echo esc_url( $list ); ?>"><?php esc_html_e( 'ביטול', 'mashehu-leshabbat' ); ?></a>
+				</p>
+			</form>
+
+			<?php
+			/*
+			 * Deletion is offered for a demo group with nobody in it, and for
+			 * nothing else. A group somebody opened is closed or rejected: its
+			 * joins are rows in the joins table and lights in the main artwork,
+			 * and dropping the row they point at would leave them counted with
+			 * nowhere to belong.
+			 */
+			if ( null !== $group && true === $group['is_demo'] && 0 === MSL_Groups::count_for( $id ) ) :
+				?>
+				<hr>
+				<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>"
+					onsubmit="return confirm(<?php echo esc_attr( wp_json_encode( __( 'למחוק את קבוצת הדוגמה?', 'mashehu-leshabbat' ) ) ); ?>);">
+					<?php wp_nonce_field( 'msl_group_delete' ); ?>
+					<input type="hidden" name="action" value="msl_group_delete">
+					<input type="hidden" name="id" value="<?php echo absint( $id ); ?>">
+					<input type="hidden" name="back" value="<?php echo esc_attr( $back ); ?>">
+					<button type="submit" class="button button-link-delete"><?php esc_html_e( 'מחיקת קבוצת הדוגמה', 'mashehu-leshabbat' ); ?></button>
+				</form>
+			<?php endif; ?>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Save a group opened or edited from the dashboard.
+	 */
+	public static function handle_group_edit(): void {
+		self::guard();
+		check_admin_referer( 'msl_group_edit' );
+
+		$id   = absint( $_POST['id'] ?? 0 );
+		$back = sanitize_key( wp_unslash( (string) ( $_POST['back'] ?? MSL_Groups::LIVE ) ) );
+
+		// The same validator the public form runs through, so a group opened
+		// here cannot hold anything a group opened there could not.
+		$data = MSL_Groups::validate( wp_unslash( $_POST ) ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput -- validate() sanitises every field it keeps.
+
+		if ( is_wp_error( $data ) ) {
+			wp_safe_redirect( admin_url( 'admin.php?page=msl-groups&status=' . rawurlencode( $back ) . '&msl_error=' . rawurlencode( (string) $data->get_error_message() ) ) );
+			exit;
+		}
+
+		if ( $id > 0 ) {
+			MSL_Groups::admin_save( $id, $data );
+		} else {
+			MSL_Groups::admin_create( MSL_Importer::page_id(), $data );
+		}
+
+		wp_safe_redirect( admin_url( 'admin.php?page=msl-groups&status=' . rawurlencode( $back ) . '&msl_saved=1' ) );
+		exit;
+	}
+
+	/**
+	 * Delete a demo group.
+	 */
+	public static function handle_group_delete(): void {
+		self::guard();
+		check_admin_referer( 'msl_group_delete' );
+
+		$id   = absint( $_POST['id'] ?? 0 );
+		$back = sanitize_key( wp_unslash( (string) ( $_POST['back'] ?? MSL_Groups::LIVE ) ) );
+
+		if ( $id > 0 ) {
+			MSL_Groups::delete_demo( $id );
+		}
+
+		wp_safe_redirect( admin_url( 'admin.php?page=msl-groups&status=' . rawurlencode( $back ) ) );
+		exit;
+	}
+
+	/**
+	 * Record a decision about a group.
+	 */
+	public static function handle_group_decision(): void {
+		self::guard();
+		check_admin_referer( 'msl_group_decision' );
+
+		$id       = absint( $_POST['id'] ?? 0 );
+		$decision = sanitize_key( wp_unslash( (string) ( $_POST['decision'] ?? '' ) ) );
+		$back     = sanitize_key( wp_unslash( (string) ( $_POST['status'] ?? MSL_Groups::PENDING ) ) );
+
+		if ( $id > 0 ) {
+			MSL_Groups::set_status( $id, $decision );
+		}
+
+		wp_safe_redirect( admin_url( 'admin.php?page=msl-groups&status=' . $back ) );
+		exit;
+	}
+
+	/**
+	 * Record a moderation decision.
+	 */
+	public static function handle_moderation(): void {
+		global $wpdb;
+
+		self::guard();
+		check_admin_referer( 'msl_moderate' );
+
+		$id       = absint( $_POST['id'] ?? 0 );
+		$decision = sanitize_key( wp_unslash( (string) ( $_POST['decision'] ?? '' ) ) );
+
+		if ( $id > 0 && in_array( $decision, array( 'approved', 'rejected' ), true ) && MSL_DB::ready() ) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery
+			$wpdb->update(
+				MSL_DB::dedications_table(),
+				array(
+					'status'      => $decision,
+					'reviewed_by' => get_current_user_id(),
+					'reviewed_at' => current_time( 'mysql', true ),
+				),
+				array( 'id' => $id ),
+				array( '%s', '%d', '%s' ),
+				array( '%d' )
+			);
+
+			MSL_Stats::flush( MSL_Importer::page_id() );
+		}
+
+		wp_safe_redirect( admin_url( 'admin.php?page=msl-moderation' ) );
+		exit;
+	}
+
+	/* ---------------------------------------------------------------------
+	 * Export
+	 * ------------------------------------------------------------------ */
+
+	/**
+	 * Stream the consented rows as CSV.
+	 *
+	 * Chunked deliberately: a full in-memory query over a campaign table would
+	 * exhaust the memory limit long before it finished.
+	 */
+	/**
+	 * The reminder list, as a CSV.
+	 *
+	 * Nothing in this theme sends those reminders — there is no mailer here and
+	 * no schedule. What it does is keep the list, correctly and separately, so
+	 * it can be handed to whatever actually does the sending. A campaign that
+	 * collects addresses it cannot export has collected nothing.
+	 *
+	 * @param int $page_id Page ID.
+	 */
+	private static function export_reminders( int $page_id ): void {
+		global $wpdb;
+
+		$table   = MSL_DB::reminders_table();
+		$join    = MSL_Meta::get( 'join', $page_id );
+		$options = array_values( (array) ( $join['options'] ?? array() ) );
+
+		nocache_headers();
+		header( 'Content-Type: text/csv; charset=utf-8' );
+		header( 'Content-Disposition: attachment; filename=or-leshabbat-reminders-' . gmdate( 'Y-m-d' ) . '.csv' );
+
+		$out = fopen( 'php://output', 'w' );
+
+		if ( false === $out ) {
+			exit;
+		}
+
+		fwrite( $out, "\xEF\xBB\xBF" );
+		fputcsv( $out, array( 'created_at', 'name', 'email', 'thing', 'lang' ), ',', '"', '' );
+
+		$offset = 0;
+
+		do {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+			$rows = $wpdb->get_results(
+				$wpdb->prepare(
+					"SELECT created_at, name, email, thing_index, custom_label, lang
+					 FROM {$table} WHERE page_id = %d ORDER BY id ASC LIMIT %d OFFSET %d",
+					$page_id,
+					500,
+					$offset
+				),
+				ARRAY_A
+			);
+
+			foreach ( (array) $rows as $row ) {
+				$label = '';
+
+				if ( null !== $row['thing_index'] ) {
+					$index = (int) $row['thing_index'];
+					$label = '' !== (string) $row['custom_label']
+						? (string) $row['custom_label']
+						: (string) ( $options[ $index ]['label_he'] ?? '' );
+				}
+
+				fputcsv(
+					$out,
+					array( $row['created_at'], $row['name'], $row['email'], $label, $row['lang'] ),
+					',',
+					'"',
+					''
+				);
+			}
+
+			$offset += 500;
+		} while ( count( (array) $rows ) === 500 );
+
+		fclose( $out );
+		exit;
+	}
+
+	public static function handle_export(): void {
+		global $wpdb;
+
+		self::guard();
+		check_admin_referer( 'msl_export' );
+
+		if ( ! MSL_DB::ready() ) {
+			wp_safe_redirect( admin_url( 'admin.php?page=msl-joins' ) );
+			exit;
+		}
+
+		$page_id = MSL_Importer::page_id();
+		$table   = MSL_DB::joins_table();
+
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- checked above.
+		$set = isset( $_REQUEST['set'] ) ? sanitize_key( wp_unslash( (string) $_REQUEST['set'] ) ) : '';
+
+		if ( 'reminders' === $set ) {
+			self::export_reminders( $page_id );
+
+			return;
+		}
+
+		nocache_headers();
+		header( 'Content-Type: text/csv; charset=utf-8' );
+		header( 'Content-Disposition: attachment; filename=mashehu-leshabbat-' . gmdate( 'Y-m-d' ) . '.csv' );
+
+		$out = fopen( 'php://output', 'w' );
+
+		if ( false === $out ) {
+			exit;
+		}
+
+		// A BOM, so Excel opens the Hebrew columns as UTF-8 rather than as mojibake.
+		fwrite( $out, "\xEF\xBB\xBF" );
+
+		/*
+		 * The escape character is passed explicitly, and empty. PHP 8.4 deprecates
+		 * relying on the default, and the deprecation notice is printed straight
+		 * into the response — that is, into the middle of the CSV the client just
+		 * downloaded. Empty is also the correct answer on its own: PHP's backslash
+		 * escaping is not part of RFC 4180 and confuses every spreadsheet that
+		 * meets it.
+		 */
+		fputcsv( $out, array( 'piece_index', 'first_name', 'city', 'country', 'lang', 'referral_code', 'referred_by', 'created_at' ), ',', '"', '' );
+
+		$offset = 0;
+
+		do {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+			$rows = (array) $wpdb->get_results(
+				$wpdb->prepare(
+					"SELECT piece_index, first_name, city, country, is_anonymous, lang, referral_code, referred_by, created_at
+					 FROM {$table} WHERE page_id = %d ORDER BY id ASC LIMIT 500 OFFSET %d",
+					$page_id,
+					$offset
+				),
+				ARRAY_A
+			);
+
+			foreach ( $rows as $row ) {
+				$anonymous = 1 === (int) $row['is_anonymous'];
+
+				fputcsv(
+					$out,
+					array(
+						$row['piece_index'],
+						$anonymous ? '' : $row['first_name'],
+						$anonymous ? '' : $row['city'],
+						$row['country'],
+						$row['lang'],
+						$row['referral_code'],
+						$row['referred_by'],
+						$row['created_at'],
+					),
+					',',
+					'"',
+					''
+				);
+			}
+
+			$offset += 500;
+		} while ( count( $rows ) === 500 );
+
+		fclose( $out );
+		exit;
+	}
+
+	/**
+	 * Refuse anyone without the capability.
+	 */
+	private static function guard(): void {
+		if ( ! current_user_can( self::CAP ) ) {
+			wp_die( esc_html__( 'אין לך הרשאה לגשת למסך הזה.', 'mashehu-leshabbat' ) );
+		}
+	}
+}

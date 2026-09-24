@@ -1,0 +1,4 @@
+# Theme packages built for upload. The theme itself is the source of truth;
+# a zip is only ever a copy of wp-content/themes/mashehu-leshabbat, rebuilt
+# whenever one is needed.
+/mashehu-leshabbat-*.zip
